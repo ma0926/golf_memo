@@ -225,7 +225,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
   void _showDatePicker() {
     showCupertinoModalPopup(
       context: context,
-      builder: (_) => Container(
+      builder: (modalContext) => Container(
         height: 280,
         color: Colors.white,
         child: Column(
@@ -234,7 +234,8 @@ class _MemoInputPageState extends State<_MemoInputPage> {
               alignment: Alignment.centerRight,
               child: CupertinoButton(
                 child: const Text('完了'),
-                onPressed: () => Navigator.pop(context),
+                // modalContext を使うことでモーダルだけを閉じる
+                onPressed: () => Navigator.pop(modalContext),
               ),
             ),
             Expanded(
