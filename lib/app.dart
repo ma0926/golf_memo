@@ -72,10 +72,24 @@ final _router = GoRouter(
         );
       },
     ),
-    // 検索
+    // 検索（下からスライドアップ）
     GoRoute(
       path: '/search',
-      builder: (context, state) => const SearchScreen(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        child: const SearchScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 1),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+            )),
+            child: child,
+          );
+        },
+      ),
     ),
     // レポート
     GoRoute(
