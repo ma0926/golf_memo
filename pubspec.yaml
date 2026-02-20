@@ -1,5 +1,5 @@
-name: test
-description: "A new Flutter project."
+name: golf_memo
+description: "ゴルフ練習メモアプリ"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -31,9 +31,26 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+
+  # データベース
+  sqflite: ^2.3.3
+  path: ^1.9.0
+
+  # ファイル保存場所
+  path_provider: ^2.1.4
+
+  # 画像・動画の選択
+  image_picker: ^1.1.2
+
+  # 動画サムネイル生成
+  video_thumbnail: ^0.5.3
+
+  # 動画圧縮
+  video_compress: ^3.1.2
+
+  # 画面遷移
+  go_router: ^14.6.2
 
 dev_dependencies:
   flutter_test:
