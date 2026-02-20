@@ -84,101 +84,79 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // ナビゲーションバー
-          SliverAppBar(
-            backgroundColor: AppColors.background,
-            elevation: 0,
-            pinned: true,
-            automaticallyImplyLeading: false,
-            leading: IconButton(
-              icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 22),
-              onPressed: () => context.pop(),
-            ),
-            actions: [
-              // 「...」ボタン
-              IconButton(
-                icon: const Icon(Icons.more_horiz, color: AppColors.textPrimary),
-                onPressed: _showActionSheet,
-              ),
-              // ブックマーク
-              IconButton(
-                icon: Icon(
-                  _isFavorite ? Icons.bookmark : Icons.bookmark_border,
-                  color: AppColors.primary,
-                ),
-                onPressed: () {
-                  setState(() => _isFavorite = !_isFavorite);
-                  // TODO: データベースを更新
-                },
-              ),
-              const SizedBox(width: 4),
-            ],
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 22),
+          onPressed: () => context.pop(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.more_horiz, color: AppColors.textPrimary),
+            onPressed: _showActionSheet,
           ),
-
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // クラブ名（大見出し）
-                  const Text(
-                    'ドライバー', // TODO: 実際のデータを表示
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-
-                  // 日付
-                  const Text(
-                    '2026/1/12（金）', // TODO: 実際のデータを表示
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // メタ情報（調子・飛距離・球筋・風）
-                  _MetaInfoRow(
-                    condition: 'good',
-                    distance: 250,
-                    shotShape: 'draw',
-                    wind: 'normal',
-                  ),
-                  const SizedBox(height: 20),
-
-                  // メモ本文
-                  const Text(
-                    // TODO: 実際のデータを表示
-                    'ソールをまず地面につけてクラブを置き、クラブの重みを感じながら、そのままテークバックしていく。\n\n脱力したまま腰でテークバックしていき、打つ！\n\nクラブの重みを感じられて良し！',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: AppColors.textPrimary,
-                      height: 1.7,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // 画像ギャラリー
-                  _ImageGallery(
-                    imagePaths: _dummyImages,
-                    currentIndex: _currentImageIndex,
-                    onPageChanged: (index) {
-                      setState(() => _currentImageIndex = index);
-                    },
-                  ),
-                  const SizedBox(height: 40),
-                ],
-              ),
+          IconButton(
+            icon: Icon(
+              _isFavorite ? Icons.bookmark : Icons.bookmark_border,
+              color: AppColors.primary,
             ),
+            onPressed: () {
+              setState(() => _isFavorite = !_isFavorite);
+              // TODO: データベースを更新
+            },
           ),
+          const SizedBox(width: 4),
         ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // クラブ名
+            const Text(
+              'ドライバー', // TODO: 実際のデータを表示
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            // 日付
+            const Text(
+              '2026/1/12（金）', // TODO: 実際のデータを表示
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            // メタ情報
+            _MetaInfoRow(
+              condition: 'good',
+              distance: 250,
+              shotShape: 'draw',
+              wind: 'normal',
+            ),
+            const SizedBox(height: 20),
+            // メモ本文
+            const Text(
+              'ソールをまず地面につけてクラブを置き、クラブの重みを感じながら、そのままテークバックしていく。\n\n脱力したまま腰でテークバックしていき、打つ！\n\nクラブの重みを感じられて良し！',
+              style: TextStyle(
+                fontSize: 15,
+                color: AppColors.textPrimary,
+                height: 1.7,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // 画像ギャラリー
+            _ImageGallery(
+              imagePaths: _dummyImages,
+              currentIndex: _currentImageIndex,
+              onPageChanged: (index) => setState(() => _currentImageIndex = index),
+            ),
+          ],
+        ),
       ),
     );
   }

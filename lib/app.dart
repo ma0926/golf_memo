@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 
@@ -30,19 +31,44 @@ final _router = GoRouter(
       path: '/home',
       builder: (context, state) => const MemoListScreen(),
     ),
-    // 記録作成（:idより先に定義する必要あり）
+    // 記録作成（下からスライドアップ・:idより先に定義する必要あり）
     GoRoute(
       path: '/memo/create',
-      builder: (context, state) => const MemoCreateScreen(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        child: const MemoCreateScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 1),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+            )),
+            child: child,
+          );
+        },
+      ),
     ),
-    // 記録詳細（Sheet形式で表示）
+    // 記録詳細（下からスライドアップ）
     GoRoute(
       path: '/memo/:id',
       pageBuilder: (context, state) {
         final id = int.parse(state.pathParameters['id']!);
-        return CupertinoPage(
-          fullscreenDialog: true,
+        return CustomTransitionPage(
           child: MemoDetailScreen(memoId: id),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOut,
+              )),
+              child: child,
+            );
+          },
         );
       },
     ),
@@ -73,6 +99,14 @@ class App extends StatelessWidget {
       title: 'ゴルフ練習メモ',
       theme: AppTheme.light,
       routerConfig: _router,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ja', 'JP'),
+      ],
     );
   }
 }
