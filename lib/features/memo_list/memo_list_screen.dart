@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
+import '../../data/models/practice_memo.dart';
+import '../../data/repositories/club_repository.dart';
+import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/memo_card.dart';
 
 class MemoListScreen extends StatelessWidget {
@@ -69,14 +72,12 @@ class MemoListScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                // 記録一覧（現在の画面）
                 IconButton(
                   icon: const Icon(Icons.list_alt_outlined),
                   color: AppColors.primary,
                   onPressed: () {},
                 ),
-                const SizedBox(width: 48), // FABのスペース
-                // レポート
+                const SizedBox(width: 48),
                 IconButton(
                   icon: const Icon(Icons.trending_up_outlined),
                   color: AppColors.textSecondary,
@@ -92,102 +93,179 @@ class MemoListScreen extends StatelessWidget {
 }
 
 // ── すべてのメモ一覧 ──────────────────────────────────
-class _AllMemosTab extends StatelessWidget {
+class _AllMemosTab extends StatefulWidget {
   const _AllMemosTab();
 
   @override
-  Widget build(BuildContext context) {
-    // ※ 後でデータベースから実際のデータを取得します
-    // 現時点はレイアウト確認用のダミーデータです
-    final dummyGroups = [
-      {
-        'date': '1/12  金  2026',
-        'memos': [
-          {'club': 'ドライバー', 'distance': '270yd', 'body': 'ソールをまず地面につけた後、ちょっと浮かして構える！'},
-          {'club': '5W',        'distance': '220yd', 'body': '軸に乗せて、少し大きくテークバックしてハーフのつもりで振る。'},
-          {'club': '7I',        'distance': '160yd', 'body': '軸に乗せて、少し大きくテークバックしてハーフのつもりで振る。'},
-          {'club': '52°',       'distance': '30yd',  'body': null},
-        ],
-      },
-      {
-        'date': '1/4  木  2026',
-        'memos': [
-          {'club': 'ドライバー', 'distance': '270yd', 'body': 'ソールをまず地面につけた後、ちょっと浮かして構える！'},
-          {'club': '5W',        'distance': '220yd', 'body': '軸に乗せて、少し大きくテークバックしてハーフのつもりで振る。'},
-        ],
-      },
-    ];
+  State<_AllMemosTab> createState() => _AllMemosTabState();
+}
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 16, bottom: 80),
-      itemCount: dummyGroups.length,
-      itemBuilder: (context, groupIndex) {
-        final group = dummyGroups[groupIndex];
-        final memos = group['memos'] as List;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 日付ヘッダー
-            Padding(
-              padding: const EdgeInsets.only(left: 20, bottom: 8, top: 4),
-              child: Text(
-                group['date'] as String,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+class _AllMemosTabState extends State<_AllMemosTab> {
+  final _memoRepo = PracticeMemoRepository();
+  final _clubRepo = ClubRepository();
+
+  List<PracticeMemo> _memos = [];
+  Map<int, String> _clubNames = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final memos = await _memoRepo.getAllMemos();
+    final clubs = await _clubRepo.getActiveClubs();
+    setState(() {
+      _memos = memos;
+      _clubNames = {for (final c in clubs) c.id!: c.name};
+      _isLoading = false;
+    });
+  }
+
+  String _dateKey(DateTime dt) {
+    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+    final w = weekdays[dt.weekday - 1];
+    return '${dt.month}/${dt.day}  $w  ${dt.year}';
+  }
+
+  List<MapEntry<String, List<PracticeMemo>>> get _grouped {
+    final map = <String, List<PracticeMemo>>{};
+    for (final memo in _memos) {
+      final key = _dateKey(memo.practicedAt);
+      map.putIfAbsent(key, () => []).add(memo);
+    }
+    return map.entries.toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_memos.isEmpty) {
+      return const Center(
+        child: Text(
+          'まだ記録がありません\n＋ボタンから追加しましょう',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: AppColors.textSecondary, height: 1.8),
+        ),
+      );
+    }
+
+    final groups = _grouped;
+
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView.builder(
+        padding: const EdgeInsets.only(top: 16, bottom: 80),
+        itemCount: groups.length,
+        itemBuilder: (context, i) {
+          final key = groups[i].key;
+          final memos = groups[i].value;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 20, bottom: 8, top: 4),
+                child: Text(
+                  key,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
-            ),
-            // カード一覧
-            ...memos.map((memo) {
-              final m = memo as Map<String, dynamic>;
-              return MemoCard(
-                clubName: m['club'] as String,
-                distance: m['distance'] as String?,
-                bodyText: m['body'] as String?,
-                onTap: () => context.push('/memo/1'),
-              );
-            }),
-            const SizedBox(height: 8),
-          ],
-        );
-      },
+              ...memos.map((memo) => MemoCard(
+                    clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                    distance: memo.distance != null ? '${memo.distance}yd' : null,
+                    bodyText: memo.body,
+                    onTap: () => context.push('/memo/${memo.id}'),
+                  )),
+              const SizedBox(height: 8),
+            ],
+          );
+        },
+      ),
     );
   }
 }
 
 // ── お気に入り一覧 ────────────────────────────────────
-class _FavoriteMemosTab extends StatelessWidget {
+class _FavoriteMemosTab extends StatefulWidget {
   const _FavoriteMemosTab();
 
   @override
-  Widget build(BuildContext context) {
-    // ※ 後でデータベースから実際のデータを取得します
-    final dummyFavorites = [
-      {'date': '2026/1/12（金）',  'club': 'ドライバー', 'distance': '270yd', 'body': 'ソールをまず地面につけた後、ちょっと浮かして構える！'},
-      {'date': '2026/1/4（木）',   'club': 'ドライバー', 'distance': '270yd', 'body': 'ソールをまず地面につけた後、ちょっと浮かして構える！'},
-      {'date': '2025/12/24（水）', 'club': 'ドライバー', 'distance': '270yd', 'body': 'ソールをまず地面につけた後、ちょっと浮かして構える！'},
-    ];
+  State<_FavoriteMemosTab> createState() => _FavoriteMemosTabState();
+}
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 16, bottom: 80),
-      itemCount: dummyFavorites.length,
-      itemBuilder: (context, index) {
-        final item = dummyFavorites[index];
-        return _FavoriteMemoCard(
-          date: item['date']!,
-          clubName: item['club']!,
-          distance: item['distance'],
-          bodyText: item['body'],
-          onTap: () => context.push('/memo/1'),
-        );
-      },
+class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
+  final _memoRepo = PracticeMemoRepository();
+  final _clubRepo = ClubRepository();
+
+  List<PracticeMemo> _memos = [];
+  Map<int, String> _clubNames = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final memos = await _memoRepo.getFavoriteMemos();
+    final clubs = await _clubRepo.getActiveClubs();
+    setState(() {
+      _memos = memos;
+      _clubNames = {for (final c in clubs) c.id!: c.name};
+      _isLoading = false;
+    });
+  }
+
+  String _formatDate(DateTime dt) {
+    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+    final w = weekdays[dt.weekday - 1];
+    return '${dt.year}/${dt.month}/${dt.day}（$w）';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_memos.isEmpty) {
+      return const Center(
+        child: Text(
+          'お気に入りはまだありません',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView.builder(
+        padding: const EdgeInsets.only(top: 16, bottom: 80),
+        itemCount: _memos.length,
+        itemBuilder: (context, index) {
+          final memo = _memos[index];
+          return _FavoriteMemoCard(
+            date: _formatDate(memo.practicedAt),
+            clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+            distance: memo.distance != null ? '${memo.distance}yd' : null,
+            bodyText: memo.body,
+            onTap: () => context.push('/memo/${memo.id}'),
+          );
+        },
+      ),
     );
   }
 }
 
-// お気に入りタブ用カード（日付がカード内に表示される）
+// お気に入りタブ用カード
 class _FavoriteMemoCard extends StatelessWidget {
   final String date;
   final String clubName;
@@ -218,16 +296,11 @@ class _FavoriteMemoCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 日付
             Text(
               date,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 4),
-            // クラブ名 + インジケーター + 距離
             Row(
               children: [
                 Text(
@@ -251,24 +324,17 @@ class _FavoriteMemoCard extends StatelessWidget {
                 if (distance != null)
                   Text(
                     distance!,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
+                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                   ),
               ],
             ),
-            // メモ本文
             if (bodyText != null) ...[
               const SizedBox(height: 4),
               Text(
                 bodyText!,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                ),
+                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
             ],
           ],

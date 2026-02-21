@@ -7,6 +7,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../data/models/club.dart';
+import '../../data/models/media.dart';
+import '../../data/models/practice_memo.dart';
+import '../../data/repositories/club_repository.dart';
+import '../../data/repositories/media_repository.dart';
+import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/media_preview_screen.dart';
 
 // ──────────────────────────────────────────────────────
@@ -17,19 +23,19 @@ class MemoCreateScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // go_routerのコンテキストをここで保持
     final outerContext = context;
 
     return Navigator(
       onGenerateRoute: (_) => CupertinoPageRoute(
         builder: (ctx) => _ClubSelectPage(
           onClose: () => outerContext.pop(),
-          onClubSelected: (name) {
+          onClubSelected: (int clubId, String clubName) {
             Navigator.of(ctx).push(
               CupertinoPageRoute(
                 builder: (_) => _MemoInputPage(
-                  clubName: name,
-                  onSave: () => outerContext.go('/home'), // TODO: DBに保存
+                  clubId: clubId,
+                  clubName: clubName,
+                  onSave: () => outerContext.go('/home'),
                 ),
               ),
             );
@@ -41,10 +47,10 @@ class MemoCreateScreen extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────────────
-// クラブ選択ページ
+// クラブ選択ページ（DBから読み込み）
 // ──────────────────────────────────────────────────────
-class _ClubSelectPage extends StatelessWidget {
-  final ValueChanged<String> onClubSelected;
+class _ClubSelectPage extends StatefulWidget {
+  final void Function(int clubId, String clubName) onClubSelected;
   final VoidCallback onClose;
 
   const _ClubSelectPage({
@@ -52,23 +58,49 @@ class _ClubSelectPage extends StatelessWidget {
     required this.onClose,
   });
 
-  // ダミーデータ（後でDBから取得）
-  static const _clubGroups = [
-    {'category': 'ウッド',         'clubs': ['ドライバー', '3W', '5W']},
-    {'category': 'ユーティリティ', 'clubs': ['3U', '4U', '5U']},
-    {'category': 'アイアン',       'clubs': ['5I', '6I', '7I', '8I', '9I']},
-    {'category': 'ウェッジ',       'clubs': ['PW', 'AW', 'SW']},
-    {'category': 'その他',         'clubs': ['パター']},
-  ];
+  @override
+  State<_ClubSelectPage> createState() => _ClubSelectPageState();
+}
+
+class _ClubSelectPageState extends State<_ClubSelectPage> {
+  final _clubRepo = ClubRepository();
+  List<Map<String, dynamic>> _clubGroups = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClubs();
+  }
+
+  Future<void> _loadClubs() async {
+    final clubs = await _clubRepo.getActiveOnClubs();
+    final grouped = <String, List<Club>>{};
+    for (final club in clubs) {
+      grouped.putIfAbsent(club.category, () => []).add(club);
+    }
+    setState(() {
+      _clubGroups = grouped.entries
+          .map((e) => {'category': e.key, 'clubs': e.value})
+          .toList();
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          // ドラッグバー(1) + ヘッダー(1) + カテゴリ数 + 設定リンク(1)
           itemCount: _clubGroups.length + 3,
           itemBuilder: (context, index) {
             // ドラッグインジケーター
@@ -76,7 +108,7 @@ class _ClubSelectPage extends StatelessWidget {
               return const Center(child: _DragIndicator());
             }
 
-            // ヘッダー（× ボタン + タイトル）
+            // ヘッダー
             if (index == 1) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -94,7 +126,7 @@ class _ClubSelectPage extends StatelessWidget {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: GestureDetector(
-                        onTap: onClose,
+                        onTap: widget.onClose,
                         child: const Icon(Icons.close, color: AppColors.textPrimary),
                       ),
                     ),
@@ -103,13 +135,13 @@ class _ClubSelectPage extends StatelessWidget {
               );
             }
 
-            // 一番下：設定画面への動線
+            // 設定画面への動線
             if (index == _clubGroups.length + 2) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 28),
                 child: GestureDetector(
                   onTap: () {
-                    onClose();
+                    widget.onClose();
                     Future.microtask(() => context.push('/settings'));
                   },
                   child: const Row(
@@ -127,9 +159,9 @@ class _ClubSelectPage extends StatelessWidget {
               );
             }
 
-            // クラブグループ（カテゴリ + クラブ一覧）
+            // クラブグループ
             final group = _clubGroups[index - 2];
-            final clubs = group['clubs'] as List<String>;
+            final clubs = group['clubs'] as List<Club>;
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,13 +191,13 @@ class _ClubSelectPage extends StatelessWidget {
                               vertical: 2,
                             ),
                             title: Text(
-                              clubs[i],
+                              clubs[i].name,
                               style: const TextStyle(
                                 fontSize: 15,
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            onTap: () => onClubSelected(clubs[i]),
+                            onTap: () => widget.onClubSelected(clubs[i].id!, clubs[i].name),
                           ),
                           if (i < clubs.length - 1)
                             const Divider(
@@ -191,10 +223,12 @@ class _ClubSelectPage extends StatelessWidget {
 // メモ入力ページ
 // ──────────────────────────────────────────────────────
 class _MemoInputPage extends StatefulWidget {
+  final int clubId;
   final String clubName;
   final VoidCallback onSave;
 
   const _MemoInputPage({
+    required this.clubId,
     required this.clubName,
     required this.onSave,
   });
@@ -221,136 +255,15 @@ class _MemoInputPageState extends State<_MemoInputPage> {
   XFile? _video;
   String? _videoThumbnailPath;
 
+  // 保存処理
+  final _memoRepo = PracticeMemoRepository();
+  final _mediaRepo = MediaRepository();
+  bool _isSaving = false;
+
   @override
   void dispose() {
     _bodyController.dispose();
     super.dispose();
-  }
-
-  // メインのアクションシート（ライブラリ / カメラ の２択）
-  void _showMediaPicker() {
-    if (_images.length >= AppConstants.maxImagesPerMemo && _video != null) return;
-
-    showCupertinoModalPopup(
-      context: context,
-      builder: (ctx) => CupertinoActionSheet(
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _pickFromLibrary();
-            },
-            child: const Text('ライブラリから選ぶ'),
-          ),
-          CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _showCameraSheet();
-            },
-            child: const Text('写真を撮る'),
-          ),
-          // 開発用：動画UIの確認のためのダミーオプション
-          if (_video == null)
-            CupertinoActionSheetAction(
-              onPressed: () {
-                Navigator.pop(ctx);
-                _setDummyVideo();
-              },
-              child: const Text('【開発用】ダミー動画を追加'),
-            ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('キャンセル'),
-        ),
-      ),
-    );
-  }
-
-  // カメラで写真を撮影
-  void _showCameraSheet() {
-    _pickImage(ImageSource.camera);
-  }
-
-  // ライブラリから選ぶ（写真・動画どちらも選択可能）
-  Future<void> _pickFromLibrary() async {
-    final file = await _picker.pickMedia();
-    if (file == null) return;
-
-    if (_isVideoFile(file)) {
-      if (_video != null) return; // 動画は1本まで
-      await _setVideo(file);
-    } else {
-      if (_images.length >= AppConstants.maxImagesPerMemo) return;
-      setState(() => _images.add(file));
-    }
-  }
-
-  // ファイル拡張子で動画判定
-  bool _isVideoFile(XFile file) {
-    final ext = file.path.split('.').last.toLowerCase();
-    return ['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext);
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
-    final file = await _picker.pickImage(source: source, imageQuality: 80);
-    if (file == null) return;
-    setState(() => _images.add(file));
-  }
-
-  Future<void> _pickVideo(ImageSource source) async {
-    final file = await _picker.pickVideo(
-      source: source,
-      maxDuration: const Duration(seconds: AppConstants.maxVideoSeconds),
-    );
-    if (file == null) return;
-    await _setVideo(file);
-  }
-
-  // 動画をセットしてサムネイルを生成
-  Future<void> _setVideo(XFile file) async {
-    final dir = await getTemporaryDirectory();
-    final thumbnailPath = await VideoThumbnail.thumbnailFile(
-      video: file.path,
-      thumbnailPath: dir.path,
-      imageFormat: ImageFormat.JPEG,
-      quality: 75,
-    );
-    setState(() {
-      _video = file;
-      _videoThumbnailPath = thumbnailPath;
-    });
-  }
-
-  void _removeImage(int index) {
-    setState(() => _images.removeAt(index));
-  }
-
-  void _removeVideo() {
-    setState(() {
-      _video = null;
-      _videoThumbnailPath = null;
-    });
-  }
-
-  // プレビュー画面を表示
-  void _showPreview(File? file, {bool isVideo = false}) {
-    Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (_) => MediaPreviewScreen(file: file, isVideo: isVideo),
-      ),
-    );
-  }
-
-  // 開発用：動画UIを確認するためのダミーデータをセット
-  Future<void> _setDummyVideo() async {
-    final dir = await getTemporaryDirectory();
-    final dummyFile = File('${dir.path}/dummy_video.mp4');
-    await dummyFile.writeAsBytes([]);
-    setState(() {
-      _video = XFile(dummyFile.path);
-      _videoThumbnailPath = null; // サムネイルなし → プレースホルダー表示
-    });
   }
 
   String get _formattedDate {
@@ -371,7 +284,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
               alignment: Alignment.centerRight,
               child: CupertinoButton(
                 child: const Text('完了'),
-                // modalContext を使うことでモーダルだけを閉じる
                 onPressed: () => Navigator.pop(modalContext),
               ),
             ),
@@ -399,6 +311,209 @@ class _MemoInputPageState extends State<_MemoInputPage> {
     });
   }
 
+  // ── メディア ─────────────────────────────────────────
+
+  void _showMediaPicker() {
+    if (_images.length >= AppConstants.maxImagesPerMemo && _video != null) return;
+
+    showCupertinoModalPopup(
+      context: context,
+      builder: (ctx) => CupertinoActionSheet(
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _pickFromLibrary();
+            },
+            child: const Text('ライブラリから選ぶ'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _showCameraSheet();
+            },
+            child: const Text('写真を撮る'),
+          ),
+          if (_video == null)
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _setDummyVideo();
+              },
+              child: const Text('【開発用】ダミー動画を追加'),
+            ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('キャンセル'),
+        ),
+      ),
+    );
+  }
+
+  void _showCameraSheet() {
+    _pickImage(ImageSource.camera);
+  }
+
+  Future<void> _pickFromLibrary() async {
+    final file = await _picker.pickMedia();
+    if (file == null) return;
+
+    if (_isVideoFile(file)) {
+      if (_video != null) return;
+      await _setVideo(file);
+    } else {
+      if (_images.length >= AppConstants.maxImagesPerMemo) return;
+      setState(() => _images.add(file));
+    }
+  }
+
+  bool _isVideoFile(XFile file) {
+    final ext = file.path.split('.').last.toLowerCase();
+    return ['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext);
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final file = await _picker.pickImage(source: source, imageQuality: 80);
+    if (file == null) return;
+    setState(() => _images.add(file));
+  }
+
+  Future<void> _setVideo(XFile file) async {
+    final dir = await getTemporaryDirectory();
+    final thumbnailPath = await VideoThumbnail.thumbnailFile(
+      video: file.path,
+      thumbnailPath: dir.path,
+      imageFormat: ImageFormat.JPEG,
+      quality: 75,
+    );
+    setState(() {
+      _video = file;
+      _videoThumbnailPath = thumbnailPath;
+    });
+  }
+
+  void _removeImage(int index) {
+    setState(() => _images.removeAt(index));
+  }
+
+  void _removeVideo() {
+    setState(() {
+      _video = null;
+      _videoThumbnailPath = null;
+    });
+  }
+
+  void _showPreview(File? file, {bool isVideo = false}) {
+    Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        builder: (_) => MediaPreviewScreen(file: file, isVideo: isVideo),
+      ),
+    );
+  }
+
+  Future<void> _setDummyVideo() async {
+    final dir = await getTemporaryDirectory();
+    final dummyFile = File('${dir.path}/dummy_video.mp4');
+    await dummyFile.writeAsBytes([]);
+    setState(() {
+      _video = XFile(dummyFile.path);
+      _videoThumbnailPath = null;
+    });
+  }
+
+  // ── DB保存 ───────────────────────────────────────────
+
+  Future<void> _saveMemo() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+
+    try {
+      final now = DateTime.now();
+
+      // メモ保存
+      final memo = PracticeMemo(
+        clubId: widget.clubId,
+        practicedAt: _selectedDate,
+        body: _bodyController.text.isEmpty ? null : _bodyController.text,
+        condition: _condition,
+        distance: int.tryParse(_distance ?? ''),
+        shotShape: _shotShape,
+        wind: _wind,
+        isFavorite: false,
+        createdAt: now,
+      );
+      final savedMemo = await _memoRepo.insertMemo(memo);
+
+      // メディアファイルをdocumentsに永続保存
+      if (_images.isNotEmpty || _video != null) {
+        final docsDir = await getApplicationDocumentsDirectory();
+        final mediaDir = Directory('${docsDir.path}/media');
+        if (!await mediaDir.exists()) {
+          await mediaDir.create(recursive: true);
+        }
+
+        for (final image in _images) {
+          final ts = DateTime.now().microsecondsSinceEpoch;
+          final ext = image.path.split('.').last.toLowerCase();
+          final destPath = '${mediaDir.path}/img_$ts.$ext';
+          await File(image.path).copy(destPath);
+          await _mediaRepo.insertMedia(Media(
+            practiceMemoId: savedMemo.id!,
+            type: 'image',
+            uri: destPath,
+            createdAt: now,
+          ));
+        }
+
+        if (_video != null) {
+          final ts = DateTime.now().microsecondsSinceEpoch;
+          final ext = _video!.path.split('.').last.toLowerCase();
+          final vidDestPath = '${mediaDir.path}/vid_$ts.$ext';
+          // ダミーファイル（空）の場合はコピーしない
+          if (await File(_video!.path).length() > 0) {
+            await File(_video!.path).copy(vidDestPath);
+          }
+
+          String? thumbDestPath;
+          if (_videoThumbnailPath != null) {
+            thumbDestPath = '${mediaDir.path}/thumb_$ts.jpg';
+            await File(_videoThumbnailPath!).copy(thumbDestPath);
+          }
+
+          await _mediaRepo.insertMedia(Media(
+            practiceMemoId: savedMemo.id!,
+            type: 'video',
+            uri: vidDestPath,
+            thumbnailUri: thumbDestPath,
+            createdAt: now,
+          ));
+        }
+      }
+
+      widget.onSave();
+    } catch (e) {
+      setState(() => _isSaving = false);
+      if (mounted) {
+        showCupertinoDialog(
+          context: context,
+          builder: (ctx) => CupertinoAlertDialog(
+            title: const Text('保存に失敗しました'),
+            content: const Text('もう一度お試しください。'),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
+  // ── ビルド ───────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     final visibleItems = _showAllItems
@@ -407,7 +522,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      // 保存ボタンをbottomに固定することでスクロールエリアが常に全体を使える
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
@@ -415,22 +529,32 @@ class _MemoInputPageState extends State<_MemoInputPage> {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: widget.onSave,
+              onPressed: _isSaving ? null : _saveMemo,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
+                disabledBackgroundColor: AppColors.primary.withOpacity(0.6),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
                 elevation: 0,
               ),
-              child: const Text(
-                '保存',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      '保存',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ),
         ),
@@ -446,7 +570,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 戻るボタン
                     GestureDetector(
                       onTap: () => Navigator.of(context).pop(),
                       child: const Padding(
@@ -454,7 +577,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                         child: Icon(Icons.arrow_back, color: AppColors.textPrimary),
                       ),
                     ),
-                    // クラブ名
                     Text(
                       widget.clubName,
                       style: const TextStyle(
@@ -464,7 +586,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    // 日付 + カレンダーアイコン
                     GestureDetector(
                       onTap: _showDatePicker,
                       child: Row(
@@ -486,13 +607,12 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // メディアエリア（追加ボタン左固定・サムネイル右側）
+                    // メディアエリア（追加ボタン左固定）
                     SizedBox(
                       height: 72,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [
-                          // 追加ボタン（常に左側）
                           if (_images.length < AppConstants.maxImagesPerMemo ||
                               _video == null)
                             GestureDetector(
@@ -513,7 +633,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                                 ),
                               ),
                             ),
-                          // 選択済み画像
                           ..._images.asMap().entries.map((entry) {
                             final file = File(entry.value.path);
                             return _MediaThumbnail(
@@ -522,7 +641,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                               onTap: () => _showPreview(file),
                             );
                           }),
-                          // 選択済み動画
                           if (_video != null)
                             _MediaThumbnail(
                               file: _videoThumbnailPath != null
@@ -541,7 +659,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // メモ入力
                     TextField(
                       controller: _bodyController,
                       maxLines: null,
@@ -562,7 +679,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                     ),
                     const SizedBox(height: 8),
                     const Divider(color: AppColors.divider),
-                    // オプション項目
                     ...visibleItems.map((key) => _buildOptionalItem(key)),
                     if (!_showAllItems)
                       InkWell(
@@ -598,10 +714,10 @@ class _MemoInputPageState extends State<_MemoInputPage> {
     final isExpanded = _expandedItems.contains(key);
 
     final configs = {
-      'distance': (Icons.place_outlined,              '飛距離'),
-      'shotShape': (Icons.north_east,                 '球筋'),
-      'condition': (Icons.sentiment_satisfied_outlined, '調子'),
-      'wind':      (Icons.air,                        '風'),
+      'distance':  (Icons.place_outlined,               '飛距離'),
+      'shotShape': (Icons.north_east,                   '球筋'),
+      'condition': (Icons.sentiment_satisfied_outlined,  '調子'),
+      'wind':      (Icons.air,                           '風'),
     };
 
     final (icon, label) = configs[key]!;
@@ -617,10 +733,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
               children: [
                 Icon(icon, size: 18, color: AppColors.textSecondary),
                 const SizedBox(width: 10),
-                Text(
-                  label,
-                  style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
-                ),
+                Text(label, style: const TextStyle(fontSize: 15, color: AppColors.textPrimary)),
                 const Spacer(),
                 if (isExpanded)
                   const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
@@ -740,10 +853,10 @@ class _ChipSelector extends StatelessWidget {
 // メディアサムネイル
 // ──────────────────────────────────────────────────────
 class _MediaThumbnail extends StatelessWidget {
-  final File? file;   // nullの場合はプレースホルダー表示
+  final File? file;
   final bool isVideo;
   final VoidCallback onRemove;
-  final VoidCallback? onTap;  // タップでプレビュー表示
+  final VoidCallback? onTap;
 
   const _MediaThumbnail({
     required this.file,
@@ -777,14 +890,12 @@ class _MediaThumbnail extends StatelessWidget {
             ),
           ),
         ),
-        // 動画アイコン（サムネイルあり時のみ重ねる）
         if (isVideo && file != null)
           const Positioned(
             bottom: 4,
             left: 4,
             child: Icon(Icons.play_circle_filled, size: 20, color: Colors.white),
           ),
-        // 削除ボタン
         Positioned(
           top: -6,
           right: 2,
