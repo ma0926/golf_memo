@@ -1,8 +1,13 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../shared/widgets/media_preview_screen.dart';
 
 // ──────────────────────────────────────────────────────
 // ルート：ローカルNavigatorでクラブ選択→フォームを管理
@@ -210,10 +215,142 @@ class _MemoInputPageState extends State<_MemoInputPage> {
   String? _condition;
   String? _wind;
 
+  // メディア
+  final _picker = ImagePicker();
+  final List<XFile> _images = [];
+  XFile? _video;
+  String? _videoThumbnailPath;
+
   @override
   void dispose() {
     _bodyController.dispose();
     super.dispose();
+  }
+
+  // メインのアクションシート（ライブラリ / カメラ の２択）
+  void _showMediaPicker() {
+    if (_images.length >= AppConstants.maxImagesPerMemo && _video != null) return;
+
+    showCupertinoModalPopup(
+      context: context,
+      builder: (ctx) => CupertinoActionSheet(
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _pickFromLibrary();
+            },
+            child: const Text('ライブラリから選ぶ'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _showCameraSheet();
+            },
+            child: const Text('写真を撮る'),
+          ),
+          // 開発用：動画UIの確認のためのダミーオプション
+          if (_video == null)
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _setDummyVideo();
+              },
+              child: const Text('【開発用】ダミー動画を追加'),
+            ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('キャンセル'),
+        ),
+      ),
+    );
+  }
+
+  // カメラで写真を撮影
+  void _showCameraSheet() {
+    _pickImage(ImageSource.camera);
+  }
+
+  // ライブラリから選ぶ（写真・動画どちらも選択可能）
+  Future<void> _pickFromLibrary() async {
+    final file = await _picker.pickMedia();
+    if (file == null) return;
+
+    if (_isVideoFile(file)) {
+      if (_video != null) return; // 動画は1本まで
+      await _setVideo(file);
+    } else {
+      if (_images.length >= AppConstants.maxImagesPerMemo) return;
+      setState(() => _images.add(file));
+    }
+  }
+
+  // ファイル拡張子で動画判定
+  bool _isVideoFile(XFile file) {
+    final ext = file.path.split('.').last.toLowerCase();
+    return ['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext);
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final file = await _picker.pickImage(source: source, imageQuality: 80);
+    if (file == null) return;
+    setState(() => _images.add(file));
+  }
+
+  Future<void> _pickVideo(ImageSource source) async {
+    final file = await _picker.pickVideo(
+      source: source,
+      maxDuration: const Duration(seconds: AppConstants.maxVideoSeconds),
+    );
+    if (file == null) return;
+    await _setVideo(file);
+  }
+
+  // 動画をセットしてサムネイルを生成
+  Future<void> _setVideo(XFile file) async {
+    final dir = await getTemporaryDirectory();
+    final thumbnailPath = await VideoThumbnail.thumbnailFile(
+      video: file.path,
+      thumbnailPath: dir.path,
+      imageFormat: ImageFormat.JPEG,
+      quality: 75,
+    );
+    setState(() {
+      _video = file;
+      _videoThumbnailPath = thumbnailPath;
+    });
+  }
+
+  void _removeImage(int index) {
+    setState(() => _images.removeAt(index));
+  }
+
+  void _removeVideo() {
+    setState(() {
+      _video = null;
+      _videoThumbnailPath = null;
+    });
+  }
+
+  // プレビュー画面を表示
+  void _showPreview(File? file, {bool isVideo = false}) {
+    Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        builder: (_) => MediaPreviewScreen(file: file, isVideo: isVideo),
+      ),
+    );
+  }
+
+  // 開発用：動画UIを確認するためのダミーデータをセット
+  Future<void> _setDummyVideo() async {
+    final dir = await getTemporaryDirectory();
+    final dummyFile = File('${dir.path}/dummy_video.mp4');
+    await dummyFile.writeAsBytes([]);
+    setState(() {
+      _video = XFile(dummyFile.path);
+      _videoThumbnailPath = null; // サムネイルなし → プレースホルダー表示
+    });
   }
 
   String get _formattedDate {
@@ -349,19 +486,58 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // 画像追加ボタン
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.divider),
-                      ),
-                      child: const Icon(
-                        Icons.add_photo_alternate_outlined,
-                        color: AppColors.textSecondary,
-                        size: 24,
+                    // メディアエリア（追加ボタン左固定・サムネイル右側）
+                    SizedBox(
+                      height: 72,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          // 追加ボタン（常に左側）
+                          if (_images.length < AppConstants.maxImagesPerMemo ||
+                              _video == null)
+                            GestureDetector(
+                              onTap: _showMediaPicker,
+                              child: Container(
+                                width: 72,
+                                height: 72,
+                                margin: const EdgeInsets.only(right: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: AppColors.divider),
+                                ),
+                                child: const Icon(
+                                  Icons.add_photo_alternate_outlined,
+                                  color: AppColors.textSecondary,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          // 選択済み画像
+                          ..._images.asMap().entries.map((entry) {
+                            final file = File(entry.value.path);
+                            return _MediaThumbnail(
+                              file: file,
+                              onRemove: () => _removeImage(entry.key),
+                              onTap: () => _showPreview(file),
+                            );
+                          }),
+                          // 選択済み動画
+                          if (_video != null)
+                            _MediaThumbnail(
+                              file: _videoThumbnailPath != null
+                                  ? File(_videoThumbnailPath!)
+                                  : null,
+                              isVideo: true,
+                              onRemove: _removeVideo,
+                              onTap: () => _showPreview(
+                                _videoThumbnailPath != null
+                                    ? File(_videoThumbnailPath!)
+                                    : null,
+                                isVideo: true,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -556,6 +732,75 @@ class _ChipSelector extends StatelessWidget {
           );
         }).toList(),
       ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────
+// メディアサムネイル
+// ──────────────────────────────────────────────────────
+class _MediaThumbnail extends StatelessWidget {
+  final File? file;   // nullの場合はプレースホルダー表示
+  final bool isVideo;
+  final VoidCallback onRemove;
+  final VoidCallback? onTap;  // タップでプレビュー表示
+
+  const _MediaThumbnail({
+    required this.file,
+    required this.onRemove,
+    this.isVideo = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: 72,
+            height: 72,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: AppColors.divider,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: file != null
+                  ? Image.file(file!, fit: BoxFit.cover)
+                  : const Center(
+                      child: Icon(Icons.videocam, size: 32, color: AppColors.textSecondary),
+                    ),
+            ),
+          ),
+        ),
+        // 動画アイコン（サムネイルあり時のみ重ねる）
+        if (isVideo && file != null)
+          const Positioned(
+            bottom: 4,
+            left: 4,
+            child: Icon(Icons.play_circle_filled, size: 20, color: Colors.white),
+          ),
+        // 削除ボタン
+        Positioned(
+          top: -6,
+          right: 2,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close, size: 12, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

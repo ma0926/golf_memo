@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../shared/widgets/media_preview_screen.dart';
 
 class MemoDetailScreen extends StatefulWidget {
   final int memoId;
@@ -256,12 +258,22 @@ class _ImageGallery extends StatelessWidget {
             itemCount: imagePaths.length,
             onPageChanged: onPageChanged,
             itemBuilder: (context, index) {
-              return ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  color: AppColors.divider, // TODO: 実際の画像に差し替え
-                  child: const Center(
-                    child: Icon(Icons.image, size: 48, color: AppColors.textSecondary),
+              return GestureDetector(
+                onTap: () {
+                  // TODO: 実際のファイルパスに差し替え（現在はダミー）
+                  Navigator.of(context, rootNavigator: true).push(
+                    MaterialPageRoute(
+                      builder: (_) => const MediaPreviewScreen(file: null),
+                    ),
+                  );
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    color: AppColors.divider, // TODO: 実際の画像に差し替え
+                    child: const Center(
+                      child: Icon(Icons.image, size: 48, color: AppColors.textSecondary),
+                    ),
                   ),
                 ),
               );
