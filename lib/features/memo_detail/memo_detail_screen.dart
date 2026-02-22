@@ -63,9 +63,10 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
       builder: (context) => CupertinoActionSheet(
         actions: [
           CupertinoActionSheetAction(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              // TODO: 編集画面へ遷移
+              final result = await context.push<bool>('/memo/${widget.memoId}/edit');
+              if (result == true && mounted) _load();
             },
             child: const Text('編集'),
           ),
@@ -146,7 +147,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 22),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 22),
           onPressed: () => context.pop(),
         ),
         actions: [

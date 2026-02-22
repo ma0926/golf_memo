@@ -41,9 +41,13 @@ class PracticeMemoRepository {
   Future<List<PracticeMemo>> searchMemos({
     int? clubId,
     String? condition,
-    String? shotShape,
+    List<String>? shotShapes,
     String? keyword,
     bool? isFavorite,
+    DateTime? practicedBefore,
+    int? distanceMin,
+    int? distanceMax,
+    bool? hasAttachment,
   }) async {
     final db = await _db.database;
     final conditions = <String>[];
@@ -57,9 +61,10 @@ class PracticeMemoRepository {
       conditions.add('condition = ?');
       args.add(condition);
     }
-    if (shotShape != null) {
-      conditions.add('shot_shape = ?');
-      args.add(shotShape);
+    if (shotShapes != null && shotShapes.isNotEmpty) {
+      final placeholders = shotShapes.map((_) => '?').join(',');
+      conditions.add('shot_shape IN ($placeholders)');
+      args.addAll(shotShapes);
     }
     if (keyword != null && keyword.isNotEmpty) {
       conditions.add('body LIKE ?');
@@ -67,6 +72,23 @@ class PracticeMemoRepository {
     }
     if (isFavorite == true) {
       conditions.add('is_favorite = 1');
+    }
+    if (practicedBefore != null) {
+      conditions.add('practiced_at <= ?');
+      args.add(practicedBefore.toIso8601String());
+    }
+    if (distanceMin != null) {
+      conditions.add('distance >= ?');
+      args.add(distanceMin);
+    }
+    if (distanceMax != null) {
+      conditions.add('distance <= ?');
+      args.add(distanceMax);
+    }
+    if (hasAttachment == true) {
+      conditions.add(
+        'practice_memo_id IN (SELECT practice_memo_id FROM media)',
+      );
     }
 
     final maps = await db.query(

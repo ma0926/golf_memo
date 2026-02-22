@@ -9,6 +9,7 @@ import 'features/onboarding/onboarding_screen.dart';
 import 'features/memo_list/memo_list_screen.dart';
 import 'features/memo_detail/memo_detail_screen.dart';
 import 'features/memo_create/memo_create_screen.dart';
+import 'features/memo_edit/memo_edit_screen.dart';
 import 'features/search/search_screen.dart';
 import 'features/report/report_screen.dart';
 import 'features/settings/settings_screen.dart';
@@ -50,7 +51,29 @@ final _router = GoRouter(
         },
       ),
     ),
-    // 記録詳細（下からスライドアップ）
+    // 記録編集（下からスライドアップ）
+    GoRoute(
+      path: '/memo/:id/edit',
+      pageBuilder: (context, state) {
+        final id = int.parse(state.pathParameters['id']!);
+        return CustomTransitionPage(
+          child: MemoEditScreen(memoId: id),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOut,
+              )),
+              child: child,
+            );
+          },
+        );
+      },
+    ),
+    // 記録詳細（右からスライドイン）
     GoRoute(
       path: '/memo/:id',
       pageBuilder: (context, state) {
@@ -60,7 +83,7 @@ final _router = GoRouter(
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: Tween<Offset>(
-                begin: const Offset(0, 1),
+                begin: const Offset(1, 0),
                 end: Offset.zero,
               ).animate(CurvedAnimation(
                 parent: animation,

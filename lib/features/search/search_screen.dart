@@ -1,8 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../data/models/club.dart';
+import '../../data/models/practice_memo.dart';
+import '../../data/repositories/club_repository.dart';
+import '../../data/repositories/practice_memo_repository.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -18,7 +21,8 @@ class _SearchScreenState extends State<SearchScreen> {
   // フィルター状態
   bool _isFavorite = false;
   bool _hasAttachment = false;
-  String? _selectedClub;
+  int? _selectedClubId;
+  String? _selectedClubName;
   String? _selectedDate;     // 'month1' / 'month6' / 'year1' / null
   int? _distanceMin;
   int? _distanceMax;
@@ -52,10 +56,11 @@ class _SearchScreenState extends State<SearchScreen> {
         .map((k) => AppConstants.shotShapeLabels[k] ?? k)
         .join(', ');
   }
+
   bool get _hasAnyFilter =>
       _isFavorite ||
       _hasAttachment ||
-      _selectedClub != null ||
+      _selectedClubId != null ||
       _selectedDate != null ||
       _distanceMin != null ||
       _distanceMax != null ||
@@ -65,7 +70,6 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    // 画面を開いたら自動でキーボードを表示
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _searchFocusNode.requestFocus();
     });
@@ -83,9 +87,15 @@ class _SearchScreenState extends State<SearchScreen> {
     _showFilterSheet(
       title: 'クラブ',
       child: _ClubFilterContent(
-        selected: _selectedClub,
-        onApply: (value) => setState(() => _selectedClub = value),
-        onClear: () => setState(() => _selectedClub = null),
+        selectedId: _selectedClubId,
+        onApply: (id, name) => setState(() {
+          _selectedClubId = id;
+          _selectedClubName = name;
+        }),
+        onClear: () => setState(() {
+          _selectedClubId = null;
+          _selectedClubName = null;
+        }),
       ),
     );
   }
@@ -204,7 +214,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               controller: _searchController,
                               focusNode: _searchFocusNode,
                               decoration: const InputDecoration(
-                                hintText: 'キーワードが入ります',
+                                hintText: 'キーワード検索',
                                 hintStyle: TextStyle(
                                   fontSize: 14,
                                   color: AppColors.textSecondary,
@@ -267,9 +277,9 @@ class _SearchScreenState extends State<SearchScreen> {
                   const SizedBox(width: 8),
                   _FilterChip(
                     label: 'クラブ',
-                    isSelected: _selectedClub != null,
+                    isSelected: _selectedClubId != null,
                     showArrow: true,
-                    selectedLabel: _selectedClub,
+                    selectedLabel: _selectedClubName,
                     onTap: _openClubSheet,
                   ),
                   const SizedBox(width: 8),
@@ -313,7 +323,17 @@ class _SearchScreenState extends State<SearchScreen> {
             // 検索結果
             Expanded(
               child: _hasResults
-                  ? _SearchResultsList(keyword: _searchController.text)
+                  ? _SearchResultsList(
+                      keyword: _searchController.text,
+                      isFavorite: _isFavorite,
+                      hasAttachment: _hasAttachment,
+                      clubId: _selectedClubId,
+                      selectedDate: _selectedDate,
+                      distanceMin: _distanceMin,
+                      distanceMax: _distanceMax,
+                      condition: _selectedCondition,
+                      shotShapes: _selectedShotShapes,
+                    )
                   : const SizedBox.shrink(),
             ),
           ],
@@ -328,8 +348,8 @@ class _FilterChip extends StatelessWidget {
   final String label;
   final bool isSelected;
   final bool showArrow;
-  final bool isToggle;       // trueの場合は黒塗りスタイル（お気に入り・添付ファイル）
-  final String? selectedLabel; // 選択済みの場合に表示する値
+  final bool isToggle;
+  final String? selectedLabel;
   final VoidCallback onTap;
 
   const _FilterChip({
@@ -343,10 +363,8 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // トグルチップ（お気に入り・添付ファイル）は選択時に黒塗り
     final isDropdownSelected = isSelected && !isToggle;
 
-    final bgColor = Colors.white;
     final borderColor = (isToggle && isSelected) || isDropdownSelected
         ? AppColors.primary
         : AppColors.divider;
@@ -363,7 +381,7 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: bgColor,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: borderColor),
         ),
@@ -380,11 +398,7 @@ class _FilterChip extends StatelessWidget {
             ),
             if (showArrow) ...[
               const SizedBox(width: 2),
-              Icon(
-                Icons.keyboard_arrow_down,
-                size: 14,
-                color: textColor,
-              ),
+              Icon(Icons.keyboard_arrow_down, size: 14, color: textColor),
             ],
           ],
         ),
@@ -412,7 +426,6 @@ class _FilterSheetWrapper extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ドラッグインジケーター
           Container(
             margin: const EdgeInsets.symmetric(vertical: 10),
             width: 36,
@@ -439,28 +452,148 @@ class _FilterSheetWrapper extends StatelessWidget {
   }
 }
 
-// ── 検索結果リスト ────────────────────────────────────
-class _SearchResultsList extends StatelessWidget {
+// ── 検索結果リスト（DBから取得） ──────────────────────
+class _SearchResultsList extends StatefulWidget {
   final String keyword;
+  final bool isFavorite;
+  final bool hasAttachment;
+  final int? clubId;
+  final String? selectedDate;
+  final int? distanceMin;
+  final int? distanceMax;
+  final String? condition;
+  final Set<String> shotShapes;
 
-  const _SearchResultsList({required this.keyword});
+  const _SearchResultsList({
+    required this.keyword,
+    required this.isFavorite,
+    required this.hasAttachment,
+    required this.clubId,
+    required this.selectedDate,
+    required this.distanceMin,
+    required this.distanceMax,
+    required this.condition,
+    required this.shotShapes,
+  });
 
-  // ダミーデータ（後でDBから取得）
-  static const _dummyResults = [
-    {'date': '2026/1/12（金）', 'club': 'ドライバー', 'distance': '270yd', 'body': 'ソールをまず地面につけた後、ちょっと浮かして構える！'},
-    {'date': '2026/1/4（木）',  'club': 'ドライバー', 'distance': '270yd', 'body': 'ソールをまず地面につけた後、ちょっと浮かして構える！'},
-    {'date': '2025/12/24（水）','club': 'ドライバー', 'distance': '270yd', 'body': 'ソールをまず地面につけた後、ちょっと浮かして構える！'},
-  ];
+  @override
+  State<_SearchResultsList> createState() => _SearchResultsListState();
+}
+
+class _SearchResultsListState extends State<_SearchResultsList> {
+  final _memoRepo = PracticeMemoRepository();
+  final _clubRepo = ClubRepository();
+
+  List<PracticeMemo> _results = [];
+  Map<int, String> _clubNames = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _search();
+  }
+
+  @override
+  void didUpdateWidget(_SearchResultsList old) {
+    super.didUpdateWidget(old);
+    final shotShapesChanged = widget.shotShapes.length != old.shotShapes.length ||
+        !widget.shotShapes.containsAll(old.shotShapes);
+    if (widget.keyword != old.keyword ||
+        widget.isFavorite != old.isFavorite ||
+        widget.hasAttachment != old.hasAttachment ||
+        widget.clubId != old.clubId ||
+        widget.selectedDate != old.selectedDate ||
+        widget.distanceMin != old.distanceMin ||
+        widget.distanceMax != old.distanceMax ||
+        widget.condition != old.condition ||
+        shotShapesChanged) {
+      _search();
+    }
+  }
+
+  Future<void> _search() async {
+    setState(() => _isLoading = true);
+
+    // 記録日フィルターを日付に変換
+    DateTime? practicedBefore;
+    final now = DateTime.now();
+    switch (widget.selectedDate) {
+      case 'month1':
+        practicedBefore = now.subtract(const Duration(days: 30));
+      case 'month6':
+        practicedBefore = now.subtract(const Duration(days: 180));
+      case 'year1':
+        practicedBefore = now.subtract(const Duration(days: 365));
+    }
+
+    final results = await _memoRepo.searchMemos(
+      keyword: widget.keyword.isEmpty ? null : widget.keyword,
+      isFavorite: widget.isFavorite ? true : null,
+      hasAttachment: widget.hasAttachment ? true : null,
+      clubId: widget.clubId,
+      practicedBefore: practicedBefore,
+      distanceMin: widget.distanceMin,
+      distanceMax: widget.distanceMax,
+      condition: widget.condition,
+      shotShapes: widget.shotShapes.isEmpty ? null : widget.shotShapes.toList(),
+    );
+
+    // 結果に含まれるクラブ名を一括取得
+    final clubMap = <int, String>{};
+    if (results.isNotEmpty) {
+      final allClubs = await _clubRepo.getActiveClubs();
+      for (final c in allClubs) {
+        clubMap[c.id!] = c.name;
+      }
+      // 削除済みクラブは個別に取得
+      for (final memo in results) {
+        if (!clubMap.containsKey(memo.clubId)) {
+          final club = await _clubRepo.getClubById(memo.clubId);
+          if (club != null) clubMap[memo.clubId] = club.name;
+        }
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _results = results;
+        _clubNames = clubMap;
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _formatDate(DateTime dt) {
+    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+    final w = weekdays[dt.weekday - 1];
+    return '${dt.year}/${dt.month}/${dt.day}（$w）';
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_results.isEmpty) {
+      return const Center(
+        child: Text(
+          '記録が見つかりませんでした',
+          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+        ),
+      );
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: _dummyResults.length,
+      itemCount: _results.length,
       itemBuilder: (context, index) {
-        final item = _dummyResults[index];
+        final memo = _results[index];
+        final clubName = _clubNames[memo.clubId] ?? '不明なクラブ';
+
         return GestureDetector(
-          onTap: () => context.push('/memo/1'),
+          onTap: () => context.push('/memo/${memo.id}'),
           child: Container(
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.all(14),
@@ -473,14 +606,14 @@ class _SearchResultsList extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['date']!,
+                  _formatDate(memo.practicedAt),
                   style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     Text(
-                      item['club']!,
+                      clubName,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -488,19 +621,25 @@ class _SearchResultsList extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    Text(
-                      item['distance']!,
-                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                    ),
+                    if (memo.distance != null)
+                      Text(
+                        '${memo.distance}yd',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  item['body']!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                ),
+                if (memo.body != null && memo.body!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    memo.body!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  ),
+                ],
               ],
             ),
           ),
@@ -510,36 +649,68 @@ class _SearchResultsList extends StatelessWidget {
   }
 }
 
-// ── クラブ選択フィルター（シングルセレクト・即閉じ） ────
-class _ClubFilterContent extends StatelessWidget {
-  final String? selected;
-  final ValueChanged<String?> onApply;
+// ── クラブ選択フィルター（DBから読み込み） ──────────────
+class _ClubFilterContent extends StatefulWidget {
+  final int? selectedId;
+  final void Function(int id, String name) onApply;
   final VoidCallback onClear;
 
   const _ClubFilterContent({
-    required this.selected,
+    required this.selectedId,
     required this.onApply,
     required this.onClear,
   });
 
-  static const _clubs = ['ドライバー', '3W', '5W', '3U', '4U', '5I', '6I', '7I', '8I', '9I', 'PW', 'AW', 'SW', 'パター'];
+  @override
+  State<_ClubFilterContent> createState() => _ClubFilterContentState();
+}
+
+class _ClubFilterContentState extends State<_ClubFilterContent> {
+  final _clubRepo = ClubRepository();
+  List<Club> _clubs = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClubs();
+  }
+
+  Future<void> _loadClubs() async {
+    final clubs = await _clubRepo.getActiveClubs();
+    setState(() {
+      _clubs = clubs;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const SizedBox(
+        height: 120,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return SizedBox(
       height: 280,
       child: ListView(
         children: _clubs.map((club) {
-          final isSelected = selected == club;
+          final isSelected = widget.selectedId == club.id;
           return Column(
             children: [
               ListTile(
-                title: Text(club),
+                title: Text(club.name),
                 trailing: isSelected
                     ? const Icon(Icons.check, color: AppColors.primary)
                     : null,
                 onTap: () {
-                  onApply(isSelected ? null : club);
+                  if (isSelected) {
+                    widget.onClear();
+                  } else {
+                    widget.onApply(club.id!, club.name);
+                  }
                   Navigator.pop(context);
                 },
               ),
@@ -700,7 +871,7 @@ class _DistanceFilterContentState extends State<_DistanceFilterContent> {
   }
 }
 
-// ── 調子フィルター（シングルセレクト・即閉じ） ──────────
+// ── 調子フィルター ────────────────────────────────────
 class _ConditionFilterContent extends StatelessWidget {
   final String? selected;
   final ValueChanged<String?> onApply;
@@ -753,7 +924,7 @@ class _ConditionFilterContent extends StatelessWidget {
   }
 }
 
-// ── 球筋フィルター（マルチセレクト・ボタンなし） ────────
+// ── 球筋フィルター（マルチセレクト） ─────────────────────
 class _ShotShapeFilterContent extends StatefulWidget {
   final Set<String> selected;
   final ValueChanged<Set<String>> onChanged;
@@ -800,7 +971,9 @@ class _ShotShapeFilterContentState extends State<_ShotShapeFilterContent> {
               width: (MediaQuery.of(context).size.width - 52) / 3,
               padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.white,
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.1)
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: isSelected ? AppColors.primary : AppColors.divider,
