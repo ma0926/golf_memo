@@ -13,6 +13,8 @@ import 'features/memo_edit/memo_edit_screen.dart';
 import 'features/search/search_screen.dart';
 import 'features/report/report_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/settings/club_settings_screen.dart';
+import 'features/settings/custom_club_screen.dart';
 
 final _router = GoRouter(
   initialLocation: '/splash',
@@ -123,6 +125,24 @@ final _router = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+    // 練習するクラブ
+    GoRoute(
+      path: '/settings/clubs',
+      builder: (context, state) => const ClubSettingsScreen(),
+    ),
+    // カスタムクラブ新規作成（:clubId より先に定義する必要あり）
+    GoRoute(
+      path: '/settings/clubs/new',
+      builder: (context, state) => const CustomClubScreen(),
+    ),
+    // カスタムクラブ編集
+    GoRoute(
+      path: '/settings/clubs/:clubId/edit',
+      builder: (context, state) {
+        final id = int.parse(state.pathParameters['clubId']!);
+        return CustomClubScreen(clubId: id);
+      },
     ),
   ],
 );
