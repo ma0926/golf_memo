@@ -203,14 +203,6 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
             },
             child: const Text('写真を撮る'),
           ),
-          if (!_hasActiveVideo)
-            CupertinoActionSheetAction(
-              onPressed: () {
-                Navigator.pop(ctx);
-                _setDummyVideo();
-              },
-              child: const Text('【開発用】ダミー動画を追加'),
-            ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(ctx),
@@ -283,16 +275,6 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _setDummyVideo() async {
-    final dir = await getTemporaryDirectory();
-    final dummyFile = File('${dir.path}/dummy_video.mp4');
-    await dummyFile.writeAsBytes([]);
-    setState(() {
-      _newVideo = XFile(dummyFile.path);
-      _newVideoThumbnailPath = null;
-    });
   }
 
   // ── 保存 ─────────────────────────────────────────────

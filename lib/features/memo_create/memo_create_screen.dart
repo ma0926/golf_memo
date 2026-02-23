@@ -330,18 +330,10 @@ class _MemoInputPageState extends State<_MemoInputPage> {
           CupertinoActionSheetAction(
             onPressed: () {
               Navigator.pop(ctx);
-              _showCameraSheet();
+              _pickImage(ImageSource.camera);
             },
             child: const Text('写真を撮る'),
           ),
-          if (_video == null)
-            CupertinoActionSheetAction(
-              onPressed: () {
-                Navigator.pop(ctx);
-                _setDummyVideo();
-              },
-              child: const Text('【開発用】ダミー動画を追加'),
-            ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(ctx),
@@ -349,10 +341,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
         ),
       ),
     );
-  }
-
-  void _showCameraSheet() {
-    _pickImage(ImageSource.camera);
   }
 
   Future<void> _pickFromLibrary() async {
@@ -414,16 +402,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
         ),
       ),
     );
-  }
-
-  Future<void> _setDummyVideo() async {
-    final dir = await getTemporaryDirectory();
-    final dummyFile = File('${dir.path}/dummy_video.mp4');
-    await dummyFile.writeAsBytes([]);
-    setState(() {
-      _video = XFile(dummyFile.path);
-      _videoThumbnailPath = null;
-    });
   }
 
   // ── DB保存 ───────────────────────────────────────────
