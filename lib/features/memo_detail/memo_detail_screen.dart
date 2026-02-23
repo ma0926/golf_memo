@@ -30,7 +30,6 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
   List<Media> _mediaList = [];
   bool _isLoading = true;
   bool _isFavorite = false;
-  int _currentImageIndex = 0;
 
   @override
   void initState() {
@@ -137,8 +136,6 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
     }
 
     final memo = _memo!;
-    final images = _mediaList.where((m) => m.isImage).toList();
-    final video = _mediaList.where((m) => m.isVideo).firstOrNull;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -204,18 +201,10 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
                 ),
               ),
             ],
-            // 画像ギャラリー
-            if (images.isNotEmpty) ...[
+            // メディア横並び
+            if (_mediaList.isNotEmpty) ...[
               const SizedBox(height: 24),
-              _MediaGallery(
-                images: images,
-                video: video,
-                currentIndex: _currentImageIndex,
-                onPageChanged: (i) => setState(() => _currentImageIndex = i),
-              ),
-            ] else if (video != null) ...[
-              const SizedBox(height: 24),
-              _VideoThumbnailItem(video: video),
+              _MediaRow(mediaList: _mediaList),
             ],
           ],
         ),
@@ -283,146 +272,69 @@ class _MetaChip extends StatelessWidget {
   }
 }
 
-// ── 画像ギャラリー ──────────────────────────────────────
-class _MediaGallery extends StatelessWidget {
-  final List<Media> images;
-  final Media? video;
-  final int currentIndex;
-  final ValueChanged<int> onPageChanged;
+// ── メディア横並びサムネイル ────────────────────────────
+class _MediaRow extends StatelessWidget {
+  final List<Media> mediaList;
 
-  const _MediaGallery({
-    required this.images,
-    required this.video,
-    required this.currentIndex,
-    required this.onPageChanged,
-  });
+  const _MediaRow({required this.mediaList});
 
   @override
   Widget build(BuildContext context) {
-    final items = [...images, if (video != null) video!];
+    return SizedBox(
+      height: 108,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: mediaList.length,
+        separatorBuilder: (_, i) => const SizedBox(width: 4),
+        itemBuilder: (context, index) {
+          final item = mediaList[index];
+          final isVideo = item.isVideo;
+          final thumbFile = isVideo && item.thumbnailUri != null
+              ? File(item.thumbnailUri!)
+              : null;
+          final imageFile = !isVideo ? File(item.uri) : null;
 
-    return Column(
-      children: [
-        SizedBox(
-          height: 220,
-          child: PageView.builder(
-            itemCount: items.length,
-            onPageChanged: onPageChanged,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              final isVideo = item.isVideo;
-              final thumbFile = isVideo && item.thumbnailUri != null
-                  ? File(item.thumbnailUri!)
-                  : null;
-              final imageFile = !isVideo ? File(item.uri) : null;
-
-              return GestureDetector(
-                onTap: () {
-                  Navigator.of(context, rootNavigator: true).push(
-                    MaterialPageRoute(
-                      builder: (_) => MediaPreviewScreen(
-                        file: thumbFile ?? imageFile,
-                        isVideo: isVideo,
-                        videoPath: isVideo ? item.uri : null,
-                      ),
-                    ),
-                  );
-                },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      if (imageFile != null)
-                        Image.file(imageFile, fit: BoxFit.cover)
-                      else if (thumbFile != null)
-                        Image.file(thumbFile, fit: BoxFit.cover)
-                      else
-                        Container(
-                          color: AppColors.divider,
-                          child: const Center(
-                            child: Icon(Icons.videocam, size: 48, color: AppColors.textSecondary),
-                          ),
-                        ),
-                      if (isVideo)
-                        const Center(
-                          child: Icon(Icons.play_circle_filled, size: 48, color: Colors.white70),
-                        ),
-                    ],
+          return GestureDetector(
+            onTap: () {
+              Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute(
+                  builder: (_) => MediaPreviewScreen(
+                    file: thumbFile ?? imageFile,
+                    isVideo: isVideo,
+                    videoPath: isVideo ? item.uri : null,
                   ),
                 ),
               );
             },
-          ),
-        ),
-        if (items.length > 1) ...[
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(items.length, (index) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: index == currentIndex ? 16 : 6,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: index == currentIndex
-                      ? AppColors.textPrimary
-                      : AppColors.divider,
-                  borderRadius: BorderRadius.circular(2),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                width: 108,
+                height: 108,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (imageFile != null)
+                      Image.file(imageFile, fit: BoxFit.cover)
+                    else if (thumbFile != null)
+                      Image.file(thumbFile, fit: BoxFit.cover)
+                    else
+                      Container(
+                        color: AppColors.divider,
+                        child: const Center(
+                          child: Icon(Icons.videocam, size: 36, color: AppColors.textSecondary),
+                        ),
+                      ),
+                    if (isVideo)
+                      const Center(
+                        child: Icon(Icons.play_circle_filled, size: 36, color: Colors.white70),
+                      ),
+                  ],
                 ),
-              );
-            }),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-// 動画のみの場合のサムネイル表示
-class _VideoThumbnailItem extends StatelessWidget {
-  final Media video;
-
-  const _VideoThumbnailItem({required this.video});
-
-  @override
-  Widget build(BuildContext context) {
-    final thumbFile = video.thumbnailUri != null ? File(video.thumbnailUri!) : null;
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context, rootNavigator: true).push(
-          MaterialPageRoute(
-            builder: (_) => MediaPreviewScreen(
-                  file: thumbFile,
-                  isVideo: true,
-                  videoPath: video.uri,
-                ),
-          ),
-        );
-      },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          height: 220,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (thumbFile != null)
-                Image.file(thumbFile, fit: BoxFit.cover)
-              else
-                Container(
-                  color: AppColors.divider,
-                  child: const Center(
-                    child: Icon(Icons.videocam, size: 48, color: AppColors.textSecondary),
-                  ),
-                ),
-              const Center(
-                child: Icon(Icons.play_circle_filled, size: 48, color: Colors.white70),
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
