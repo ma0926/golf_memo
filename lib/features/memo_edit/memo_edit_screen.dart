@@ -213,16 +213,28 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
   }
 
   Future<void> _pickFromLibrary() async {
-    final file = await _picker.pickMedia();
-    if (file == null) return;
+    final remainingImages = AppConstants.maxImagesPerMemo - _totalImageCount;
+    final limit = remainingImages + (!_hasActiveVideo ? 1 : 0);
+    if (limit <= 0) return;
 
-    if (_isVideoFile(file)) {
-      if (_hasActiveVideo) return;
-      await _setNewVideo(file);
-    } else {
-      if (_totalImageCount >= AppConstants.maxImagesPerMemo) return;
-      setState(() => _newImages.add(file));
+    final files = await _picker.pickMultipleMedia(limit: limit);
+    if (files.isEmpty) return;
+
+    final newImages = <XFile>[];
+    XFile? newVideo;
+
+    for (final file in files) {
+      if (_isVideoFile(file)) {
+        if (!_hasActiveVideo && newVideo == null) newVideo = file;
+      } else {
+        if (_totalImageCount + newImages.length < AppConstants.maxImagesPerMemo) {
+          newImages.add(file);
+        }
+      }
     }
+
+    if (newImages.isNotEmpty) setState(() => _newImages.addAll(newImages));
+    if (newVideo != null) await _setNewVideo(newVideo);
   }
 
   bool _isVideoFile(XFile file) {

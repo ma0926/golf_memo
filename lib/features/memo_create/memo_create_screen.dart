@@ -344,16 +344,30 @@ class _MemoInputPageState extends State<_MemoInputPage> {
   }
 
   Future<void> _pickFromLibrary() async {
-    final file = await _picker.pickMedia();
-    if (file == null) return;
+    final remainingImages = AppConstants.maxImagesPerMemo - _images.length;
+    final limit = remainingImages + (_video == null ? 1 : 0);
+    if (limit <= 0) return;
 
-    if (_isVideoFile(file)) {
-      if (_video != null) return;
-      await _setVideo(file);
-    } else {
-      if (_images.length >= AppConstants.maxImagesPerMemo) return;
-      setState(() => _images.add(file));
+    final files = await _picker.pickMultipleMedia(limit: limit);
+    if (files.isEmpty) return;
+
+    final newImages = <XFile>[];
+    XFile? newVideo;
+
+    for (final file in files) {
+      if (_isVideoFile(file)) {
+        // 動画スロットが空で、まだ動画を選んでいなければ追加
+        if (_video == null && newVideo == null) newVideo = file;
+      } else {
+        // 画像スロットが残っていれば追加
+        if (_images.length + newImages.length < AppConstants.maxImagesPerMemo) {
+          newImages.add(file);
+        }
+      }
     }
+
+    if (newImages.isNotEmpty) setState(() => _images.addAll(newImages));
+    if (newVideo != null) await _setVideo(newVideo);
   }
 
   bool _isVideoFile(XFile file) {
