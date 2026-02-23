@@ -21,6 +21,7 @@ class MediaPreviewScreen extends StatefulWidget {
 class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
   VideoPlayerController? _controller;
   bool _initialized = false;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -31,17 +32,27 @@ class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
   }
 
   Future<void> _initVideo() async {
+    final path = widget.videoPath!;
+    final file = File(path);
+
+    // ファイルが存在しない場合はエラー扱い
+    if (!file.existsSync()) {
+      debugPrint('[VideoPlayer] ファイルが見つかりません: $path');
+      if (mounted) setState(() => _hasError = true);
+      return;
+    }
+
     try {
-      final controller = VideoPlayerController.file(File(widget.videoPath!));
+      final controller = VideoPlayerController.file(file);
       _controller = controller;
       await controller.initialize();
       if (mounted) {
         setState(() => _initialized = true);
         controller.play();
       }
-    } catch (_) {
-      // 読み込み失敗時はサムネイル表示にフォールバック
-      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('[VideoPlayer] 初期化エラー: $e\nパス: $path');
+      if (mounted) setState(() => _hasError = true);
     }
   }
 
@@ -97,8 +108,8 @@ class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
           InteractiveViewer(
             child: Image.file(widget.file!, fit: BoxFit.contain),
           ),
-        // videoPathがある場合はローディング、ない場合は再生アイコン
-        if (widget.videoPath != null)
+        // 読み込み中のみスピナー。エラーまたはパス未指定は再生アイコン
+        if (widget.videoPath != null && !_hasError)
           const CircularProgressIndicator(color: Colors.white)
         else
           const Icon(Icons.play_circle_outline, size: 72, color: Colors.white70),
