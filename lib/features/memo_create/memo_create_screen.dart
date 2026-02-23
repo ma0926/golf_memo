@@ -348,18 +348,25 @@ class _MemoInputPageState extends State<_MemoInputPage> {
     final limit = remainingImages + (_video == null ? 1 : 0);
     if (limit <= 0) return;
 
-    final files = await _picker.pickMultipleMedia(limit: limit);
-    if (files.isEmpty) return;
+    // limit==1 のとき pickMultipleMedia(limit:1) が iOS で動作しない場合があるため
+    // 単体選択用の pickMedia() にフォールバック
+    final List<XFile> files;
+    if (limit == 1) {
+      final file = await _picker.pickMedia();
+      if (file == null) return;
+      files = [file];
+    } else {
+      files = await _picker.pickMultipleMedia(limit: limit);
+      if (files.isEmpty) return;
+    }
 
     final newImages = <XFile>[];
     XFile? newVideo;
 
     for (final file in files) {
       if (_isVideoFile(file)) {
-        // 動画スロットが空で、まだ動画を選んでいなければ追加
         if (_video == null && newVideo == null) newVideo = file;
       } else {
-        // 画像スロットが残っていれば追加
         if (_images.length + newImages.length < AppConstants.maxImagesPerMemo) {
           newImages.add(file);
         }

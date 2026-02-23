@@ -217,8 +217,15 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
     final limit = remainingImages + (!_hasActiveVideo ? 1 : 0);
     if (limit <= 0) return;
 
-    final files = await _picker.pickMultipleMedia(limit: limit);
-    if (files.isEmpty) return;
+    final List<XFile> files;
+    if (limit == 1) {
+      final file = await _picker.pickMedia();
+      if (file == null) return;
+      files = [file];
+    } else {
+      files = await _picker.pickMultipleMedia(limit: limit);
+      if (files.isEmpty) return;
+    }
 
     final newImages = <XFile>[];
     XFile? newVideo;
