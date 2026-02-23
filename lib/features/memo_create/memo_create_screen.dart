@@ -404,10 +404,14 @@ class _MemoInputPageState extends State<_MemoInputPage> {
     });
   }
 
-  void _showPreview(File? file, {bool isVideo = false}) {
+  void _showPreview(File? file, {bool isVideo = false, String? videoPath}) {
     Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
-        builder: (_) => MediaPreviewScreen(file: file, isVideo: isVideo),
+        builder: (_) => MediaPreviewScreen(
+          file: file,
+          isVideo: isVideo,
+          videoPath: videoPath,
+        ),
       ),
     );
   }
@@ -653,6 +657,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                                     ? File(_videoThumbnailPath!)
                                     : null,
                                 isVideo: true,
+                                videoPath: _video?.path,
                               ),
                             ),
                         ],

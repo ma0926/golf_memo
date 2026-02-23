@@ -323,6 +323,7 @@ class _MediaGallery extends StatelessWidget {
                       builder: (_) => MediaPreviewScreen(
                         file: thumbFile ?? imageFile,
                         isVideo: isVideo,
+                        videoPath: isVideo ? item.uri : null,
                       ),
                     ),
                   );
@@ -392,7 +393,11 @@ class _VideoThumbnailItem extends StatelessWidget {
       onTap: () {
         Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
-            builder: (_) => MediaPreviewScreen(file: thumbFile, isVideo: true),
+            builder: (_) => MediaPreviewScreen(
+                  file: thumbFile,
+                  isVideo: true,
+                  videoPath: video.uri,
+                ),
           ),
         );
       },

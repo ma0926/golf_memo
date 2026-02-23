@@ -273,10 +273,14 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
     });
   }
 
-  void _showPreview(File? file, {bool isVideo = false}) {
+  void _showPreview(File? file, {bool isVideo = false, String? videoPath}) {
     Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
-        builder: (_) => MediaPreviewScreen(file: file, isVideo: isVideo),
+        builder: (_) => MediaPreviewScreen(
+          file: file,
+          isVideo: isVideo,
+          videoPath: videoPath,
+        ),
       ),
     );
   }
@@ -570,6 +574,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                               ? File(activeExistingVideo.thumbnailUri!)
                               : null,
                           isVideo: true,
+                          videoPath: activeExistingVideo.uri,
                         ),
                       ),
                     // 新規画像
@@ -594,6 +599,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                               ? File(_newVideoThumbnailPath!)
                               : null,
                           isVideo: true,
+                          videoPath: _newVideo?.path,
                         ),
                       ),
                   ],
