@@ -55,38 +55,6 @@ class MemoListScreen extends StatelessWidget {
             _FavoriteMemosTab(),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => context.push('/memo/create'),
-          backgroundColor: AppColors.primary,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.add, color: Colors.white, size: 28),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        bottomNavigationBar: BottomAppBar(
-          color: Colors.white,
-          elevation: 8,
-          shape: const CircularNotchedRectangle(),
-          notchMargin: 8,
-          child: SizedBox(
-            height: 56,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.list_alt_outlined),
-                  color: AppColors.primary,
-                  onPressed: () {},
-                ),
-                const SizedBox(width: 48),
-                IconButton(
-                  icon: const Icon(Icons.trending_up_outlined),
-                  color: AppColors.textSecondary,
-                  onPressed: () => context.push('/report'),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

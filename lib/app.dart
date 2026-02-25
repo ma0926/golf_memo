@@ -1,7 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'core/constants/app_colors.dart';
 import 'core/theme/app_theme.dart';
 
 import 'features/splash/splash_screen.dart';
@@ -29,10 +29,28 @@ final _router = GoRouter(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
     ),
-    // ホーム（タブ付き記録一覧）
-    GoRoute(
-      path: '/home',
-      builder: (context, state) => const MemoListScreen(),
+    // ホーム・レポートをシェルで包み、ボトムナビを固定する
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) =>
+          _ScaffoldWithNav(navigationShell: navigationShell),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/home',
+              builder: (context, state) => const MemoListScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/report',
+              builder: (context, state) => const ReportScreen(),
+            ),
+          ],
+        ),
+      ],
     ),
     // 記録作成（下からスライドアップ・:idより先に定義する必要あり）
     GoRoute(
@@ -116,11 +134,6 @@ final _router = GoRouter(
         },
       ),
     ),
-    // レポート
-    GoRoute(
-      path: '/report',
-      builder: (context, state) => const ReportScreen(),
-    ),
     // 設定
     GoRoute(
       path: '/settings',
@@ -146,6 +159,64 @@ final _router = GoRouter(
     ),
   ],
 );
+
+// ── ボトムナビゲーション共有シェル ────────────────────
+class _ScaffoldWithNav extends StatelessWidget {
+  final StatefulNavigationShell navigationShell;
+
+  const _ScaffoldWithNav({required this.navigationShell});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: navigationShell,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push('/memo/create'),
+        backgroundColor: AppColors.primary,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.white,
+        elevation: 8,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        child: SizedBox(
+          height: 56,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                icon: Icon(
+                  navigationShell.currentIndex == 0
+                      ? Icons.list_alt_outlined
+                      : Icons.list_alt_outlined,
+                ),
+                color: navigationShell.currentIndex == 0
+                    ? AppColors.primary
+                    : AppColors.textSecondary,
+                onPressed: () => navigationShell.goBranch(0),
+              ),
+              const SizedBox(width: 48),
+              IconButton(
+                icon: Icon(
+                  navigationShell.currentIndex == 1
+                      ? Icons.trending_up
+                      : Icons.trending_up_outlined,
+                ),
+                color: navigationShell.currentIndex == 1
+                    ? AppColors.primary
+                    : AppColors.textSecondary,
+                onPressed: () => navigationShell.goBranch(1),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class App extends StatelessWidget {
   const App({super.key});

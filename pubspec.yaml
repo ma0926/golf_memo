@@ -57,6 +57,9 @@ dependencies:
   # 初回起動フラグなどの簡易設定保存
   shared_preferences: ^2.3.4
 
+  # グラフ描画
+  fl_chart: ^0.69.0
+
   # 画面遷移
   go_router: ^14.6.2
 
