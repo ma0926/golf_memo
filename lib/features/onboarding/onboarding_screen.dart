@@ -19,7 +19,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   List<Club> _clubs = [];
   String _selectedTab = 'すべて';
-  final Set<String> _expandedCategories = {};
   bool _isLoading = true;
 
   static const _tabs = ['すべて', ...AppConstants.clubCategories];
@@ -200,14 +199,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildCategoryGroup(String category, List<Club> clubs) {
-    final isExpanded = _expandedCategories.contains(category);
-    final onClubs = clubs.where((c) => c.isActive).toList();
-
-    final displayClubs =
-        (isExpanded || onClubs.isEmpty) ? clubs : onClubs;
-    final hasHidden =
-        !isExpanded && onClubs.isNotEmpty && clubs.length > onClubs.length;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -215,8 +206,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           padding: const EdgeInsets.only(top: 16, bottom: 6, left: 4),
           child: Text(
             category,
-            style: const TextStyle(
-                fontSize: 13, color: AppColors.textSecondary),
+            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
         ),
         Container(
@@ -225,51 +215,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Column(
-            children: [
-              ...List.generate(displayClubs.length, (i) {
-                final club = displayClubs[i];
-                return Column(
-                  children: [
-                    ListTile(
-                      title: Text(
-                        club.name,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      trailing: CupertinoSwitch(
-                        value: club.isActive,
-                        onChanged: (v) => _toggleClub(club, v),
-                        activeTrackColor: Colors.green,
+            children: List.generate(clubs.length, (i) {
+              final club = clubs[i];
+              return Column(
+                children: [
+                  ListTile(
+                    title: Text(
+                      club.name,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                    if (i < displayClubs.length - 1 || hasHidden)
-                      const Divider(
-                          height: 0.5,
-                          indent: 16,
-                          color: AppColors.divider),
-                  ],
-                );
-              }),
-              if (hasHidden)
-                InkWell(
-                  onTap: () =>
-                      setState(() => _expandedCategories.add(category)),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'すべて表示',
-                        style:
-                            TextStyle(fontSize: 14, color: Colors.blue),
-                      ),
+                    trailing: CupertinoSwitch(
+                      value: club.isActive,
+                      onChanged: (v) => _toggleClub(club, v),
+                      activeTrackColor: Colors.green,
                     ),
                   ),
-                ),
-            ],
+                  if (i < clubs.length - 1)
+                    const Divider(height: 0.5, indent: 16, color: AppColors.divider),
+                ],
+              );
+            }),
           ),
         ),
       ],

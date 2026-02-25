@@ -18,7 +18,6 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
 
   List<Club> _clubs = [];
   String _selectedTab = 'すべて';
-  final Set<String> _expandedCategories = {};
   bool _isLoading = true;
 
   static const _tabs = ['すべて', ...AppConstants.clubCategories];
@@ -177,13 +176,6 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
   }
 
   Widget _buildCategoryGroup(String category, List<Club> clubs) {
-    final isExpanded = _expandedCategories.contains(category);
-    final onClubs = clubs.where((c) => c.isActive).toList();
-
-    // ONのクラブが0件の場合は全件表示（折りたたむと何も見えなくなるため）
-    final displayClubs = (isExpanded || onClubs.isEmpty) ? clubs : onClubs;
-    final hasHidden = !isExpanded && onClubs.isNotEmpty && clubs.length > onClubs.length;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -200,53 +192,35 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Column(
-            children: [
-              ...List.generate(displayClubs.length, (i) {
-                final club = displayClubs[i];
-                return Column(
-                  children: [
-                    ListTile(
-                      title: Text(
-                        club.name,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      trailing: CupertinoSwitch(
-                        value: club.isActive,
-                        onChanged: (v) => _toggleClub(club, v),
-                        activeTrackColor: Colors.green,
-                      ),
-                      // カスタムクラブはタップで編集画面へ
-                      onTap: club.isCustom
-                          ? () async {
-                              await context.push('/settings/clubs/${club.id}/edit');
-                              _load();
-                            }
-                          : null,
-                    ),
-                    if (i < displayClubs.length - 1 || hasHidden)
-                      const Divider(height: 0.5, indent: 16, color: AppColors.divider),
-                  ],
-                );
-              }),
-              // すべて表示リンク
-              if (hasHidden)
-                InkWell(
-                  onTap: () => setState(() => _expandedCategories.add(category)),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'すべて表示',
-                        style: TextStyle(fontSize: 14, color: Colors.blue),
+            children: List.generate(clubs.length, (i) {
+              final club = clubs[i];
+              return Column(
+                children: [
+                  ListTile(
+                    title: Text(
+                      club.name,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: AppColors.textPrimary,
                       ),
                     ),
+                    trailing: CupertinoSwitch(
+                      value: club.isActive,
+                      onChanged: (v) => _toggleClub(club, v),
+                      activeTrackColor: Colors.green,
+                    ),
+                    onTap: club.isCustom
+                        ? () async {
+                            await context.push('/settings/clubs/${club.id}/edit');
+                            _load();
+                          }
+                        : null,
                   ),
-                ),
-            ],
+                  if (i < clubs.length - 1)
+                    const Divider(height: 0.5, indent: 16, color: AppColors.divider),
+                ],
+              );
+            }),
           ),
         ),
       ],
