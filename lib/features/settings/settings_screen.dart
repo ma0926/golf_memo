@@ -12,6 +12,11 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 22),
+          onPressed: () => context.pop(),
+        ),
         title: const Text(
           '設定',
           style: TextStyle(
@@ -25,11 +30,11 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // 練習するクラブ
+          // 練習クラブ
           _SettingsGroup(
             children: [
               _SettingsRow(
-                label: '練習するクラブ',
+                label: '練習クラブ',
                 onTap: () => context.push('/settings/clubs'),
               ),
             ],
@@ -46,9 +51,10 @@ class SettingsScreen extends StatelessWidget {
           _SettingsGroup(
             children: [
               _SettingsRow(label: 'お問い合わせ', onTap: () {}),
-              _SettingsRow(label: '利用規約', onTap: () {}),
-              _SettingsRow(label: 'プライバシーポリシー', onTap: () {}),
-              _SettingsRow(label: 'ライセンス', onTap: () {}),
+              _SettingsRow(
+                label: '規約・ライセンス',
+                onTap: () => context.push('/settings/terms'),
+              ),
             ],
           ),
         ],

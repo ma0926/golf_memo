@@ -15,6 +15,7 @@ import 'features/report/report_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/settings/club_settings_screen.dart';
 import 'features/settings/custom_club_screen.dart';
+import 'features/settings/terms_screen.dart';
 
 final _router = GoRouter(
   initialLocation: '/splash',
@@ -143,6 +144,11 @@ final _router = GoRouter(
     GoRoute(
       path: '/settings/clubs',
       builder: (context, state) => const ClubSettingsScreen(),
+    ),
+    // 規約・ライセンス
+    GoRoute(
+      path: '/settings/terms',
+      builder: (context, state) => const TermsScreen(),
     ),
     // カスタムクラブ新規作成（:clubId より先に定義する必要あり）
     GoRoute(
