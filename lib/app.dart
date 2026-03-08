@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -94,7 +95,7 @@ final _router = GoRouter(
         );
       },
     ),
-    // 記録詳細（右からスライドイン）
+    // 記録詳細（Container Transform 近似: FadeScale）
     GoRoute(
       path: '/memo/:id',
       pageBuilder: (context, state) {
@@ -102,43 +103,44 @@ final _router = GoRouter(
         return CustomTransitionPage(
           child: MemoDetailScreen(memoId: id),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(1, 0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOut,
-              )),
-              child: child,
-            );
+            return FadeScaleTransition(animation: animation, child: child);
           },
         );
       },
     ),
-    // 検索（下からスライドアップ）
+    // 検索（Container Transform: スケール＋フェード）
     GoRoute(
       path: '/search',
       pageBuilder: (context, state) => CustomTransitionPage(
         child: const SearchScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 1),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOut,
-            )),
-            child: child,
+          final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
+          return FadeTransition(
+            opacity: curved,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.92, end: 1.0).animate(curved),
+              child: child,
+            ),
           );
         },
       ),
     ),
-    // 設定
+    // 設定（Container Transform: スケール＋フェード）
     GoRoute(
       path: '/settings',
-      builder: (context, state) => const SettingsScreen(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        child: const SettingsScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
+          return FadeTransition(
+            opacity: curved,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.92, end: 1.0).animate(curved),
+              child: child,
+            ),
+          );
+        },
+      ),
     ),
     // 練習するクラブ
     GoRoute(
@@ -180,6 +182,7 @@ class _ScaffoldWithNav extends StatelessWidget {
         onPressed: () => context.push('/memo/create'),
         backgroundColor: AppColors.primary,
         shape: const CircleBorder(),
+        elevation: 3,
         child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -230,7 +233,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'ゴルフ練習メモ',
+      title: 'PIN',
       theme: AppTheme.light,
       routerConfig: _router,
       localizationsDelegates: const [

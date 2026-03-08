@@ -70,7 +70,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
   Future<void> _load() async {
     final memo = await _memoRepo.getMemoById(widget.memoId);
     if (memo == null) {
-      if (mounted) context.pop();
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
       return;
     }
     final club = await _clubRepo.getClubById(memo.clubId);
@@ -379,7 +379,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
         }
       }
 
-      if (mounted) context.pop(true);
+      if (mounted) Navigator.of(context, rootNavigator: true).pop(true);
     } catch (e) {
       setState(() => _isSaving = false);
       if (mounted) {
@@ -427,7 +427,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: AppColors.textPrimary),
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
         ),
         title: const Text(
           '編集',

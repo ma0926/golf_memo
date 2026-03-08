@@ -10,6 +10,7 @@ import '../../data/repositories/club_repository.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/media_preview_screen.dart';
+import '../memo_edit/memo_edit_screen.dart';
 
 class MemoDetailScreen extends StatefulWidget {
   final int memoId;
@@ -64,7 +65,20 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
           CupertinoActionSheetAction(
             onPressed: () async {
               Navigator.pop(context);
-              final result = await context.push<bool>('/memo/${widget.memoId}/edit');
+              final size = MediaQuery.of(context).size;
+              final result = await showModalBottomSheet<bool>(
+                context: context,
+                isScrollControlled: true,
+                useRootNavigator: true,
+                useSafeArea: false,
+                backgroundColor: Colors.transparent,
+                constraints: BoxConstraints(maxHeight: size.height * 0.92),
+                builder: (_) => ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: MemoEditScreen(memoId: widget.memoId),
+                ),
+              );
               if (result == true && mounted) _load();
             },
             child: const Text('編集'),

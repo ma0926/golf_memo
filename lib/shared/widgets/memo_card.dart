@@ -1,13 +1,17 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
 // 記録一覧の1枚のカード
+// OpenContainer の closedBuilder 内で使う場合は onTap を省略する
 class MemoCard extends StatelessWidget {
   final String clubName;
-  final String? distance;    // 例: "270yd"
-  final String? bodyText;    // メモ本文（省略表示）
-  final String? thumbnailPath; // サムネイル画像パス（任意）
-  final VoidCallback onTap;
+  final String? distance;
+  final String? bodyText;
+  final String? thumbnailPath;
+  final bool isFavorite;
+  final VoidCallback? onTap;          // null のとき GestureDetector を使わない
+  final VoidCallback? onToggleFavorite;
 
   const MemoCard({
     super.key,
@@ -15,93 +19,128 @@ class MemoCard extends StatelessWidget {
     this.distance,
     this.bodyText,
     this.thumbnailPath,
-    required this.onTap,
+    this.isFavorite = false,
+    this.onTap,
+    this.onToggleFavorite,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.divider, width: 0.8),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 左側：クラブ名・距離・メモ
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // クラブ名 + 距離
-                  Row(
-                    children: [
-                      Text(
-                        clubName,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      // 調子インジケーター（グリーンの四角）
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const Spacer(),
-                      if (distance != null)
-                        Text(
-                          distance!,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                    ],
+    final content = Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.divider, width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D0C0C0D),
+            offset: Offset(0, 1),
+            blurRadius: 4,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // クラブ名 + 飛距離
+          Row(
+            children: [
+              Text(
+                clubName,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const Spacer(),
+              if (distance != null)
+                Text(
+                  distance!,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
-                  // メモ本文（1行で省略）
-                  if (bodyText != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      bodyText!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 本文 + サムネイル
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (bodyText != null)
+                      Text(
+                        bodyText!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textBody,
+                          height: 1.5,
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    // ブックマークボタン（タップは OpenContainer のタップと独立させる）
+                    GestureDetector(
+                      onTap: onToggleFavorite,
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundMiddle,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                          size: 18,
+                          color: isFavorite
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ],
-                ],
-              ),
-            ),
-            // 右側：サムネイル（あれば表示）
-            if (thumbnailPath != null) ...[
-              const SizedBox(width: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: Image.asset(
-                  thumbnailPath!,
-                  width: 52,
-                  height: 52,
-                  fit: BoxFit.cover,
                 ),
               ),
+              if (thumbnailPath != null) ...[
+                const SizedBox(width: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    File(thumbnailPath!),
+                    width: 81,
+                    height: 81,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 81,
+                      height: 81,
+                      color: AppColors.backgroundMiddle,
+                    ),
+                  ),
+                ),
+              ],
             ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
+
+    // onTap が指定されている場合のみ GestureDetector でラップ
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: content,
+      );
+    }
+    return content;
   }
 }
