@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/practice_memo.dart';
@@ -31,17 +32,18 @@ class MemoListScreen extends StatelessWidget {
             'メモ一覧',
             style: TextStyle(
               fontSize: 24,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w900,
+              fontFamily: 'Hiragino Sans',
               color: AppColors.textPrimary,
             ),
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.settings_outlined, color: AppColors.primary),
+              icon: Image.asset('assets/icons/settings.png', width: 28, height: 28),
               onPressed: () => context.push('/settings'),
             ),
             IconButton(
-              icon: const Icon(Icons.search, color: AppColors.primary),
+              icon: Image.asset('assets/icons/search.png', width: 28, height: 28),
               onPressed: () => context.push('/search'),
             ),
             const SizedBox(width: 4),
@@ -49,21 +51,27 @@ class MemoListScreen extends StatelessWidget {
           bottom: const TabBar(
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textSecondary,
-            indicatorColor: AppColors.primary,
-            indicatorWeight: 3,
+            indicator: const UnderlineTabIndicator(
+              borderSide: BorderSide(color: AppColors.primary, width: 2.0),
+              borderRadius: BorderRadius.zero,
+              insets: EdgeInsets.symmetric(horizontal: 16),
+            ),
+            indicatorSize: TabBarIndicatorSize.tab,
             dividerColor: Color(0xFF4B5E96),
             dividerHeight: 0.3,
             labelStyle: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Hiragino Sans',
             ),
             unselectedLabelStyle: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Hiragino Sans',
             ),
             tabs: [
-              Tab(text: 'すべて'),
-              Tab(text: 'お気に入り'),
+              Tab(text: 'すべて', height: 38),
+              Tab(text: 'お気に入り', height: 38),
             ],
           ),
         ),
@@ -220,18 +228,18 @@ class _DateHeader extends StatelessWidget {
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppColors.textMedium,
+              height: 0.8,
             ),
           ),
           const SizedBox(width: 8),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 2),
-            child: Row(
+          Row(
               children: [
                 Text(
                   weekday,
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
+                    height: 1.0,
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -240,11 +248,11 @@ class _DateHeader extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
+                    height: 1.0,
                   ),
                 ),
               ],
             ),
-          ),
         ],
       ),
     );

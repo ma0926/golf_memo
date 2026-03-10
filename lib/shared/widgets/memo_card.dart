@@ -51,7 +51,8 @@ class MemoCard extends StatelessWidget {
                 clubName,
                 style: const TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Hiragino Sans',
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -61,7 +62,8 @@ class MemoCard extends StatelessWidget {
                   distance!,
                   style: const TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Hiragino Sans',
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -83,6 +85,7 @@ class MemoCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 14,
+                          fontFamily: 'Hiragino Sans',
                           color: AppColors.textBody,
                           height: 1.5,
                         ),
@@ -120,11 +123,7 @@ class MemoCard extends StatelessWidget {
                     width: 81,
                     height: 81,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 81,
-                      height: 81,
-                      color: AppColors.backgroundMiddle,
-                    ),
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                   ),
                 ),
               ],

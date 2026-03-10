@@ -1,6 +1,7 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'core/constants/app_colors.dart';
 import 'core/theme/app_theme.dart';
@@ -168,6 +169,21 @@ final _router = GoRouter(
   ],
 );
 
+// FABをNavBar上辺から16px上に出すカスタム位置
+class _CenterAboveNavBar extends FloatingActionButtonLocation {
+  const _CenterAboveNavBar();
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    final double fabX = (scaffoldGeometry.scaffoldSize.width -
+            scaffoldGeometry.floatingActionButtonSize.width) /
+        2.0;
+    // FAB bottom = contentBottom + diameter - 16 → FAB top = contentBottom - 16
+    final double fabY = scaffoldGeometry.contentBottom - 16.0;
+    return Offset(fabX, fabY);
+  }
+}
+
 // ── ボトムナビゲーション共有シェル ────────────────────
 class _ScaffoldWithNav extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -183,45 +199,71 @@ class _ScaffoldWithNav extends StatelessWidget {
         backgroundColor: AppColors.primary,
         shape: const CircleBorder(),
         elevation: 3,
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        elevation: 8,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        child: SizedBox(
-          height: 56,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              IconButton(
-                icon: Icon(
-                  navigationShell.currentIndex == 0
-                      ? Icons.list_alt_outlined
-                      : Icons.list_alt_outlined,
-                ),
-                color: navigationShell.currentIndex == 0
-                    ? AppColors.primary
-                    : AppColors.textSecondary,
-                onPressed: () => navigationShell.goBranch(0),
-              ),
-              const SizedBox(width: 48),
-              IconButton(
-                icon: Icon(
-                  navigationShell.currentIndex == 1
-                      ? Icons.trending_up
-                      : Icons.trending_up_outlined,
-                ),
-                color: navigationShell.currentIndex == 1
-                    ? AppColors.primary
-                    : AppColors.textSecondary,
-                onPressed: () => navigationShell.goBranch(1),
-              ),
-            ],
-          ),
+        child: SvgPicture.asset(
+          'assets/icons/add_2.svg',
+          width: 24,
+          height: 24,
         ),
+      ),
+      floatingActionButtonLocation: const _CenterAboveNavBar(),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            height: 0.33,
+            color: const Color(0x4D000000), // #000000 30%opacity
+          ),
+          BottomAppBar(
+            color: Colors.white,
+            elevation: 8,
+            padding: EdgeInsets.zero,
+            child: SizedBox(
+              height: 40,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => navigationShell.goBranch(0),
+                      child: Center(
+                        child: SvgPicture.asset(
+                          'assets/icons/view_agenda.svg',
+                          width: 28,
+                          height: 28,
+                          colorFilter: ColorFilter.mode(
+                            navigationShell.currentIndex == 0
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => navigationShell.goBranch(1),
+                      child: Center(
+                        child: SvgPicture.asset(
+                          'assets/icons/show_chart.svg',
+                          width: 28,
+                          height: 28,
+                          colorFilter: ColorFilter.mode(
+                            navigationShell.currentIndex == 1
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
