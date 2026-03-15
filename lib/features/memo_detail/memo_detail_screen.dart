@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
@@ -134,10 +135,11 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
     await _memoRepo.toggleFavorite(widget.memoId, newValue);
   }
 
-  String _formatDate(DateTime dt) {
+  String _formatDate(DateTime dt) => '${dt.year}/${dt.month}/${dt.day}';
+
+  String _weekday(DateTime dt) {
     const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
-    final w = weekdays[dt.weekday - 1];
-    return '${dt.year}/${dt.month}/${dt.day}（$w）';
+    return weekdays[dt.weekday - 1];
   }
 
   @override
@@ -152,77 +154,84 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
     final memo = _memo!;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 22),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_horiz, color: AppColors.textPrimary),
-            onPressed: _showActionSheet,
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          leading: IconButton(
+            icon: SvgPicture.asset('assets/icons/close.svg', width: 24, height: 24),
+            onPressed: () => Navigator.of(context).pop(),
           ),
-          IconButton(
-            icon: Icon(
-              _isFavorite ? Icons.bookmark : Icons.bookmark_border,
-              color: AppColors.primary,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.more_horiz, color: AppColors.textPrimary),
+              onPressed: _showActionSheet,
             ),
-            onPressed: _toggleFavorite,
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // クラブ名
-            Text(
-              _clubName,
-              style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+            IconButton(
+              icon: Icon(
+                _isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                color: AppColors.primary,
               ),
+              onPressed: _toggleFavorite,
             ),
-            const SizedBox(height: 4),
-            // 日付
-            Text(
-              _formatDate(memo.practicedAt),
-              style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            // メタ情報
-            _MetaInfoRow(
-              condition: memo.condition,
-              distance: memo.distance,
-              shotShape: memo.shotShape,
-              wind: memo.wind,
-            ),
-            if (memo.body != null && memo.body!.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              Text(
-                memo.body!,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                  height: 1.7,
-                ),
-              ),
-            ],
-            // メディア横並び
-            if (_mediaList.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              _MediaRow(mediaList: _mediaList),
-            ],
+            const SizedBox(width: 4),
           ],
         ),
-      ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _clubName,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Hiragino Sans',
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text(
+                    _formatDate(memo.practicedAt),
+                    style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _weekday(memo.practicedAt),
+                    style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _MetaInfoRow(
+                condition: memo.condition,
+                distance: memo.distance,
+                shotShape: memo.shotShape,
+                wind: memo.wind,
+              ),
+              if (memo.body != null && memo.body!.isNotEmpty) ...[
+                const SizedBox(height: 20),
+                Text(
+                  memo.body!,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontFamily: 'Hiragino Sans',
+                    color: AppColors.textMedium,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+              if (_mediaList.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                _MediaRow(mediaList: _mediaList),
+              ],
+            ],
+          ),
+        ),
     );
   }
 }
@@ -238,29 +247,39 @@ class _MetaInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 8,
-      children: [
-        if (condition != null)
-          _MetaChip(
-            icon: Icons.thumb_up_outlined,
-            label: AppConstants.conditionLabels[condition] ?? condition!,
+    final chips = <Widget>[
+      if (distance != null)
+        _MetaChip(icon: Icons.place_outlined, label: '${distance}yd'),
+      if (shotShape != null)
+        _MetaChip(
+          icon: Icons.north_east,
+          label: AppConstants.shotShapeLabels[shotShape] ?? shotShape!,
+        ),
+      if (condition != null)
+        _MetaChip(
+          icon: Icons.sentiment_satisfied_outlined,
+          label: AppConstants.conditionLabels[condition] ?? condition!,
+        ),
+      if (wind != null)
+        _MetaChip(
+          icon: Icons.air,
+          label: AppConstants.windLabels[wind] ?? wind!,
+        ),
+    ];
+    if (chips.isEmpty) return const SizedBox.shrink();
+    final spaced = <Widget>[];
+    for (var i = 0; i < chips.length; i++) {
+      spaced.add(Expanded(
+        child: Align(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 96),
+            child: chips[i],
           ),
-        if (distance != null)
-          _MetaChip(icon: Icons.place_outlined, label: '${distance}yd'),
-        if (shotShape != null)
-          _MetaChip(
-            icon: Icons.north_east,
-            label: AppConstants.shotShapeLabels[shotShape] ?? shotShape!,
-          ),
-        if (wind != null)
-          _MetaChip(
-            icon: Icons.air,
-            label: AppConstants.windLabels[wind] ?? wind!,
-          ),
-      ],
-    );
+        ),
+      ));
+      if (i < chips.length - 1) spaced.add(const SizedBox(width: 4));
+    }
+    return Row(children: spaced);
   }
 }
 
@@ -272,16 +291,27 @@ class _MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: AppColors.textSecondary),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
-        ),
-      ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundLabel,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: AppColors.textPrimary),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -295,11 +325,11 @@ class _MediaRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 108,
+      height: 92,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: mediaList.length,
-        separatorBuilder: (_, i) => const SizedBox(width: 4),
+        separatorBuilder: (_, i) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final item = mediaList[index];
           final isVideo = item.isVideo;
@@ -323,8 +353,8 @@ class _MediaRow extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: SizedBox(
-                width: 108,
-                height: 108,
+                width: 92,
+                height: 92,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [

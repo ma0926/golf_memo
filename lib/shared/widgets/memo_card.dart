@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
 // 記録一覧の1枚のカード
-// OpenContainer の closedBuilder 内で使う場合は onTap を省略する
 class MemoCard extends StatelessWidget {
   final String clubName;
   final String? distance;
   final String? bodyText;
   final String? thumbnailPath;
   final bool isFavorite;
-  final VoidCallback? onTap;          // null のとき GestureDetector を使わない
+  final VoidCallback? onTap;
   final VoidCallback? onToggleFavorite;
+  final EdgeInsetsGeometry margin;
 
   const MemoCard({
     super.key,
@@ -22,24 +22,18 @@ class MemoCard extends StatelessWidget {
     this.isFavorite = false,
     this.onTap,
     this.onToggleFavorite,
+    this.margin = const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
   });
 
   @override
   Widget build(BuildContext context) {
     final content = Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: margin,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.divider, width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0D0C0C0D),
-            offset: Offset(0, 1),
-            blurRadius: 4,
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,12 +127,8 @@ class MemoCard extends StatelessWidget {
       ),
     );
 
-    // onTap が指定されている場合のみ GestureDetector でラップ
     if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: content,
-      );
+      return GestureDetector(onTap: onTap, child: content);
     }
     return content;
   }

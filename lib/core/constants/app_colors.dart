@@ -19,6 +19,8 @@ class AppColors {
   static const Color textSecondary   = Color(0xFF5E6871);
   // 本文テキスト
   static const Color textBody        = Color(0xFF474747);
+  // Figma: background/label（メタチップ背景）
+  static const Color backgroundLabel = Color(0xFFEBF2F8);
   // Figma: border/low（カードの枠線）
   static const Color divider         = Color(0xFFF2F3F5);
 }

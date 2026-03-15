@@ -1,5 +1,5 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/practice_memo.dart';
@@ -7,6 +7,8 @@ import '../../data/repositories/club_repository.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/memo_card.dart';
+import '../memo_detail/memo_detail_screen.dart';
+import '../../app.dart' show isDetailOpen;
 
 // 日付ごとのグループ
 class _DateGroup {
@@ -51,7 +53,7 @@ class MemoListScreen extends StatelessWidget {
           bottom: const TabBar(
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textSecondary,
-            indicator: const UnderlineTabIndicator(
+            indicator: UnderlineTabIndicator(
               borderSide: BorderSide(color: AppColors.primary, width: 2.0),
               borderRadius: BorderRadius.zero,
               insets: EdgeInsets.symmetric(horizontal: 16),
@@ -75,10 +77,26 @@ class MemoListScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(
+        body: Stack(
           children: [
-            _AllMemosTab(),
-            _FavoriteMemosTab(),
+            const TabBarView(
+              children: [
+                _AllMemosTab(),
+                _FavoriteMemosTab(),
+              ],
+            ),
+            ValueListenableBuilder<bool>(
+              valueListenable: isDetailOpen,
+              builder: (_, open, __) => IgnorePointer(
+                child: AnimatedOpacity(
+                  opacity: open ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: const SizedBox.expand(
+                    child: ColoredBox(color: Color(0xD9FFFFFF)),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -114,7 +132,6 @@ class _AllMemosTabState extends State<_AllMemosTab> {
     final memos = await _memoRepo.getAllMemos();
     final clubs = await _clubRepo.getActiveClubs();
 
-    // 各メモのサムネイルを並行して取得
     final mediaResults = await Future.wait(
       memos.map((m) => m.id != null
           ? _mediaRepo.getMediaByMemoId(m.id!)
@@ -188,14 +205,37 @@ class _AllMemosTabState extends State<_AllMemosTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _DateHeader(date: group.date),
-              ...group.memos.map((memo) => MemoCard(
-                    clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
-                    distance: memo.distance != null ? '${memo.distance}yd' : null,
-                    bodyText: memo.body,
-                    thumbnailPath: _thumbnails[memo.id],
-                    isFavorite: memo.isFavorite,
-                    onTap: () => context.push('/memo/${memo.id}'),
-                    onToggleFavorite: () => _toggleFavorite(memo),
+              ...group.memos.map((memo) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: OpenContainer<bool>(
+                      transitionDuration: const Duration(milliseconds: 400),
+                      transitionType: ContainerTransitionType.fade,
+                      openColor: Colors.white,
+                      closedColor: Colors.white,
+                      closedElevation: 0,
+                      openElevation: 0,
+                      closedShape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(16)),
+                      ),
+                      onClosed: (_) {
+                        isDetailOpen.value = false;
+                      },
+                      closedBuilder: (context, openContainer) => MemoCard(
+                        clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                        distance: memo.distance != null ? '${memo.distance}yd' : null,
+                        bodyText: memo.body,
+                        thumbnailPath: _thumbnails[memo.id],
+                        isFavorite: memo.isFavorite,
+                        margin: EdgeInsets.zero,
+                        onTap: () {
+                          isDetailOpen.value = true;
+                          openContainer();
+                        },
+                        onToggleFavorite: () => _toggleFavorite(memo),
+                      ),
+                      openBuilder: (context, _) =>
+                          MemoDetailScreen(memoId: memo.id!),
+                    ),
                   )),
               const SizedBox(height: 12),
             ],
@@ -233,26 +273,26 @@ class _DateHeader extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Row(
-              children: [
-                Text(
-                  weekday,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    height: 1.0,
-                  ),
+            children: [
+              Text(
+                weekday,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                  height: 1.0,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  '${date.year}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    height: 1.0,
-                  ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '${date.year}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                  height: 1.0,
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -359,14 +399,37 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _DateHeader(date: group.date),
-              ...group.memos.map((memo) => MemoCard(
-                    clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
-                    distance: memo.distance != null ? '${memo.distance}yd' : null,
-                    bodyText: memo.body,
-                    thumbnailPath: _thumbnails[memo.id],
-                    isFavorite: memo.isFavorite,
-                    onTap: () => context.push('/memo/${memo.id}'),
-                    onToggleFavorite: () => _toggleFavorite(memo),
+              ...group.memos.map((memo) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: OpenContainer<bool>(
+                      transitionDuration: const Duration(milliseconds: 400),
+                      transitionType: ContainerTransitionType.fade,
+                      openColor: Colors.white,
+                      closedColor: Colors.white,
+                      closedElevation: 0,
+                      openElevation: 0,
+                      closedShape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(16)),
+                      ),
+                      onClosed: (_) {
+                        isDetailOpen.value = false;
+                      },
+                      closedBuilder: (context, openContainer) => MemoCard(
+                        clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                        distance: memo.distance != null ? '${memo.distance}yd' : null,
+                        bodyText: memo.body,
+                        thumbnailPath: _thumbnails[memo.id],
+                        isFavorite: memo.isFavorite,
+                        margin: EdgeInsets.zero,
+                        onTap: () {
+                          isDetailOpen.value = true;
+                          openContainer();
+                        },
+                        onToggleFavorite: () => _toggleFavorite(memo),
+                      ),
+                      openBuilder: (context, _) =>
+                          MemoDetailScreen(memoId: memo.id!),
+                    ),
                   )),
               const SizedBox(height: 12),
             ],

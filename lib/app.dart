@@ -96,17 +96,12 @@ final _router = GoRouter(
         );
       },
     ),
-    // 記録詳細（Container Transform 近似: FadeScale）
+    // 記録詳細（検索画面などから直接遷移する場合のフォールバック）
     GoRoute(
       path: '/memo/:id',
-      pageBuilder: (context, state) {
+      builder: (context, state) {
         final id = int.parse(state.pathParameters['id']!);
-        return CustomTransitionPage(
-          child: MemoDetailScreen(memoId: id),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeScaleTransition(animation: animation, child: child);
-          },
-        );
+        return MemoDetailScreen(memoId: id);
       },
     ),
     // 検索（Container Transform: スケール＋フェード）
@@ -184,6 +179,9 @@ class _CenterAboveNavBar extends FloatingActionButtonLocation {
   }
 }
 
+/// 詳細画面が開いているかどうか（BottomAppBar非表示に使用）
+final isDetailOpen = ValueNotifier<bool>(false);
+
 // ── ボトムナビゲーション共有シェル ────────────────────
 class _ScaffoldWithNav extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -193,20 +191,36 @@ class _ScaffoldWithNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       body: navigationShell,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/memo/create'),
-        backgroundColor: AppColors.primary,
-        shape: const CircleBorder(),
-        elevation: 3,
-        child: SvgPicture.asset(
-          'assets/icons/add_2.svg',
-          width: 24,
-          height: 24,
+      floatingActionButton: ValueListenableBuilder<bool>(
+        valueListenable: isDetailOpen,
+        builder: (_, open, child) => AnimatedOpacity(
+          opacity: open ? 0.0 : 1.0,
+          duration: const Duration(milliseconds: 300),
+          child: IgnorePointer(ignoring: open, child: child),
+        ),
+        child: FloatingActionButton(
+          onPressed: () => context.push('/memo/create'),
+          backgroundColor: AppColors.primary,
+          shape: const CircleBorder(),
+          elevation: 3,
+          child: SvgPicture.asset(
+            'assets/icons/add_2.svg',
+            width: 24,
+            height: 24,
+          ),
         ),
       ),
       floatingActionButtonLocation: const _CenterAboveNavBar(),
-      bottomNavigationBar: Column(
+      bottomNavigationBar: ValueListenableBuilder<bool>(
+        valueListenable: isDetailOpen,
+        builder: (_, open, child) => AnimatedOpacity(
+          opacity: open ? 0.0 : 1.0,
+          duration: const Duration(milliseconds: 300),
+          child: IgnorePointer(ignoring: open, child: child),
+        ),
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
@@ -264,6 +278,7 @@ class _ScaffoldWithNav extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
