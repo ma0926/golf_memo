@@ -7,7 +7,7 @@ import '../../data/repositories/club_repository.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/memo_card.dart';
-import '../memo_detail/memo_detail_screen.dart';
+import 'memo_expanded_card.dart';
 import '../../app.dart' show isDetailOpen;
 
 // 日付ごとのグループ
@@ -208,7 +208,7 @@ class _AllMemosTabState extends State<_AllMemosTab> {
               ...group.memos.map((memo) => Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     child: OpenContainer<bool>(
-                      transitionDuration: const Duration(milliseconds: 400),
+                      transitionDuration: const Duration(milliseconds: 350),
                       transitionType: ContainerTransitionType.fade,
                       openColor: Colors.white,
                       closedColor: Colors.white,
@@ -219,6 +219,7 @@ class _AllMemosTabState extends State<_AllMemosTab> {
                       ),
                       onClosed: (_) {
                         isDetailOpen.value = false;
+                        _load();
                       },
                       closedBuilder: (context, openContainer) => MemoCard(
                         clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
@@ -233,8 +234,10 @@ class _AllMemosTabState extends State<_AllMemosTab> {
                         },
                         onToggleFavorite: () => _toggleFavorite(memo),
                       ),
-                      openBuilder: (context, _) =>
-                          MemoDetailScreen(memoId: memo.id!),
+                      openBuilder: (context, _) => MemoExpandedCard(
+                        memo: memo,
+                        clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                      ),
                     ),
                   )),
               const SizedBox(height: 12),
@@ -402,7 +405,7 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
               ...group.memos.map((memo) => Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     child: OpenContainer<bool>(
-                      transitionDuration: const Duration(milliseconds: 400),
+                      transitionDuration: const Duration(milliseconds: 350),
                       transitionType: ContainerTransitionType.fade,
                       openColor: Colors.white,
                       closedColor: Colors.white,
@@ -413,6 +416,7 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
                       ),
                       onClosed: (_) {
                         isDetailOpen.value = false;
+                        _load();
                       },
                       closedBuilder: (context, openContainer) => MemoCard(
                         clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
@@ -427,8 +431,10 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
                         },
                         onToggleFavorite: () => _toggleFavorite(memo),
                       ),
-                      openBuilder: (context, _) =>
-                          MemoDetailScreen(memoId: memo.id!),
+                      openBuilder: (context, _) => MemoExpandedCard(
+                        memo: memo,
+                        clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                      ),
                     ),
                   )),
               const SizedBox(height: 12),
