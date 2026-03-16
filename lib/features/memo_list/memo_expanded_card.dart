@@ -47,7 +47,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
     _isFavorite = widget.memo.isFavorite;
     _loadMedia();
     // カードの拡大アニメーション（400ms）が終わってからコンテンツをフェードイン
-    Future.delayed(const Duration(milliseconds: 330), () {
+    Future.delayed(const Duration(milliseconds: 380), () {
       if (mounted) _fadeCtrl.forward();
     });
   }

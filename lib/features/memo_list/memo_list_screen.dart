@@ -121,6 +121,7 @@ class _AllMemosTabState extends State<_AllMemosTab> {
   Map<int, String> _clubNames = {};
   Map<int, String?> _thumbnails = {};
   bool _isLoading = true;
+  int? _hiddenMemoId;
 
   @override
   void initState() {
@@ -208,7 +209,7 @@ class _AllMemosTabState extends State<_AllMemosTab> {
               ...group.memos.map((memo) => Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     child: OpenContainer<bool>(
-                      transitionDuration: const Duration(milliseconds: 350),
+                      transitionDuration: const Duration(milliseconds: 400),
                       transitionType: ContainerTransitionType.fade,
                       openColor: Colors.white,
                       closedColor: Colors.white,
@@ -220,19 +221,28 @@ class _AllMemosTabState extends State<_AllMemosTab> {
                       onClosed: (_) {
                         isDetailOpen.value = false;
                         _load();
+                        // カードが完成してから160ms後にコンテンツを表示
+                        Future.delayed(const Duration(milliseconds: 260), () {
+                          if (mounted) setState(() => _hiddenMemoId = null);
+                        });
                       },
-                      closedBuilder: (context, openContainer) => MemoCard(
-                        clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
-                        distance: memo.distance != null ? '${memo.distance}yd' : null,
-                        bodyText: memo.body,
-                        thumbnailPath: _thumbnails[memo.id],
-                        isFavorite: memo.isFavorite,
-                        margin: EdgeInsets.zero,
-                        onTap: () {
-                          isDetailOpen.value = true;
-                          openContainer();
-                        },
-                        onToggleFavorite: () => _toggleFavorite(memo),
+                      closedBuilder: (context, openContainer) => AnimatedOpacity(
+                        opacity: _hiddenMemoId == memo.id ? 0.0 : 1.0,
+                        duration: const Duration(milliseconds: 160),
+                        child: MemoCard(
+                          clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                          distance: memo.distance != null ? '${memo.distance}yd' : null,
+                          bodyText: memo.body,
+                          thumbnailPath: _thumbnails[memo.id],
+                          isFavorite: memo.isFavorite,
+                          margin: EdgeInsets.zero,
+                          onTap: () {
+                            setState(() => _hiddenMemoId = memo.id);
+                            isDetailOpen.value = true;
+                            openContainer();
+                          },
+                          onToggleFavorite: () => _toggleFavorite(memo),
+                        ),
                       ),
                       openBuilder: (context, _) => MemoExpandedCard(
                         memo: memo,
@@ -314,6 +324,7 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
   final _memoRepo = PracticeMemoRepository();
   final _clubRepo = ClubRepository();
   final _mediaRepo = MediaRepository();
+  int? _hiddenMemoId;
 
   List<PracticeMemo> _memos = [];
   Map<int, String> _clubNames = {};
@@ -405,7 +416,7 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
               ...group.memos.map((memo) => Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     child: OpenContainer<bool>(
-                      transitionDuration: const Duration(milliseconds: 350),
+                      transitionDuration: const Duration(milliseconds: 400),
                       transitionType: ContainerTransitionType.fade,
                       openColor: Colors.white,
                       closedColor: Colors.white,
@@ -417,19 +428,27 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
                       onClosed: (_) {
                         isDetailOpen.value = false;
                         _load();
+                        Future.delayed(const Duration(milliseconds: 260), () {
+                          if (mounted) setState(() => _hiddenMemoId = null);
+                        });
                       },
-                      closedBuilder: (context, openContainer) => MemoCard(
-                        clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
-                        distance: memo.distance != null ? '${memo.distance}yd' : null,
-                        bodyText: memo.body,
-                        thumbnailPath: _thumbnails[memo.id],
-                        isFavorite: memo.isFavorite,
-                        margin: EdgeInsets.zero,
-                        onTap: () {
-                          isDetailOpen.value = true;
-                          openContainer();
-                        },
-                        onToggleFavorite: () => _toggleFavorite(memo),
+                      closedBuilder: (context, openContainer) => AnimatedOpacity(
+                        opacity: _hiddenMemoId == memo.id ? 0.0 : 1.0,
+                        duration: const Duration(milliseconds: 160),
+                        child: MemoCard(
+                          clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                          distance: memo.distance != null ? '${memo.distance}yd' : null,
+                          bodyText: memo.body,
+                          thumbnailPath: _thumbnails[memo.id],
+                          isFavorite: memo.isFavorite,
+                          margin: EdgeInsets.zero,
+                          onTap: () {
+                            setState(() => _hiddenMemoId = memo.id);
+                            isDetailOpen.value = true;
+                            openContainer();
+                          },
+                          onToggleFavorite: () => _toggleFavorite(memo),
+                        ),
                       ),
                       openBuilder: (context, _) => MemoExpandedCard(
                         memo: memo,
