@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/media.dart';
 import '../../data/models/practice_memo.dart';
+import '../../data/repositories/club_repository.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/media_preview_screen.dart';
@@ -33,7 +34,10 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
     with SingleTickerProviderStateMixin {
   final _mediaRepo = MediaRepository();
   final _memoRepo = PracticeMemoRepository();
+  final _clubRepo = ClubRepository();
 
+  late PracticeMemo _memo;
+  late String _clubName;
   List<Media> _mediaList = [];
   late bool _isFavorite;
   late final AnimationController _fadeCtrl = AnimationController(
@@ -44,11 +48,27 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
   @override
   void initState() {
     super.initState();
+    _memo = widget.memo;
+    _clubName = widget.clubName;
     _isFavorite = widget.memo.isFavorite;
     _loadMedia();
     // カードの拡大アニメーション（400ms）が終わってからコンテンツをフェードイン
     Future.delayed(const Duration(milliseconds: 280), () {
       if (mounted) _fadeCtrl.forward();
+    });
+  }
+
+  Future<void> _reload() async {
+    if (_memo.id == null) return;
+    final memo = await _memoRepo.getMemoById(_memo.id!);
+    if (memo == null || !mounted) return;
+    final club = await _clubRepo.getClubById(memo.clubId);
+    final media = await _mediaRepo.getMediaByMemoId(_memo.id!);
+    setState(() {
+      _memo = memo;
+      _clubName = club?.name ?? '不明なクラブ';
+      _isFavorite = memo.isFavorite;
+      _mediaList = media;
     });
   }
 
@@ -59,15 +79,15 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
   }
 
   Future<void> _loadMedia() async {
-    if (widget.memo.id == null) return;
-    final media = await _mediaRepo.getMediaByMemoId(widget.memo.id!);
+    if (_memo.id == null) return;
+    final media = await _mediaRepo.getMediaByMemoId(_memo.id!);
     if (mounted) setState(() => _mediaList = media);
   }
 
   Future<void> _toggleFavorite() async {
     final newValue = !_isFavorite;
     setState(() => _isFavorite = newValue);
-    await _memoRepo.toggleFavorite(widget.memo.id!, newValue);
+    await _memoRepo.toggleFavorite(_memo.id!, newValue);
     widget.onChanged?.call();
   }
 
@@ -93,7 +113,10 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
                   child: MemoEditScreen(memoId: widget.memo.id!),
                 ),
               );
-              if (result == true) widget.onChanged?.call();
+              if (result == true) {
+                await _reload();
+                widget.onChanged?.call();
+              }
             },
             child: const Text('編集'),
           ),
@@ -129,8 +152,8 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
             isDestructiveAction: true,
             onPressed: () async {
               Navigator.pop(ctx);
-              await _mediaRepo.deleteMediaByMemoId(widget.memo.id!);
-              await _memoRepo.deleteMemo(widget.memo.id!);
+              await _mediaRepo.deleteMediaByMemoId(_memo.id!);
+              await _memoRepo.deleteMemo(_memo.id!);
               if (mounted) {
                 widget.onChanged?.call();
                 Navigator.of(context).pop();
@@ -145,7 +168,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
 
   @override
   Widget build(BuildContext context) {
-    final memo = widget.memo;
+    final memo = _memo;
     const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
     final weekday = weekdays[memo.practicedAt.weekday - 1];
     final dateStr =
@@ -184,7 +207,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.clubName,
+                _clubName,
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -268,19 +291,11 @@ class _MetaChipsRow extends StatelessWidget {
     ];
     if (chips.isEmpty) return const SizedBox.shrink();
 
-    final spaced = <Widget>[];
-    for (var i = 0; i < chips.length; i++) {
-      spaced.add(Expanded(
-        child: Align(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 96),
-            child: chips[i],
-          ),
-        ),
-      ));
-      if (i < chips.length - 1) spaced.add(const SizedBox(width: 4));
-    }
-    return Row(children: spaced);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: chips,
+    );
   }
 }
 
@@ -293,14 +308,13 @@ class _MetaChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.backgroundLabel,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: AppColors.textPrimary),
           const SizedBox(width: 4),
@@ -339,12 +353,18 @@ class _MediaRow extends StatelessWidget {
           return GestureDetector(
             onTap: () {
               Navigator.of(context, rootNavigator: true).push(
-                MaterialPageRoute(
-                  builder: (_) => MediaPreviewScreen(
+                PageRouteBuilder(
+                  opaque: false,
+                  barrierColor: Colors.black,
+                  transitionDuration: const Duration(milliseconds: 250),
+                  reverseTransitionDuration: const Duration(milliseconds: 200),
+                  pageBuilder: (_, __, ___) => MediaPreviewScreen(
                     file: thumbFile ?? imageFile,
                     isVideo: isVideo,
                     videoPath: isVideo ? item.uri : null,
                   ),
+                  transitionsBuilder: (_, animation, __, child) =>
+                      FadeTransition(opacity: animation, child: child),
                 ),
               );
             },

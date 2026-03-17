@@ -155,11 +155,13 @@ class _AllMemosTabState extends State<_AllMemosTab> {
       }
     }
 
+    if (!mounted) return;
     setState(() {
       _memos = memos;
       _clubNames = {for (final c in clubs) c.id!: c.name};
       _thumbnails = thumbnails;
       _isLoading = false;
+      _hiddenMemoId = null;
     });
   }
 
@@ -228,10 +230,6 @@ class _AllMemosTabState extends State<_AllMemosTab> {
                       onClosed: (_) {
                         isDetailOpen.value = false;
                         _load();
-                        // カードが完成してから160ms後にコンテンツを表示
-                        Future.delayed(const Duration(milliseconds: 260), () {
-                          if (mounted) setState(() => _hiddenMemoId = null);
-                        });
                       },
                       closedBuilder: (context, openContainer) => AnimatedOpacity(
                         opacity: _hiddenMemoId == memo.id ? 0.0 : 1.0,
@@ -363,11 +361,13 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
       }
     }
 
+    if (!mounted) return;
     setState(() {
       _memos = memos;
       _clubNames = {for (final c in clubs) c.id!: c.name};
       _thumbnails = thumbnails;
       _isLoading = false;
+      _hiddenMemoId = null;
     });
   }
 
@@ -435,9 +435,6 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
                       onClosed: (_) {
                         isDetailOpen.value = false;
                         _load();
-                        Future.delayed(const Duration(milliseconds: 260), () {
-                          if (mounted) setState(() => _hiddenMemoId = null);
-                        });
                       },
                       closedBuilder: (context, openContainer) => AnimatedOpacity(
                         opacity: _hiddenMemoId == memo.id ? 0.0 : 1.0,

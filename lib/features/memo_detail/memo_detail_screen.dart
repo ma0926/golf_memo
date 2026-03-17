@@ -341,12 +341,18 @@ class _MediaRow extends StatelessWidget {
           return GestureDetector(
             onTap: () {
               Navigator.of(context, rootNavigator: true).push(
-                MaterialPageRoute(
-                  builder: (_) => MediaPreviewScreen(
+                PageRouteBuilder(
+                  opaque: false,
+                  barrierColor: Colors.black,
+                  transitionDuration: const Duration(milliseconds: 250),
+                  reverseTransitionDuration: const Duration(milliseconds: 200),
+                  pageBuilder: (_, __, ___) => MediaPreviewScreen(
                     file: thumbFile ?? imageFile,
                     isVideo: isVideo,
                     videoPath: isVideo ? item.uri : null,
                   ),
+                  transitionsBuilder: (_, animation, __, child) =>
+                      FadeTransition(opacity: animation, child: child),
                 ),
               );
             },
