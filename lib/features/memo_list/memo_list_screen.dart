@@ -9,6 +9,8 @@ import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/memo_card.dart';
 import 'memo_expanded_card.dart';
 import '../../app.dart' show isDetailOpen, memoCreatedNotifier;
+import '../settings/settings_screen.dart';
+import '../search/search_screen.dart';
 
 // 日付ごとのグループ
 class _DateGroup {
@@ -42,11 +44,33 @@ class MemoListScreen extends StatelessWidget {
           actions: [
             IconButton(
               icon: Image.asset('assets/icons/settings.png', width: 28, height: 28),
-              onPressed: () => context.push('/settings'),
+              onPressed: () => Navigator.of(context, rootNavigator: true).push(
+                PageRouteBuilder(
+                  pageBuilder: (_, __, ___) => const SettingsScreen(),
+                  transitionsBuilder: (_, animation, __, child) => SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(1, 0),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+                    child: child,
+                  ),
+                ),
+              ),
             ),
             IconButton(
               icon: Image.asset('assets/icons/search.png', width: 28, height: 28),
-              onPressed: () => context.push('/search'),
+              onPressed: () => Navigator.of(context, rootNavigator: true).push(
+                PageRouteBuilder(
+                  pageBuilder: (_, __, ___) => const SearchScreen(),
+                  transitionsBuilder: (_, animation, __, child) => SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(1, 0),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+                    child: child,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(width: 4),
           ],

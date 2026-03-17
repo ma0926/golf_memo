@@ -19,7 +19,10 @@ import 'features/settings/club_settings_screen.dart';
 import 'features/settings/custom_club_screen.dart';
 import 'features/settings/terms_screen.dart';
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final _router = GoRouter(
+  navigatorKey: _rootNavigatorKey,
   initialLocation: '/splash',
   routes: [
     // スプラッシュ
@@ -121,19 +124,19 @@ final _router = GoRouter(
         },
       ),
     ),
-    // 設定（Container Transform: スケール＋フェード）
+    // 設定（右からスライドイン）
     GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
       path: '/settings',
       pageBuilder: (context, state) => CustomTransitionPage(
         child: const SettingsScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
-          return FadeTransition(
-            opacity: curved,
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.92, end: 1.0).animate(curved),
-              child: child,
-            ),
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1, 0),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            child: child,
           );
         },
       ),

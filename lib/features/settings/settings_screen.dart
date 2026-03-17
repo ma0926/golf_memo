@@ -15,7 +15,7 @@ class SettingsScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         leading: IconButton(
           icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 22),
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           '設定',

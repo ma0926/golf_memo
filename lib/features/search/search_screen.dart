@@ -243,7 +243,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () => context.pop(),
+                    onTap: () => Navigator.of(context).pop(),
                     child: const Text(
                       'キャンセル',
                       style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
