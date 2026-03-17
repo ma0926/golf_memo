@@ -8,7 +8,7 @@ import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/memo_card.dart';
 import 'memo_expanded_card.dart';
-import '../../app.dart' show isDetailOpen;
+import '../../app.dart' show isDetailOpen, memoCreatedNotifier;
 
 // 日付ごとのグループ
 class _DateGroup {
@@ -127,6 +127,13 @@ class _AllMemosTabState extends State<_AllMemosTab> {
   void initState() {
     super.initState();
     _load();
+    memoCreatedNotifier.addListener(_load);
+  }
+
+  @override
+  void dispose() {
+    memoCreatedNotifier.removeListener(_load);
+    super.dispose();
   }
 
   Future<void> _load() async {

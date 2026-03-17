@@ -182,6 +182,9 @@ class _CenterAboveNavBar extends FloatingActionButtonLocation {
 /// 詳細画面が開いているかどうか（BottomAppBar非表示に使用）
 final isDetailOpen = ValueNotifier<bool>(false);
 
+/// メモが作成されたことを通知する（一覧画面のリロード用）
+final memoCreatedNotifier = ValueNotifier<int>(0);
+
 // ── ボトムナビゲーション共有シェル ────────────────────
 class _ScaffoldWithNav extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -201,7 +204,24 @@ class _ScaffoldWithNav extends StatelessWidget {
           child: IgnorePointer(ignoring: open, child: child),
         ),
         child: FloatingActionButton(
-          onPressed: () => context.push('/memo/create'),
+          onPressed: () async {
+            final size = MediaQuery.of(context).size;
+            final result = await showModalBottomSheet<bool>(
+              context: context,
+              isScrollControlled: true,
+              useRootNavigator: true,
+              useSafeArea: false,
+              backgroundColor: Colors.transparent,
+              constraints: BoxConstraints(maxHeight: size.height * 0.92),
+              builder: (_) => const ClipRRect(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                child: MemoCreateScreen(),
+              ),
+            );
+            if (result == true) {
+              memoCreatedNotifier.value++;
+            }
+          },
           backgroundColor: AppColors.primary,
           shape: const CircleBorder(),
           elevation: 3,

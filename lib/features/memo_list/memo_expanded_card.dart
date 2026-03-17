@@ -38,7 +38,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
   late bool _isFavorite;
   late final AnimationController _fadeCtrl = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 180),
+    duration: const Duration(milliseconds: 80),
   );
 
   @override
@@ -47,7 +47,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
     _isFavorite = widget.memo.isFavorite;
     _loadMedia();
     // カードの拡大アニメーション（400ms）が終わってからコンテンツをフェードイン
-    Future.delayed(const Duration(milliseconds: 380), () {
+    Future.delayed(const Duration(milliseconds: 280), () {
       if (mounted) _fadeCtrl.forward();
     });
   }
@@ -179,57 +179,57 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
       body: FadeTransition(
         opacity: _fadeCtrl,
         child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.clubName,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Hiragino Sans',
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Text(dateStr,
-                    style: const TextStyle(
-                        fontSize: 14, color: AppColors.textSecondary)),
-                const SizedBox(width: 8),
-                Text(weekday,
-                    style: const TextStyle(
-                        fontSize: 14, color: AppColors.textSecondary)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _MetaChipsRow(
-              condition: memo.condition,
-              distance: memo.distance,
-              shotShape: memo.shotShape,
-              wind: memo.wind,
-            ),
-            if (memo.body != null && memo.body!.isNotEmpty) ...[
-              const SizedBox(height: 20),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                memo.body!,
+                widget.clubName,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                   fontFamily: 'Hiragino Sans',
-                  color: AppColors.textMedium,
-                  height: 1.5,
+                  color: AppColors.textPrimary,
                 ),
               ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text(dateStr,
+                      style: const TextStyle(
+                          fontSize: 14, color: AppColors.textSecondary)),
+                  const SizedBox(width: 8),
+                  Text(weekday,
+                      style: const TextStyle(
+                          fontSize: 14, color: AppColors.textSecondary)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _MetaChipsRow(
+                condition: memo.condition,
+                distance: memo.distance,
+                shotShape: memo.shotShape,
+                wind: memo.wind,
+              ),
+              if (memo.body != null && memo.body!.isNotEmpty) ...[
+                const SizedBox(height: 20),
+                Text(
+                  memo.body!,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontFamily: 'Hiragino Sans',
+                    color: AppColors.textMedium,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+              if (_mediaList.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                _MediaRow(mediaList: _mediaList),
+              ],
             ],
-            if (_mediaList.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              _MediaRow(mediaList: _mediaList),
-            ],
-          ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -383,3 +383,4 @@ class _MediaRow extends StatelessWidget {
     );
   }
 }
+

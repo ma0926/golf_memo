@@ -28,14 +28,14 @@ class MemoCreateScreen extends StatelessWidget {
     return Navigator(
       onGenerateRoute: (_) => CupertinoPageRoute(
         builder: (ctx) => _ClubSelectPage(
-          onClose: () => outerContext.pop(),
+          onClose: () => Navigator.of(outerContext).pop(),
           onClubSelected: (int clubId, String clubName) {
             Navigator.of(ctx).push(
               CupertinoPageRoute(
                 builder: (_) => _MemoInputPage(
                   clubId: clubId,
                   clubName: clubName,
-                  onSave: () => outerContext.go('/home'),
+                  onSave: () => Navigator.of(outerContext).pop(true),
                 ),
               ),
             );
