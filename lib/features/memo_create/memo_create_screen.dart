@@ -523,45 +523,10 @@ class _MemoInputPageState extends State<_MemoInputPage> {
         ? ['distance', 'shotShape', 'condition', 'wind']
         : ['distance', 'shotShape'];
 
-    return Scaffold(
+    return Listener(
+      onPointerDown: (_) => FocusScope.of(context).unfocus(),
+      child: Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-          child: SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: _isSaving ? null : _saveMemo,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                disabledBackgroundColor: AppColors.primary.withOpacity(0.6),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                elevation: 0,
-              ),
-              child: _isSaving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Text(
-                      '保存',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-            ),
-          ),
-        ),
-      ),
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -573,12 +538,40 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Icon(Icons.arrow_back, color: AppColors.textPrimary),
-                      ),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                          ),
+                        ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: _isSaving ? null : _saveMemo,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: _isSaving
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.primary,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    '保存',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
                     ),
                     Text(
                       widget.clubName,
@@ -710,6 +703,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

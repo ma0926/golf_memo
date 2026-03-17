@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/club.dart';
 import '../../data/repositories/club_repository.dart';
+import '../settings/custom_club_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -110,7 +111,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: GestureDetector(
                       onTap: () async {
-                        await context.push('/settings/clubs/new');
+                        await showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height * 0.92,
+                          ),
+                          builder: (_) => ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                            child: CustomClubScreen(
+                              initialCategory: _selectedTab == 'すべて' ? null : _selectedTab,
+                            ),
+                          ),
+                        );
                         _load();
                       },
                       child: const Row(

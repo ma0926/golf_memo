@@ -8,8 +8,9 @@ import '../../data/repositories/club_repository.dart';
 
 class CustomClubScreen extends StatefulWidget {
   final int? clubId; // null = 新規, 非null = 既存クラブを編集
+  final String? initialCategory; // 新規作成時の初期カテゴリ
 
-  const CustomClubScreen({super.key, this.clubId});
+  const CustomClubScreen({super.key, this.clubId, this.initialCategory});
 
   @override
   State<CustomClubScreen> createState() => _CustomClubScreenState();
@@ -42,7 +43,10 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
 
   Future<void> _load() async {
     if (_isNew) {
-      setState(() => _isLoading = false);
+      setState(() {
+        _selectedCategory = widget.initialCategory;
+        _isLoading = false;
+      });
       return;
     }
 
@@ -214,8 +218,10 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
+        leadingWidth: 100,
         leading: TextButton(
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(padding: EdgeInsets.zero),
           child: const Text(
             'キャンセル',
             style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
@@ -231,14 +237,17 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
         ),
         centerTitle: true,
         actions: [
-          TextButton(
-            onPressed: (_canSave && !_isSaving) ? _save : null,
-            child: Text(
-              '保存',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: _canSave ? AppColors.primary : AppColors.textSecondary,
+          GestureDetector(
+            onTap: (_canSave && !_isSaving) ? _save : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Text(
+                '保存',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: _canSave ? AppColors.primary : AppColors.textSecondary,
+                ),
               ),
             ),
           ),
