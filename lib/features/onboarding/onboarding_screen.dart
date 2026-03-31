@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/club.dart';
 import '../../data/repositories/club_repository.dart';
@@ -85,17 +86,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Column(
           children: [
             // タイトル
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 32, 20, 20),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
               child: Text(
                 'あなたの練習するクラブを\n選択してください',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                  height: 1.5,
-                ),
+                style: AppTypography.jpMMedium.copyWith(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.textPrimary, height: 1.5),
               ),
             ),
             // カテゴリタブ
@@ -127,14 +123,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         );
                         _load();
                       },
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add, size: 15, color: Colors.blue),
-                          SizedBox(width: 4),
+                          const Icon(Icons.add, size: 15, color: AppColors.accent),
+                          const SizedBox(width: 4),
                           Text(
                             'カスタムクラブを追加',
-                            style: TextStyle(fontSize: 14, color: Colors.blue),
+                            style: AppTypography.jpSRegular.copyWith(color: AppColors.accent),
                           ),
                         ],
                       ),
@@ -164,7 +160,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               child: const Text(
                 '次へ',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: AppTypography.jpHeader4,
               ),
             ),
           ),
@@ -197,12 +193,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               child: Text(
                 tab,
-                style: TextStyle(
+                style: AppTypography.jpSRegular.copyWith(
                   fontSize: 13,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color:
-                      isSelected ? Colors.white : AppColors.textPrimary,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected ? Colors.white : AppColors.textPrimary,
                 ),
               ),
             ),
@@ -220,7 +214,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           padding: const EdgeInsets.only(top: 16, bottom: 6, left: 4),
           child: Text(
             category,
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            style: AppTypography.jpSRegular.copyWith(fontSize: 13, color: AppColors.textSecondary),
           ),
         ),
         Container(
@@ -236,10 +230,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ListTile(
                     title: Text(
                       club.name,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: AppColors.textPrimary,
-                      ),
+                      style: AppTypography.jpMRegular.copyWith(fontSize: 15, color: AppColors.textPrimary),
                     ),
                     trailing: CupertinoSwitch(
                       value: club.isActive,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/media.dart';
 import '../../data/models/practice_memo.dart';
@@ -185,24 +186,19 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
             children: [
               Text(
                 _clubName,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Hiragino Sans',
-                  color: AppColors.textPrimary,
-                ),
+                style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
                   Text(
                     _formatDate(memo.practicedAt),
-                    style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                    style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     _weekday(memo.practicedAt),
-                    style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                    style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -217,12 +213,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
                 const SizedBox(height: 20),
                 Text(
                   memo.body!,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontFamily: 'Hiragino Sans',
-                    color: AppColors.textMedium,
-                    height: 1.5,
-                  ),
+                  style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
                 ),
               ],
               if (_mediaList.isNotEmpty) ...[
@@ -305,10 +296,7 @@ class _MetaChip extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textPrimary,
-            ),
+            style: AppTypography.jpSRegular.copyWith(fontSize: 12, color: AppColors.textPrimary),
           ),
         ],
       ),

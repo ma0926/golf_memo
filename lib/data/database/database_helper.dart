@@ -4,12 +4,14 @@ import 'package:path/path.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
   static Database? _database;
+  static Future<Database>? _initFuture;
 
   DatabaseHelper._();
 
-  Future<Database> get database async {
-    _database ??= await _initDatabase();
-    return _database!;
+  Future<Database> get database {
+    // 同時に複数の呼び出しが来ても _initDatabase() は1回しか実行しない
+    _initFuture ??= _initDatabase();
+    return _initFuture!;
   }
 
   Future<Database> _initDatabase() async {

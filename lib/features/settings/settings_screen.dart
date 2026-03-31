@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -17,13 +18,9 @@ class SettingsScreen extends StatelessWidget {
           icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 22),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
+        title: Text(
           '設定',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
+          style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
         ),
         centerTitle: true,
       ),
@@ -41,11 +38,11 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           // このアプリについて
-          const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
               'このアプリについて',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: AppTypography.jpSRegular.copyWith(fontSize: 13, color: AppColors.textSecondary),
             ),
           ),
           _SettingsGroup(
@@ -98,7 +95,7 @@ class _SettingsRow extends StatelessWidget {
     return ListTile(
       title: Text(
         label,
-        style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+        style: AppTypography.jpMRegular.copyWith(fontSize: 15, color: AppColors.textPrimary),
       ),
       trailing: const Icon(
         Icons.chevron_right,

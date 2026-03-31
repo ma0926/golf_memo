@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/club.dart';
 import '../../data/models/practice_memo.dart';
 import '../../data/repositories/club_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
+import '../../app.dart' show memoCreatedNotifier;
 
 // ── 1日分のデータ ─────────────────────────────────────
 class _DayData {
@@ -47,6 +49,13 @@ class _ReportScreenState extends State<ReportScreen> {
   void initState() {
     super.initState();
     _loadClubs();
+    memoCreatedNotifier.addListener(_loadMemos);
+  }
+
+  @override
+  void dispose() {
+    memoCreatedNotifier.removeListener(_loadMemos);
+    super.dispose();
   }
 
   Future<void> _loadClubs() async {
@@ -124,15 +133,11 @@ class _ReportScreenState extends State<ReportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Text(
                 'レポート',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+                style: AppTypography.jpHeader1.copyWith(color: AppColors.textPrimary),
               ),
             ),
             _PeriodTabs(
@@ -155,9 +160,9 @@ class _ReportScreenState extends State<ReportScreen> {
 
   Widget _buildBody() {
     if (_clubs.isEmpty) {
-      return const Center(
+      return Center(
         child: Text('設定からクラブをONにしてください',
-            style: TextStyle(color: AppColors.textSecondary)),
+            style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary)),
       );
     }
 
@@ -171,11 +176,8 @@ class _ReportScreenState extends State<ReportScreen> {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
           child: Row(
             children: [
-              const Text('飛距離',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary)),
+              Text('飛距離',
+                  style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary)),
               const Spacer(),
               GestureDetector(
                 onTap: _showClubSheet,
@@ -189,8 +191,7 @@ class _ReportScreenState extends State<ReportScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(_selectedClub?.name ?? '—',
-                          style: const TextStyle(
-                              fontSize: 13, color: AppColors.textPrimary)),
+                          style: AppTypography.jpSRegular.copyWith(fontSize: 13, color: AppColors.textPrimary)),
                       const SizedBox(width: 2),
                       const Icon(Icons.keyboard_arrow_down,
                           size: 16, color: AppColors.textPrimary),
@@ -206,7 +207,7 @@ class _ReportScreenState extends State<ReportScreen> {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
           child: Text(
             avg != null ? '平均: ${avg.round()}yd' : '平均: —',
-            style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
           ),
         ),
         // グラフ
@@ -223,11 +224,11 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           )
         else
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 32),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32),
             child: Center(
               child: Text('この期間の飛距離データがありません',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                  style: AppTypography.jpSRegular.copyWith(fontSize: 13, color: AppColors.textSecondary)),
             ),
           ),
         // タップ時の概要カード
@@ -286,9 +287,8 @@ class _Tab extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            style: AppTypography.jpSMedium.copyWith(
+              fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
               color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
             ),
           ),
@@ -368,7 +368,7 @@ class _DistanceChart extends StatelessWidget {
                   getDotPainter: (spot, percent, bar, index) =>
                       FlDotCirclePainter(
                     radius: 6,
-                    color: Colors.blue,
+                    color: AppColors.accent,
                     strokeWidth: 2,
                     strokeColor: Colors.white,
                   ),
@@ -382,7 +382,7 @@ class _DistanceChart extends StatelessWidget {
             spots: spots,
             isCurved: data.length > 2,
             curveSmoothness: 0.3,
-            color: Colors.blue,
+            color: AppColors.accent,
             barWidth: 2,
             isStrokeCapRound: true,
             dotData: FlDotData(
@@ -391,15 +391,15 @@ class _DistanceChart extends StatelessWidget {
                 final isSelected = index == selectedIndex;
                 return FlDotCirclePainter(
                   radius: isSelected ? 6 : 3,
-                  color: isSelected ? Colors.blue : Colors.white,
+                  color: isSelected ? AppColors.accent : Colors.white,
                   strokeWidth: 2,
-                  strokeColor: Colors.blue,
+                  strokeColor: AppColors.accent,
                 );
               },
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.blue.withAlpha(20),
+              color: AppColors.accent.withAlpha(20),
             ),
           ),
         ],
@@ -421,8 +421,7 @@ class _DistanceChart extends StatelessWidget {
                 }
                 return Text(
                   '${value.toInt()}',
-                  style: const TextStyle(
-                      fontSize: 10, color: AppColors.textSecondary),
+                  style: AppTypography.jpSRegular.copyWith(fontSize: 10, color: AppColors.textSecondary),
                   textAlign: TextAlign.right,
                 );
               },
@@ -443,8 +442,7 @@ class _DistanceChart extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     '${date.month}/${date.day}',
-                    style: const TextStyle(
-                        fontSize: 9, color: AppColors.textSecondary),
+                    style: AppTypography.jpSRegular.copyWith(fontSize: 9, color: AppColors.textSecondary),
                   ),
                 );
               },
@@ -489,7 +487,7 @@ class _DaySummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.blue.withAlpha(60)),
+        border: Border.all(color: AppColors.accent.withAlpha(60)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -500,24 +498,16 @@ class _DaySummaryCard extends StatelessWidget {
             child: Row(
               children: [
                 const Icon(Icons.calendar_today_outlined,
-                    size: 13, color: Colors.blue),
+                    size: 13, color: AppColors.accent),
                 const SizedBox(width: 6),
                 Text(
                   _formatDate(dayData.date),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AppTypography.jpSMedium.copyWith(fontSize: 13, color: AppColors.textPrimary),
                 ),
                 const Spacer(),
                 Text(
                   '${dayData.avgDistance.round()}yd',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
+                  style: AppTypography.jpSMedium.copyWith(fontSize: 15, color: AppColors.accent),
                 ),
               ],
             ),
@@ -571,7 +561,7 @@ class _SummaryMemoRow extends StatelessWidget {
                 memo.body!,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                style: AppTypography.jpSRegular.copyWith(fontSize: 13, color: AppColors.textPrimary),
               ),
             ),
           // チップ + 詳細ボタン
@@ -584,12 +574,11 @@ class _SummaryMemoRow extends StatelessWidget {
               const Spacer(),
               GestureDetector(
                 onTap: () => onDetailTap(memo.id!),
-                child: const Row(
+                child: Row(
                   children: [
                     Text('詳細',
-                        style: TextStyle(
-                            fontSize: 12, color: AppColors.textSecondary)),
-                    Icon(Icons.chevron_right,
+                        style: AppTypography.jpSRegular.copyWith(fontSize: 12, color: AppColors.textSecondary)),
+                    const Icon(Icons.chevron_right,
                         size: 14, color: AppColors.textSecondary),
                   ],
                 ),
@@ -616,8 +605,7 @@ class _Chip extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(label,
-          style:
-              const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+          style: AppTypography.jpSRegular.copyWith(fontSize: 11, color: AppColors.textSecondary)),
     );
   }
 }
@@ -661,11 +649,8 @@ class _ClubSelectSheet extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  const Text('クラブを選択',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary)),
+                  Text('クラブを選択',
+                      style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary)),
                   Align(
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
@@ -689,15 +674,13 @@ class _ClubSelectSheet extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
                       child: Text(entry.key,
-                          style: const TextStyle(
-                              fontSize: 12, color: AppColors.textSecondary)),
+                          style: AppTypography.jpSRegular.copyWith(fontSize: 12, color: AppColors.textSecondary)),
                     ),
                     ...entry.value.map((club) => ListTile(
                           contentPadding:
                               const EdgeInsets.symmetric(horizontal: 20),
                           title: Text(club.name,
-                              style: const TextStyle(
-                                  fontSize: 15, color: AppColors.textPrimary)),
+                              style: AppTypography.jpMRegular.copyWith(fontSize: 15, color: AppColors.textPrimary)),
                           trailing: club.id == selectedClubId
                               ? const Icon(Icons.check, color: AppColors.primary)
                               : null,

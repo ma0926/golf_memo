@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/club.dart';
 import '../../data/models/media.dart';
@@ -115,13 +116,9 @@ class _ClubSelectPageState extends State<_ClubSelectPage> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    const Text(
+                    Text(
                       'クラブを選択',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
+                      style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
                     ),
                     Align(
                       alignment: Alignment.centerLeft,
@@ -144,15 +141,15 @@ class _ClubSelectPageState extends State<_ClubSelectPage> {
                     widget.onClose();
                     Future.microtask(() => context.push('/settings'));
                   },
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         'クラブの設定を開く',
-                        style: TextStyle(fontSize: 14, color: Colors.blue),
+                        style: AppTypography.jpSRegular.copyWith(color: AppColors.accent),
                       ),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_outward, size: 14, color: Colors.blue),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.arrow_outward, size: 14, color: AppColors.accent),
                     ],
                   ),
                 ),

@@ -1,7 +1,9 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../data/models/practice_memo.dart';
 import '../../data/repositories/club_repository.dart';
 import '../../data/repositories/media_repository.dart';
@@ -32,18 +34,15 @@ class MemoListScreen extends StatelessWidget {
           backgroundColor: AppColors.background,
           elevation: 0,
           titleSpacing: 16,
-          title: const Text(
+          title: Text(
             'メモ一覧',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              fontFamily: 'Hiragino Sans',
-              color: AppColors.textPrimary,
-            ),
+            style: AppTypography.jpHeader1.copyWith(color: AppColors.textPrimary),
           ),
           actions: [
             IconButton(
-              icon: Image.asset('assets/icons/settings.png', width: 28, height: 28),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              icon: SvgPicture.asset('assets/icons/Icon Button.svg', width: 48, height: 48),
               onPressed: () => Navigator.of(context, rootNavigator: true).push(
                 PageRouteBuilder(
                   pageBuilder: (_, __, ___) => const SettingsScreen(),
@@ -58,7 +57,9 @@ class MemoListScreen extends StatelessWidget {
               ),
             ),
             IconButton(
-              icon: Image.asset('assets/icons/search.png', width: 28, height: 28),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              icon: SvgPicture.asset('assets/icons/Icon Button-1.svg', width: 48, height: 48),
               onPressed: () => Navigator.of(context, rootNavigator: true).push(
                 PageRouteBuilder(
                   pageBuilder: (_, __, ___) => const SearchScreen(),
@@ -75,26 +76,18 @@ class MemoListScreen extends StatelessWidget {
             const SizedBox(width: 4),
           ],
           bottom: const TabBar(
-            labelColor: AppColors.primary,
+            labelColor: AppColors.textPrimary,
             unselectedLabelColor: AppColors.textSecondary,
             indicator: UnderlineTabIndicator(
-              borderSide: BorderSide(color: AppColors.primary, width: 2.0),
+              borderSide: BorderSide(color: AppColors.textPrimary, width: 2.0),
               borderRadius: BorderRadius.zero,
               insets: EdgeInsets.symmetric(horizontal: 16),
             ),
             indicatorSize: TabBarIndicatorSize.tab,
-            dividerColor: Color(0xFF4B5E96),
+            dividerColor: AppColors.primaryMiddle,
             dividerHeight: 0.3,
-            labelStyle: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Hiragino Sans',
-            ),
-            unselectedLabelStyle: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Hiragino Sans',
-            ),
+            labelStyle: AppTypography.jpHeader4,
+            unselectedLabelStyle: AppTypography.jpHeader4,
             tabs: [
               Tab(text: 'すべて', height: 38),
               Tab(text: 'お気に入り', height: 38),
@@ -217,11 +210,11 @@ class _AllMemosTabState extends State<_AllMemosTab> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_memos.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'まだ記録がありません\n＋ボタンから追加しましょう',
           textAlign: TextAlign.center,
-          style: TextStyle(color: AppColors.textSecondary, height: 1.8),
+          style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary, height: 1.8),
         ),
       );
     }
@@ -231,7 +224,7 @@ class _AllMemosTabState extends State<_AllMemosTab> {
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView.builder(
-        padding: const EdgeInsets.only(top: 12, bottom: 80),
+        padding: const EdgeInsets.only(top: 24, bottom: 80),
         itemCount: groups.length,
         itemBuilder: (context, i) {
           final group = groups[i];
@@ -263,14 +256,12 @@ class _AllMemosTabState extends State<_AllMemosTab> {
                           distance: memo.distance != null ? '${memo.distance}yd' : null,
                           bodyText: memo.body,
                           thumbnailPath: _thumbnails[memo.id],
-                          isFavorite: memo.isFavorite,
                           margin: EdgeInsets.zero,
                           onTap: () {
                             setState(() => _hiddenMemoId = memo.id);
                             isDetailOpen.value = true;
                             openContainer();
                           },
-                          onToggleFavorite: () => _toggleFavorite(memo),
                         ),
                       ),
                       openBuilder: (context, _) => MemoExpandedCard(
@@ -279,7 +270,7 @@ class _AllMemosTabState extends State<_AllMemosTab> {
                       ),
                     ),
                   )),
-              const SizedBox(height: 12),
+              const SizedBox(height: 24),
             ],
           );
         },
@@ -288,54 +279,34 @@ class _AllMemosTabState extends State<_AllMemosTab> {
   }
 }
 
-// 日付ヘッダー（例: "1/12  金  2026"）
+// 日付ヘッダー（1週間以内は相対表示）
 class _DateHeader extends StatelessWidget {
   final DateTime date;
 
   const _DateHeader({required this.date});
 
-  @override
-  Widget build(BuildContext context) {
+  String _label() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(date.year, date.month, date.day);
+    final diff = today.difference(target).inDays;
+
+    if (diff == 0) return '今日';
+    if (diff == 1) return '昨日';
+    if (diff <= 6) return '$diff日前';
+
     const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
     final weekday = weekdays[date.weekday - 1];
+    return '${date.month}/${date.day}（$weekday）';
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            '${date.month}/${date.day}',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textMedium,
-              height: 0.8,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Row(
-            children: [
-              Text(
-                weekday,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                  height: 1.0,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '${date.year}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                  height: 1.0,
-                ),
-              ),
-            ],
-          ),
-        ],
+      padding: const EdgeInsets.fromLTRB(32, 12, 24, 8),
+      child: Text(
+        _label(),
+        style: AppTypography.jpSubHeader.copyWith(color: AppColors.textMedium),
       ),
     );
   }
@@ -423,10 +394,10 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_memos.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'お気に入りはまだありません',
-          style: TextStyle(color: AppColors.textSecondary),
+          style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
         ),
       );
     }
@@ -436,7 +407,7 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView.builder(
-        padding: const EdgeInsets.only(top: 12, bottom: 80),
+        padding: const EdgeInsets.only(top: 24, bottom: 80),
         itemCount: groups.length,
         itemBuilder: (context, i) {
           final group = groups[i];
@@ -468,14 +439,12 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
                           distance: memo.distance != null ? '${memo.distance}yd' : null,
                           bodyText: memo.body,
                           thumbnailPath: _thumbnails[memo.id],
-                          isFavorite: memo.isFavorite,
                           margin: EdgeInsets.zero,
                           onTap: () {
                             setState(() => _hiddenMemoId = memo.id);
                             isDetailOpen.value = true;
                             openContainer();
                           },
-                          onToggleFavorite: () => _toggleFavorite(memo),
                         ),
                       ),
                       openBuilder: (context, _) => MemoExpandedCard(
@@ -484,7 +453,7 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
                       ),
                     ),
                   )),
-              const SizedBox(height: 12),
+              const SizedBox(height: 24),
             ],
           );
         },

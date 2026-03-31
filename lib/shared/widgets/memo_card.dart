@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 
 // 記録一覧の1枚のカード
 class MemoCard extends StatelessWidget {
@@ -8,9 +9,7 @@ class MemoCard extends StatelessWidget {
   final String? distance;
   final String? bodyText;
   final String? thumbnailPath;
-  final bool isFavorite;
   final VoidCallback? onTap;
-  final VoidCallback? onToggleFavorite;
   final EdgeInsetsGeometry margin;
 
   const MemoCard({
@@ -19,9 +18,7 @@ class MemoCard extends StatelessWidget {
     this.distance,
     this.bodyText,
     this.thumbnailPath,
-    this.isFavorite = false,
     this.onTap,
-    this.onToggleFavorite,
     this.margin = const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
   });
 
@@ -29,11 +26,23 @@ class MemoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final content = Container(
       margin: margin,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.divider, width: 1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white, width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D000000),
+            blurRadius: 20,
+            offset: Offset(0, 0),
+          ),
+          BoxShadow(
+            color: Color(0x0A007BFF),
+            blurRadius: 40,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,88 +50,52 @@ class MemoCard extends StatelessWidget {
           // クラブ名 + 飛距離
           Row(
             children: [
-              Text(
-                clubName,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Hiragino Sans',
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  clubName,
+                  style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Spacer(),
-              if (distance != null)
+              if (distance != null) ...[
+                const SizedBox(width: 8),
                 Text(
                   distance!,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Hiragino Sans',
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 本文 + サムネイル
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (bodyText != null)
-                      Text(
-                        bodyText!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontFamily: 'Hiragino Sans',
-                          color: AppColors.textBody,
-                          height: 1.5,
-                        ),
-                      ),
-                    const SizedBox(height: 8),
-                    // ブックマークボタン（タップは OpenContainer のタップと独立させる）
-                    GestureDetector(
-                      onTap: onToggleFavorite,
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundMiddle,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          isFavorite ? Icons.bookmark : Icons.bookmark_border,
-                          size: 18,
-                          color: isFavorite
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (thumbnailPath != null) ...[
-                const SizedBox(width: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.file(
-                    File(thumbnailPath!),
-                    width: 81,
-                    height: 81,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                  ),
+                  style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary),
                 ),
               ],
             ],
           ),
+          if (bodyText != null && bodyText!.isNotEmpty || thumbnailPath != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (bodyText != null && bodyText!.isNotEmpty)
+                  Expanded(
+                    child: Text(
+                      bodyText!.replaceAll('\n', ' '),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
+                    ),
+                  ),
+                if (thumbnailPath != null) ...[
+                  if (bodyText != null && bodyText!.isNotEmpty) const SizedBox(width: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(thumbnailPath!),
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
         ],
       ),
     );
