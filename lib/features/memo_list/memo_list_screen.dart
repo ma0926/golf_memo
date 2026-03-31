@@ -10,6 +10,8 @@ import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/memo_card.dart';
 import 'memo_expanded_card.dart';
+import 'package:path_provider/path_provider.dart';
+import '../../core/utils/media_path_helper.dart';
 import '../../app.dart' show isDetailOpen, memoCreatedNotifier;
 import '../settings/settings_screen.dart';
 import '../search/search_screen.dart';
@@ -163,12 +165,16 @@ class _AllMemosTabState extends State<_AllMemosTab> {
           : Future.value([])),
     );
 
+    final docsDir = await getApplicationDocumentsDirectory();
     final thumbnails = <int, String?>{};
     for (var i = 0; i < memos.length; i++) {
       final memo = memos[i];
       if (memo.id != null && mediaResults[i].isNotEmpty) {
         final first = mediaResults[i].first;
-        thumbnails[memo.id!] = first.isVideo ? first.thumbnailUri : first.uri;
+        final rawPath = first.isVideo ? first.thumbnailUri : first.uri;
+        if (rawPath != null) {
+          thumbnails[memo.id!] = MediaPathHelper.resolve(rawPath, docsDir.path);
+        }
       }
     }
 
@@ -347,12 +353,16 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
           : Future.value([])),
     );
 
+    final docsDir = await getApplicationDocumentsDirectory();
     final thumbnails = <int, String?>{};
     for (var i = 0; i < memos.length; i++) {
       final memo = memos[i];
       if (memo.id != null && mediaResults[i].isNotEmpty) {
         final first = mediaResults[i].first;
-        thumbnails[memo.id!] = first.isVideo ? first.thumbnailUri : first.uri;
+        final rawPath = first.isVideo ? first.thumbnailUri : first.uri;
+        if (rawPath != null) {
+          thumbnails[memo.id!] = MediaPathHelper.resolve(rawPath, docsDir.path);
+        }
       }
     }
 

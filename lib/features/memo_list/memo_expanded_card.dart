@@ -2,9 +2,11 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/media_path_helper.dart';
 import '../../data/models/media.dart';
 import '../../data/models/practice_memo.dart';
 import '../../data/repositories/club_repository.dart';
@@ -40,6 +42,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
   late PracticeMemo _memo;
   late String _clubName;
   List<Media> _mediaList = [];
+  String _docsPath = '';
   late bool _isFavorite;
   late final AnimationController _fadeCtrl = AnimationController(
     vsync: this,
@@ -82,7 +85,11 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
   Future<void> _loadMedia() async {
     if (_memo.id == null) return;
     final media = await _mediaRepo.getMediaByMemoId(_memo.id!);
-    if (mounted) setState(() => _mediaList = media);
+    final docsDir = await getApplicationDocumentsDirectory();
+    if (mounted) setState(() {
+      _mediaList = media;
+      _docsPath = docsDir.path;
+    });
   }
 
   Future<void> _toggleFavorite() async {
@@ -170,30 +177,29 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
   @override
   Widget build(BuildContext context) {
     final memo = _memo;
-    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
-    final weekday = weekdays[memo.practicedAt.weekday - 1];
-    final dateStr =
-        '${memo.practicedAt.year}/${memo.practicedAt.month}/${memo.practicedAt.day}';
+    const weekdayNames = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日', '日曜日'];
+    final weekday = weekdayNames[memo.practicedAt.weekday - 1];
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: SvgPicture.asset('assets/icons/close.svg', width: 24, height: 24),
+          icon: SvgPicture.asset('assets/icons/close.svg', width: 30, height: 30),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.more_horiz, color: AppColors.textPrimary),
+            icon: SvgPicture.asset('assets/icons/more_horiz.svg', width: 30, height: 30),
             onPressed: _showActionSheet,
           ),
           IconButton(
-            icon: Icon(
-              _isFavorite ? Icons.bookmark : Icons.bookmark_border,
-              color: AppColors.primary,
+            icon: SvgPicture.asset(
+              _isFavorite ? 'assets/icons/bookmark.svg' : 'assets/icons/bookmark_border.svg',
+              width: 24,
+              height: 24,
             ),
             onPressed: _toggleFavorite,
           ),
@@ -207,37 +213,50 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Section 1
               Text(
-                _clubName,
-                style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
+                weekday,
+                style: AppTypography.jpSubHeader.copyWith(color: AppColors.textSecondary),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text(dateStr,
-                      style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary)),
-                  const SizedBox(width: 8),
-                  Text(weekday,
-                      style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary)),
+                  Expanded(
+                    child: Text(
+                      _clubName,
+                      style: AppTypography.jpHeader1.copyWith(color: AppColors.textPrimary),
+                    ),
+                  ),
+                  if (memo.distance != null)
+                    Text(
+                      '${memo.distance}yd',
+                      style: AppTypography.enHeader2.copyWith(
+                        color: AppColors.textPrimary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: 16),
               _MetaChipsRow(
                 condition: memo.condition,
-                distance: memo.distance,
                 shotShape: memo.shotShape,
                 wind: memo.wind,
               ),
+              // Section 2: media
+              if (_mediaList.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                _MediaRow(mediaList: _mediaList, docsPath: _docsPath),
+              ],
+              // Section 3: body text
               if (memo.body != null && memo.body!.isNotEmpty) ...[
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 Text(
                   memo.body!,
                   style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
                 ),
-              ],
-              if (_mediaList.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                _MediaRow(mediaList: _mediaList),
               ],
             ],
           ),
@@ -247,72 +266,88 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
   }
 }
 
-// ── メタチップ行 ──────────────────────────────────────
+// ── メタ情報行 ──────────────────────────────────────
 class _MetaChipsRow extends StatelessWidget {
   final String? condition;
-  final int? distance;
   final String? shotShape;
   final String? wind;
 
-  const _MetaChipsRow(
-      {this.condition, this.distance, this.shotShape, this.wind});
+  const _MetaChipsRow({this.condition, this.shotShape, this.wind});
 
   @override
   Widget build(BuildContext context) {
-    final chips = <Widget>[
-      if (distance != null)
-        _MetaChip(icon: Icons.place_outlined, label: '${distance}yd'),
+    final items = <Widget>[
       if (shotShape != null)
-        _MetaChip(
-          icon: Icons.north_east,
+        _MetaItem(
+          svgPath: 'assets/icons/$shotShape.svg',
           label: AppConstants.shotShapeLabels[shotShape] ?? shotShape!,
+          iconTextGap: 0,
+          applyColorFilter: true,
         ),
       if (condition != null)
-        _MetaChip(
+        _MetaItem(
           icon: Icons.sentiment_satisfied_outlined,
           label: AppConstants.conditionLabels[condition] ?? condition!,
         ),
       if (wind != null)
-        _MetaChip(
-          icon: Icons.air,
-          label: AppConstants.windLabels[wind] ?? wind!,
-        ),
+        wind == 'none'
+            ? const _MetaItem(
+                svgPath: 'assets/icons/wind_none.svg',
+                label: '風なし',
+              )
+            : _MetaItem(
+                icon: Icons.air,
+                label: AppConstants.windLabels[wind!] ?? wind!,
+              ),
     ];
-    if (chips.isEmpty) return const SizedBox.shrink();
+    if (items.isEmpty) return const SizedBox.shrink();
 
     return Wrap(
-      spacing: 8,
+      spacing: 16,
       runSpacing: 8,
-      children: chips,
+      children: items,
     );
   }
 }
 
-class _MetaChip extends StatelessWidget {
-  final IconData icon;
+class _MetaItem extends StatelessWidget {
+  final IconData? icon;
+  final String? svgPath;
   final String label;
+  final double iconTextGap;
+  final bool applyColorFilter;
 
-  const _MetaChip({required this.icon, required this.label});
+  const _MetaItem({
+    this.icon,
+    this.svgPath,
+    required this.label,
+    this.iconTextGap = 4,
+    this.applyColorFilter = false,
+  }) : assert(icon != null || svgPath != null);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundLabel,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppColors.textPrimary),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: AppTypography.jpSRegular.copyWith(fontSize: 12, color: AppColors.textPrimary),
-          ),
-        ],
-      ),
+    final iconWidget = svgPath != null
+        ? SvgPicture.asset(
+            svgPath!,
+            width: 16,
+            height: 16,
+            colorFilter: applyColorFilter
+                ? const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn)
+                : null,
+          )
+        : Icon(icon, size: 16, color: AppColors.textSecondary);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        iconWidget,
+        SizedBox(width: iconTextGap),
+        Text(
+          label,
+          style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
+        ),
+      ],
     );
   }
 }
@@ -320,8 +355,9 @@ class _MetaChip extends StatelessWidget {
 // ── メディア横並びサムネイル ──────────────────────────
 class _MediaRow extends StatelessWidget {
   final List<Media> mediaList;
+  final String docsPath;
 
-  const _MediaRow({required this.mediaList});
+  const _MediaRow({required this.mediaList, required this.docsPath});
 
   @override
   Widget build(BuildContext context) {
@@ -335,9 +371,11 @@ class _MediaRow extends StatelessWidget {
           final item = mediaList[index];
           final isVideo = item.isVideo;
           final thumbFile = isVideo && item.thumbnailUri != null
-              ? File(item.thumbnailUri!)
+              ? File(MediaPathHelper.resolve(item.thumbnailUri!, docsPath))
               : null;
-          final imageFile = !isVideo ? File(item.uri) : null;
+          final imageFile = !isVideo
+              ? File(MediaPathHelper.resolve(item.uri, docsPath))
+              : null;
 
           return GestureDetector(
             onTap: () {
@@ -350,7 +388,7 @@ class _MediaRow extends StatelessWidget {
                   pageBuilder: (_, __, ___) => MediaPreviewScreen(
                     file: thumbFile ?? imageFile,
                     isVideo: isVideo,
-                    videoPath: isVideo ? item.uri : null,
+                    videoPath: isVideo ? MediaPathHelper.resolve(item.uri, docsPath) : null,
                   ),
                   transitionsBuilder: (_, animation, __, child) =>
                       FadeTransition(opacity: animation, child: child),

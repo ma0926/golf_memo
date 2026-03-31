@@ -456,12 +456,12 @@ class _MemoInputPageState extends State<_MemoInputPage> {
         for (final image in _images) {
           final ts = DateTime.now().microsecondsSinceEpoch;
           final ext = image.path.split('.').last.toLowerCase();
-          final destPath = '${mediaDir.path}/img_$ts.$ext';
-          await File(image.path).copy(destPath);
+          final relPath = 'media/img_$ts.$ext';
+          await File(image.path).copy('${mediaDir.path}/img_$ts.$ext');
           await _mediaRepo.insertMedia(Media(
             practiceMemoId: savedMemo.id!,
             type: 'image',
-            uri: destPath,
+            uri: relPath,
             createdAt: now,
           ));
         }
@@ -469,23 +469,24 @@ class _MemoInputPageState extends State<_MemoInputPage> {
         if (_video != null) {
           final ts = DateTime.now().microsecondsSinceEpoch;
           final ext = _video!.path.split('.').last.toLowerCase();
+          final vidRelPath = 'media/vid_$ts.$ext';
           final vidDestPath = '${mediaDir.path}/vid_$ts.$ext';
           // ダミーファイル（空）の場合はコピーしない
           if (await File(_video!.path).length() > 0) {
             await File(_video!.path).copy(vidDestPath);
           }
 
-          String? thumbDestPath;
+          String? thumbRelPath;
           if (_videoThumbnailPath != null) {
-            thumbDestPath = '${mediaDir.path}/thumb_$ts.jpg';
-            await File(_videoThumbnailPath!).copy(thumbDestPath);
+            thumbRelPath = 'media/thumb_$ts.jpg';
+            await File(_videoThumbnailPath!).copy('${mediaDir.path}/thumb_$ts.jpg');
           }
 
           await _mediaRepo.insertMedia(Media(
             practiceMemoId: savedMemo.id!,
             type: 'video',
-            uri: vidDestPath,
-            thumbnailUri: thumbDestPath,
+            uri: vidRelPath,
+            thumbnailUri: thumbRelPath,
             createdAt: now,
           ));
         }

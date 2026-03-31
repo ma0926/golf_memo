@@ -161,7 +161,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
           elevation: 0,
           automaticallyImplyLeading: false,
           leading: IconButton(
-            icon: SvgPicture.asset('assets/icons/close.svg', width: 24, height: 24),
+            icon: SvgPicture.asset('assets/icons/close.svg', width: 30, height: 30),
             onPressed: () => Navigator.of(context).pop(),
           ),
           actions: [

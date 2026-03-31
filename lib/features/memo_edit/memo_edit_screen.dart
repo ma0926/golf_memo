@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/media_path_helper.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/club.dart';
 import '../../data/models/media.dart';
@@ -319,13 +320,14 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
       await _memoRepo.updateMemo(updatedMemo);
 
       // 削除対象のメディアを処理
+      final docsDir = await getApplicationDocumentsDirectory();
       for (final id in _removedMediaIds) {
         final media = _existingMedia.firstWhere((m) => m.id == id);
         await _mediaRepo.deleteMedia(id);
         try {
-          await File(media.uri).delete();
+          await File(MediaPathHelper.resolve(media.uri, docsDir.path)).delete();
           if (media.thumbnailUri != null) {
-            await File(media.thumbnailUri!).delete();
+            await File(MediaPathHelper.resolve(media.thumbnailUri!, docsDir.path)).delete();
           }
         } catch (_) {
           // ファイル削除エラーは無視
@@ -334,7 +336,6 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
 
       // 新規メディアを保存
       if (_newImages.isNotEmpty || _newVideo != null) {
-        final docsDir = await getApplicationDocumentsDirectory();
         final mediaDir = Directory('${docsDir.path}/media');
         if (!await mediaDir.exists()) {
           await mediaDir.create(recursive: true);
@@ -345,12 +346,12 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
         for (final image in _newImages) {
           final ts = DateTime.now().microsecondsSinceEpoch;
           final ext = image.path.split('.').last.toLowerCase();
-          final destPath = '${mediaDir.path}/img_$ts.$ext';
-          await File(image.path).copy(destPath);
+          final relPath = 'media/img_$ts.$ext';
+          await File(image.path).copy('${mediaDir.path}/img_$ts.$ext');
           await _mediaRepo.insertMedia(Media(
             practiceMemoId: widget.memoId,
             type: 'image',
-            uri: destPath,
+            uri: relPath,
             createdAt: now,
           ));
         }
@@ -358,22 +359,23 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
         if (_newVideo != null) {
           final ts = DateTime.now().microsecondsSinceEpoch;
           final ext = _newVideo!.path.split('.').last.toLowerCase();
+          final vidRelPath = 'media/vid_$ts.$ext';
           final vidDestPath = '${mediaDir.path}/vid_$ts.$ext';
           if (await File(_newVideo!.path).length() > 0) {
             await File(_newVideo!.path).copy(vidDestPath);
           }
 
-          String? thumbDestPath;
+          String? thumbRelPath;
           if (_newVideoThumbnailPath != null) {
-            thumbDestPath = '${mediaDir.path}/thumb_$ts.jpg';
-            await File(_newVideoThumbnailPath!).copy(thumbDestPath);
+            thumbRelPath = 'media/thumb_$ts.jpg';
+            await File(_newVideoThumbnailPath!).copy('${mediaDir.path}/thumb_$ts.jpg');
           }
 
           await _mediaRepo.insertMedia(Media(
             practiceMemoId: widget.memoId,
             type: 'video',
-            uri: vidDestPath,
-            thumbnailUri: thumbDestPath,
+            uri: vidRelPath,
+            thumbnailUri: thumbRelPath,
             createdAt: now,
           ));
         }

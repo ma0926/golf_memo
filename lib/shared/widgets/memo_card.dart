@@ -61,7 +61,7 @@ class MemoCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   distance!,
-                  style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary),
+                  style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary, fontStyle: FontStyle.italic),
                 ),
               ],
             ],
@@ -79,7 +79,9 @@ class MemoCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
                     ),
-                  ),
+                  )
+                else if (thumbnailPath != null)
+                  const Spacer(),
                 if (thumbnailPath != null) ...[
                   if (bodyText != null && bodyText!.isNotEmpty) const SizedBox(width: 12),
                   ClipRRect(
