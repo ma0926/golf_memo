@@ -30,33 +30,29 @@ class AppConstants {
 
   // 風の選択肢
   static const List<String> windConditions = [
-    'strong',
-    'normal',
-    'weak',
+    'yes',
     'none',
   ];
 
   // 調子の表示ラベル
   static const Map<String, String> conditionLabels = {
-    'good':   '良い',
-    'normal': '普通',
-    'bad':    '悪い',
+    'good':   '絶好調',
+    'normal': 'いつもの調子',
+    'bad':    'いまひとつ',
   };
 
   // 球筋の表示ラベル
   static const Map<String, String> shotShapeLabels = {
-    'straight': 'ストレート',
     'draw':     'ドロー',
+    'straight': 'ストレート',
     'fade':     'フェード',
-    'slice':    'スライス',
     'hook':     'フック',
+    'slice':    'スライス',
   };
 
   // 風の表示ラベル
   static const Map<String, String> windLabels = {
-    'strong': '強',
-    'normal': '中',
-    'weak':   '弱',
-    'none':   'なし',
+    'yes':  'あり',
+    'none': 'なし',
   };
 }

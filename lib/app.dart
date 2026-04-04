@@ -316,6 +316,7 @@ class App extends StatelessWidget {
       title: 'PIN',
       theme: AppTheme.light,
       routerConfig: _router,
+      locale: const Locale('ja', 'JP'),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

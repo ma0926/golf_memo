@@ -100,46 +100,75 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
   }
 
   void _showActionSheet() {
-    showCupertinoModalPopup(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => CupertinoActionSheet(
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final size = MediaQuery.of(context).size;
-              final result = await showModalBottomSheet<bool>(
-                context: context,
-                isScrollControlled: true,
-                useRootNavigator: true,
-                useSafeArea: false,
-                backgroundColor: Colors.transparent,
-                constraints: BoxConstraints(maxHeight: size.height * 0.92),
-                builder: (_) => ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: MemoEditScreen(memoId: widget.memo.id!),
-                ),
-              );
-              if (result == true) {
-                await _reload();
-                widget.onChanged?.call();
-              }
-            },
-            child: const Text('編集'),
-          ),
-          CupertinoActionSheetAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(ctx);
-              _showDeleteConfirm();
-            },
-            child: const Text('削除'),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('キャンセル'),
+      useRootNavigator: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD0D7DE),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            ListTile(
+              leading: SvgPicture.asset(
+                'assets/icons/edit.svg',
+                width: 24,
+                height: 24,
+                colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+              ),
+              title: Text(
+                '編集',
+                style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
+              ),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final result = await Navigator.of(context, rootNavigator: true).push<bool>(
+                  PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => MemoEditScreen(memoId: widget.memo.id!),
+                    transitionsBuilder: (_, animation, __, child) => SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 1),
+                        end: Offset.zero,
+                      ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+                      child: child,
+                    ),
+                  ),
+                );
+                if (result == true) {
+                  await _reload();
+                  widget.onChanged?.call();
+                }
+              },
+            ),
+            ListTile(
+              leading: SvgPicture.asset(
+                'assets/icons/delete.svg',
+                width: 24,
+                height: 24,
+                colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
+              ),
+              title: Text(
+                '削除',
+                style: AppTypography.jpMRegular.copyWith(color: Colors.red),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showDeleteConfirm();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );

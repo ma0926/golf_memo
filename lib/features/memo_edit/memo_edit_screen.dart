@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/utils/media_path_helper.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/club.dart';
@@ -36,9 +38,9 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
   DateTime _selectedDate = DateTime.now();
   final _bodyController = TextEditingController();
   final _distanceController = TextEditingController();
+  final _distanceFocusNode = FocusNode();
 
-  bool _showAllItems = false;
-  final Set<String> _expandedItems = {};
+  String _docsPath = '';
 
   String? _shotShape;
   String? _condition;
@@ -55,9 +57,14 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
 
+  // 展開済みセクション（未選択のときは折りたたみ表示）
+  final Set<String> _openSections = {};
+
   @override
   void initState() {
     super.initState();
+    _bodyController.addListener(() => setState(() {}));
+    _distanceController.addListener(() => setState(() {}));
     _load();
   }
 
@@ -65,6 +72,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
   void dispose() {
     _bodyController.dispose();
     _distanceController.dispose();
+    _distanceFocusNode.dispose();
     super.dispose();
   }
 
@@ -76,12 +84,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
     }
     final club = await _clubRepo.getClubById(memo.clubId);
     final media = await _mediaRepo.getMediaByMemoId(widget.memoId);
-
-    final expandedItems = <String>{};
-    if (memo.distance != null) expandedItems.add('distance');
-    if (memo.shotShape != null) expandedItems.add('shotShape');
-    if (memo.condition != null) expandedItems.add('condition');
-    if (memo.wind != null) expandedItems.add('wind');
+    final docsDir = await getApplicationDocumentsDirectory();
 
     setState(() {
       _memo = memo;
@@ -94,18 +97,45 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
       _condition = memo.condition;
       _wind = memo.wind;
       _existingMedia = media;
-      _expandedItems.addAll(expandedItems);
-      if (memo.condition != null || memo.wind != null) {
-        _showAllItems = true;
-      }
+      _docsPath = docsDir.path;
+      // 既に値が入っているセクションは最初から展開
+      if (memo.distance != null) _openSections.add('distance');
+      if (memo.shotShape != null) _openSections.add('shotShape');
+      if (memo.condition != null) _openSections.add('condition');
+      if (memo.wind != null) _openSections.add('wind');
       _isLoading = false;
     });
   }
 
+  bool get _hasChanges {
+    if (_memo == null) return false;
+    final m = _memo!;
+    return _clubId != m.clubId ||
+        !_isSameDay(_selectedDate, m.practicedAt) ||
+        _bodyController.text != (m.body ?? '') ||
+        _distanceController.text != (m.distance?.toString() ?? '') ||
+        _shotShape != m.shotShape ||
+        _condition != m.condition ||
+        _wind != m.wind ||
+        _removedMediaIds.isNotEmpty ||
+        _newImages.isNotEmpty ||
+        _newVideo != null;
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
   String get _formattedDate {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final diff = today.difference(target).inDays;
+    if (diff == 0) return '今日';
+    if (diff == 1) return '昨日';
+    if (diff <= 6) return '$diff日前';
     const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
     final w = weekdays[_selectedDate.weekday - 1];
-    return '${_selectedDate.year}/${_selectedDate.month}/${_selectedDate.day}（$w）';
+    return '${_selectedDate.month}/${_selectedDate.day}（$w）';
   }
 
   void _showDatePicker() {
@@ -119,7 +149,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: CupertinoButton(
-                child: const Text('完了'),
+                child: const Text('完了', style: TextStyle(color: AppColors.accent)),
                 onPressed: () => Navigator.pop(modalContext),
               ),
             ),
@@ -162,16 +192,6 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
     );
   }
 
-  void _toggleExpand(String key) {
-    setState(() {
-      if (_expandedItems.contains(key)) {
-        _expandedItems.remove(key);
-      } else {
-        _expandedItems.add(key);
-      }
-    });
-  }
-
   // ── メディア ─────────────────────────────────────────
 
   int get _activeExistingImageCount =>
@@ -186,28 +206,73 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
   void _showMediaPicker() {
     if (_totalImageCount >= AppConstants.maxImagesPerMemo && _hasActiveVideo) return;
 
-    showCupertinoModalPopup(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => CupertinoActionSheet(
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _pickFromLibrary();
-            },
-            child: const Text('ライブラリから選ぶ'),
-          ),
-          CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _pickImage(ImageSource.camera);
-            },
-            child: const Text('写真を撮る'),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('キャンセル'),
+      useRootNavigator: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ドラッグインジケーター
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // ライブラリから選ぶ
+            ListTile(
+              leading: SvgPicture.asset(
+                'assets/icons/photo_library.svg',
+                width: 24,
+                height: 24,
+                colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+              ),
+              title: Text(
+                'ライブラリから選ぶ',
+                style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickFromLibrary();
+              },
+            ),
+            // 写真を撮る
+            ListTile(
+              leading: SvgPicture.asset(
+                'assets/icons/camera_add.svg',
+                width: 24,
+                height: 24,
+                colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+              ),
+              title: Text(
+                '写真を撮る',
+                style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Text(
+                  '※動画は1枚、画像は3枚まで追加できます。',
+                  style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -413,338 +478,400 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
       );
     }
 
-    final visibleItems = _showAllItems
-        ? ['distance', 'shotShape', 'condition', 'wind']
-        : ['distance', 'shotShape'];
-
     final activeExistingImages =
         _existingMedia.where((m) => m.isImage && !_removedMediaIds.contains(m.id)).toList();
     final activeExistingVideo =
         _existingMedia.where((m) => m.isVideo && !_removedMediaIds.contains(m.id)).firstOrNull;
 
+    // 未選択セクションのチップ（画面最下部に固定）
+    final collapsedChips = <Widget>[
+      if (!_openSections.contains('distance'))
+        _CollapsedChip(label: '飛距離', onTap: () {
+          setState(() => _openSections.add('distance'));
+          Future.microtask(() => _distanceFocusNode.requestFocus());
+        }),
+      if (!_openSections.contains('shotShape'))
+        _CollapsedChip(label: '球筋', onTap: () => setState(() => _openSections.add('shotShape'))),
+      if (!_openSections.contains('condition'))
+        _CollapsedChip(label: '調子', onTap: () => setState(() => _openSections.add('condition'))),
+      if (!_openSections.contains('wind'))
+        _CollapsedChip(label: '風', onTap: () => setState(() => _openSections.add('wind'))),
+    ];
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.backgroundExLow,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.backgroundExLow,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.textPrimary),
-          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-        ),
-        title: const Text(
-          '編集',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+        toolbarHeight: 56 + 8,
+        automaticallyImplyLeading: false,
+        leading: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: IconButton(
+            icon: SvgPicture.asset('assets/icons/close.svg', width: 30, height: 30),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           ),
         ),
-        centerTitle: true,
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-          child: SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: _isSaving ? null : _saveChanges,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.6),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                elevation: 0,
-              ),
-              child: _isSaving
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16, top: 8, bottom: 6),
+            child: ElevatedButton.icon(
+              onPressed: (_isSaving || !_hasChanges) ? null : _saveChanges,
+              icon: _isSaving
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                     )
-                  : const Text(
-                      '保存',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
+                  : const Icon(Icons.check_rounded, size: 18, color: Colors.white),
+              label: Text('保存', style: AppTypography.jpMMedium.copyWith(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                disabledBackgroundColor: AppColors.accent.withValues(alpha: 0.4),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                elevation: 0,
+                minimumSize: const Size(0, 44),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
             ),
           ),
+        ],
+      ),
+      body: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── スクロール部分 ──
+            Expanded(
+              child: CustomScrollView(
+          slivers: [
+            // ── 上部固定コンテンツ（日付・クラブ・メディア）──
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 日付
+                    Center(
+                      child: GestureDetector(
+                        onTap: _showDatePicker,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _formattedDate,
+                              style: AppTypography.jpSubHeader.copyWith(color: AppColors.textSecondary),
+                            ),
+                            const SizedBox(width: 6),
+                            SvgPicture.asset('assets/icons/calendar.svg', width: 20, height: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // クラブ名
+                    GestureDetector(
+                      onTap: _showClubSelect,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _clubName,
+                            style: AppTypography.jpHeader1.copyWith(color: AppColors.textPrimary),
+                          ),
+                          const SizedBox(width: 6),
+                          SvgPicture.asset('assets/icons/edit_pen.svg', width: 20, height: 20),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // メディアエリア
+                    SizedBox(
+                      height: 64,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          if (_totalImageCount < AppConstants.maxImagesPerMemo || !_hasActiveVideo)
+                            GestureDetector(
+                              onTap: _showMediaPicker,
+                              child: Container(
+                                width: 64,
+                                height: 64,
+                                margin: const EdgeInsets.only(right: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: AppColors.backgroundMiddle),
+                                ),
+                                child: Center(
+                                  child: SvgPicture.asset('assets/icons/add_photo.svg', width: 28, height: 28),
+                                ),
+                              ),
+                            ),
+                          ...activeExistingImages.map((m) {
+                            final file = File(MediaPathHelper.resolve(m.uri, _docsPath));
+                            return _MediaThumbnail(
+                              file: file,
+                              onRemove: () => _removeExistingMedia(m.id!),
+                              onTap: () => _showPreview(file),
+                            );
+                          }),
+                          if (activeExistingVideo != null)
+                            _MediaThumbnail(
+                              file: activeExistingVideo.thumbnailUri != null
+                                  ? File(MediaPathHelper.resolve(activeExistingVideo.thumbnailUri!, _docsPath))
+                                  : null,
+                              isVideo: true,
+                              onRemove: () => _removeExistingMedia(activeExistingVideo.id!),
+                              onTap: () => _showPreview(
+                                activeExistingVideo.thumbnailUri != null
+                                    ? File(MediaPathHelper.resolve(activeExistingVideo.thumbnailUri!, _docsPath))
+                                    : null,
+                                isVideo: true,
+                                videoPath: MediaPathHelper.resolve(activeExistingVideo.uri, _docsPath),
+                              ),
+                            ),
+                          ..._newImages.asMap().entries.map((entry) {
+                            final file = File(entry.value.path);
+                            return _MediaThumbnail(
+                              file: file,
+                              onRemove: () => _removeNewImage(entry.key),
+                              onTap: () => _showPreview(file),
+                            );
+                          }),
+                          if (_newVideo != null)
+                            _MediaThumbnail(
+                              file: _newVideoThumbnailPath != null ? File(_newVideoThumbnailPath!) : null,
+                              isVideo: true,
+                              onRemove: _removeNewVideo,
+                              onTap: () => _showPreview(
+                                _newVideoThumbnailPath != null ? File(_newVideoThumbnailPath!) : null,
+                                isVideo: true,
+                                videoPath: _newVideo?.path,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+            // ── テキスト（残りの縦スペースをすべて埋める）＋展開セクション ──
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // テキストエリア（縦ストレッチ）
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        controller: _bodyController,
+                        maxLines: null,
+                        expands: true,
+                        textAlignVertical: TextAlignVertical.top,
+                        decoration: InputDecoration(
+                          hintText: '練習内容・気づき',
+                          hintStyle: AppTypography.jpMRegular.copyWith(color: AppColors.textPlaceholder),
+                          border: InputBorder.none,
+                        ),
+                        style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
+                      ),
+                    ),
+                  ),
+                  // 展開セクション（テキストの直下）
+                  if (_openSections.contains('distance'))
+                    _buildDistanceCard(),
+                  if (_openSections.contains('shotShape'))
+                    _buildSectionCard(
+                      label: '球筋',
+                      sectionKey: 'shotShape',
+                      child: _ChipSelector(
+                        options: AppConstants.shotShapeLabels.entries
+                            .map((e) => (value: e.key, label: e.value, svgPath: 'assets/icons/${e.key}.svg'))
+                            .toList(),
+                        selected: _shotShape,
+                        onSelected: (v) => setState(() => _shotShape = v),
+                        useGridLayout: true,
+                      ),
+                    ),
+                  if (_openSections.contains('condition'))
+                    _buildSectionCard(
+                      label: '調子',
+                      sectionKey: 'condition',
+                      child: _ChipSelector(
+                        options: AppConstants.conditionLabels.entries
+                            .map((e) => (value: e.key, label: e.value, svgPath: null))
+                            .toList(),
+                        selected: _condition,
+                        onSelected: (v) => setState(() => _condition = v),
+                      ),
+                    ),
+                  if (_openSections.contains('wind'))
+                    _buildSectionCard(
+                      label: '風',
+                      sectionKey: 'wind',
+                      child: _ChipSelector(
+                        options: AppConstants.windLabels.entries
+                            .map((e) => (value: e.key, label: e.value, svgPath: null))
+                            .toList(),
+                        selected: _wind,
+                        onSelected: (v) => setState(() => _wind = v),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ],
+        ),
+            ),
+            // ── 固定下部（折りたたみチップのみ） ──
+            SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Divider(color: AppColors.divider, height: 1),
+                  if (collapsedChips.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Row(children: collapsedChips),
+                    )
+                  else
+                    const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-      body: SafeArea(
-        bottom: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // クラブ名（タップでクラブ選択）
-              GestureDetector(
-                onTap: _showClubSelect,
-                child: Row(
-                  children: [
-                    Text(
-                      _clubName,
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(
-                      Icons.edit_outlined,
-                      size: 20,
-                      color: AppColors.textSecondary,
-                    ),
-                  ],
-                ),
+    );
+  }
+
+  Widget _buildSectionCard({required String label, required String sectionKey, required Widget child}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF2F3F5)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  Text(label, style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium, fontSize: 14)),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => setState(() => _openSections.remove(sectionKey)),
+                    child: const Icon(Icons.close, size: 20, color: AppColors.textMedium),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              // 日付
-              GestureDetector(
-                onTap: _showDatePicker,
-                child: Row(
-                  children: [
-                    Text(
-                      _formattedDate,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Icon(
-                      Icons.calendar_today_outlined,
-                      size: 15,
-                      color: AppColors.textSecondary,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              // メディアエリア
-              SizedBox(
-                height: 72,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    if (_totalImageCount < AppConstants.maxImagesPerMemo || !_hasActiveVideo)
-                      GestureDetector(
-                        onTap: _showMediaPicker,
-                        child: Container(
-                          width: 72,
-                          height: 72,
-                          margin: const EdgeInsets.only(right: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.divider),
-                          ),
-                          child: const Icon(
-                            Icons.add_photo_alternate_outlined,
-                            color: AppColors.textSecondary,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                    // 既存画像（アクティブ）
-                    ...activeExistingImages.map((m) {
-                      final file = File(m.uri);
-                      return _MediaThumbnail(
-                        file: file,
-                        onRemove: () => _removeExistingMedia(m.id!),
-                        onTap: () => _showPreview(file),
-                      );
-                    }),
-                    // 既存動画（アクティブ）
-                    if (activeExistingVideo != null)
-                      _MediaThumbnail(
-                        file: activeExistingVideo.thumbnailUri != null
-                            ? File(activeExistingVideo.thumbnailUri!)
-                            : null,
-                        isVideo: true,
-                        onRemove: () => _removeExistingMedia(activeExistingVideo.id!),
-                        onTap: () => _showPreview(
-                          activeExistingVideo.thumbnailUri != null
-                              ? File(activeExistingVideo.thumbnailUri!)
-                              : null,
-                          isVideo: true,
-                          videoPath: activeExistingVideo.uri,
-                        ),
-                      ),
-                    // 新規画像
-                    ..._newImages.asMap().entries.map((entry) {
-                      final file = File(entry.value.path);
-                      return _MediaThumbnail(
-                        file: file,
-                        onRemove: () => _removeNewImage(entry.key),
-                        onTap: () => _showPreview(file),
-                      );
-                    }),
-                    // 新規動画
-                    if (_newVideo != null)
-                      _MediaThumbnail(
-                        file: _newVideoThumbnailPath != null
-                            ? File(_newVideoThumbnailPath!)
-                            : null,
-                        isVideo: true,
-                        onRemove: _removeNewVideo,
-                        onTap: () => _showPreview(
-                          _newVideoThumbnailPath != null
-                              ? File(_newVideoThumbnailPath!)
-                              : null,
-                          isVideo: true,
-                          videoPath: _newVideo?.path,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              // メモ本文
-              TextField(
-                controller: _bodyController,
-                maxLines: null,
-                minLines: 5,
+            ),
+            const SizedBox(height: 16),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDistanceCard() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF2F3F5)),
+        ),
+        child: Row(
+          children: [
+            Text('飛距離', style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium, fontSize: 14)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: TextField(
+                controller: _distanceController,
+                focusNode: _distanceFocusNode,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.right,
+                style: const TextStyle(fontSize: 18, color: AppColors.textPrimary),
                 decoration: const InputDecoration(
-                  hintText: 'どんなことを意識した？',
-                  hintStyle: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 15,
+                  border: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFFD9D9D9)),
                   ),
-                  border: InputBorder.none,
-                ),
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                  height: 1.7,
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFFD9D9D9)),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFFD9D9D9)),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  isDense: true,
                 ),
               ),
-              const SizedBox(height: 8),
-              const Divider(color: AppColors.divider),
-              ...visibleItems.map((key) => _buildOptionalItem(key)),
-              if (!_showAllItems)
-                InkWell(
-                  onTap: () => setState(() => _showAllItems = true),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Row(
-                      children: [
-                        Icon(Icons.more_horiz, size: 18, color: AppColors.textSecondary),
-                        SizedBox(width: 10),
-                        Text(
-                          'すべて表示',
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 6),
+            Text('yd', style: AppTypography.enMMedium.copyWith(color: AppColors.textPlaceholder)),
+            const SizedBox(width: 16),
+            GestureDetector(
+              onTap: () => setState(() => _openSections.remove('distance')),
+              child: const Icon(Icons.close, size: 20, color: AppColors.textMedium),
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildOptionalItem(String key) {
-    final isExpanded = _expandedItems.contains(key);
+// ──────────────────────────────────────────────────────
+// 折りたたみ状態のセクションチップ（＋ラベル）
+// ──────────────────────────────────────────────────────
+class _CollapsedChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
 
-    final configs = {
-      'distance':  (Icons.place_outlined,               '飛距離'),
-      'shotShape': (Icons.north_east,                   '球筋'),
-      'condition': (Icons.sentiment_satisfied_outlined,  '調子'),
-      'wind':      (Icons.air,                           '風'),
-    };
+  const _CollapsedChip({required this.label, required this.onTap});
 
-    final (icon, label) = configs[key]!;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: () => _toggleExpand(key),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              children: [
-                Icon(icon, size: 18, color: AppColors.textSecondary),
-                const SizedBox(width: 10),
-                Text(label, style: const TextStyle(fontSize: 15, color: AppColors.textPrimary)),
-                const Spacer(),
-                if (isExpanded)
-                  const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
-              ],
-            ),
-          ),
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 36,
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.only(left: 4, right: 10),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundMiddle,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE1E1E5)),
         ),
-        if (isExpanded) _buildExpandedContent(key),
-      ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.add, size: 16, color: AppColors.textMedium),
+            const SizedBox(width: 2),
+            Text(label, style: AppTypography.jpMMedium.copyWith(color: AppColors.textMedium, fontSize: 14)),
+          ],
+        ),
+      ),
     );
-  }
-
-  Widget _buildExpandedContent(String key) {
-    switch (key) {
-      case 'distance':
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 100,
-                child: TextField(
-                  controller: _distanceController,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.right,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text('yd', style: TextStyle(fontSize: 15)),
-            ],
-          ),
-        );
-      case 'shotShape':
-        return _ChipSelector(
-          options: AppConstants.shotShapeLabels.entries
-              .map((e) => (value: e.key, label: e.value))
-              .toList(),
-          selected: _shotShape,
-          onSelected: (v) => setState(() => _shotShape = v),
-        );
-      case 'condition':
-        return _ChipSelector(
-          options: AppConstants.conditionLabels.entries
-              .map((e) => (value: e.key, label: e.value))
-              .toList(),
-          selected: _condition,
-          onSelected: (v) => setState(() => _condition = v),
-        );
-      case 'wind':
-        return _ChipSelector(
-          options: AppConstants.windLabels.entries
-              .map((e) => (value: e.key, label: e.value))
-              .toList(),
-          selected: _wind,
-          onSelected: (v) => setState(() => _wind = v),
-        );
-      default:
-        return const SizedBox.shrink();
-    }
   }
 }
 
@@ -933,46 +1060,104 @@ class _ClubSelectSheetState extends State<_ClubSelectSheet> {
 // チップ選択（球筋・調子・風で共通）
 // ──────────────────────────────────────────────────────
 class _ChipSelector extends StatelessWidget {
-  final List<({String value, String label})> options;
+  final List<({String value, String label, String? svgPath})> options;
   final String? selected;
   final ValueChanged<String?> onSelected;
+  final bool useGridLayout;
 
   const _ChipSelector({
     required this.options,
     required this.selected,
     required this.onSelected,
+    this.useGridLayout = false,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: options.map((opt) {
-          final isSelected = selected == opt.value;
-          return GestureDetector(
-            onTap: () => onSelected(isSelected ? null : opt.value),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : AppColors.divider,
+  Widget _buildChip(({String value, String label, String? svgPath}) opt, {bool compact = false}) {
+    final isSelected = selected == opt.value;
+    return GestureDetector(
+      onTap: () => onSelected(isSelected ? null : opt.value),
+      child: Container(
+        padding: compact
+            ? const EdgeInsets.fromLTRB(4, 8, 4, 8)
+            : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : const Color(0xFFD0D7DE),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (opt.svgPath != null) ...[
+              SvgPicture.asset(
+                opt.svgPath!,
+                width: 20,
+                height: 20,
+                colorFilter: ColorFilter.mode(
+                  isSelected ? Colors.white : AppColors.textPlaceholder,
+                  BlendMode.srcIn,
                 ),
               ),
+              const SizedBox(width: 2),
+            ],
+            Flexible(
               child: Text(
                 opt.label,
-                style: TextStyle(
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.jpMMedium.copyWith(
                   fontSize: 14,
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                  color: isSelected ? Colors.white : AppColors.textPlaceholder,
                 ),
               ),
             ),
-          );
-        }).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (useGridLayout && options.length == 5) {
+      // 3＋2のグリッドレイアウト（球筋用）
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: _buildChip(options[0], compact: true)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildChip(options[1], compact: true)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildChip(options[2], compact: true)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: _buildChip(options[3], compact: true)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildChip(options[4], compact: true)),
+            ],
+          ),
+        ],
+      );
+    }
+
+    return SizedBox(
+      height: 40,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: options.map((opt) {
+            return Container(
+              margin: const EdgeInsets.only(right: 8),
+              child: _buildChip(opt),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -1002,19 +1187,19 @@ class _MediaThumbnail extends StatelessWidget {
         GestureDetector(
           onTap: onTap,
           child: Container(
-            width: 72,
-            height: 72,
+            width: 64,
+            height: 64,
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
               color: AppColors.divider,
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
               child: file != null
                   ? Image.file(file!, fit: BoxFit.cover)
                   : const Center(
-                      child: Icon(Icons.videocam, size: 32, color: AppColors.textSecondary),
+                      child: Icon(Icons.videocam, size: 28, color: AppColors.textSecondary),
                     ),
             ),
           ),
@@ -1026,17 +1211,17 @@ class _MediaThumbnail extends StatelessWidget {
             child: Icon(Icons.play_circle_filled, size: 20, color: Colors.white),
           ),
         Positioned(
-          top: -6,
-          right: 2,
+          top: -8,
+          right: 0,
           child: GestureDetector(
             onTap: onRemove,
             child: Container(
-              padding: const EdgeInsets.all(2),
+              padding: const EdgeInsets.all(3),
               decoration: const BoxDecoration(
                 color: Colors.black54,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.close, size: 12, color: Colors.white),
+              child: const Icon(Icons.close, size: 16, color: Colors.white),
             ),
           ),
         ),

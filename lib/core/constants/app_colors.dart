@@ -26,6 +26,8 @@ class AppColors {
   static const Color textBody        = Color(0xFF474747);
 
   // ── 背景 ─────────────────────────────────────────────
+  // Figma: Background/Ex-Low
+  static const Color backgroundExLow = Color(0xFFFCFCFD);
   // Figma: Background/Low
   static const Color background      = Color(0xFFF6F7F9);
   // Figma: Background/Middle
