@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -12,6 +13,7 @@ import '../../data/models/club.dart';
 import '../../data/models/media.dart';
 import '../../data/models/practice_memo.dart';
 import '../../data/repositories/club_repository.dart';
+import '../settings/club_settings_screen.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/media_preview_screen.dart';
@@ -100,116 +102,169 @@ class _ClubSelectPageState extends State<_ClubSelectPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: _clubGroups.length + 3,
-          itemBuilder: (context, index) {
-            // ドラッグインジケーター
-            if (index == 0) {
-              return const Center(child: _DragIndicator());
-            }
-
+        child: Column(
+          children: [
+            // グラバー
+            const _DragIndicator(),
             // ヘッダー
-            if (index == 1) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+              child: SizedBox(
+                height: 44,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    Text(
+                    const Text(
                       'クラブを選択',
-                      style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: GestureDetector(
                         onTap: widget.onClose,
-                        child: const Icon(Icons.close, color: AppColors.textPrimary),
+                        child: SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: Center(
+                            child: SvgPicture.asset(
+                              'assets/icons/close.svg',
+                              width: 30,
+                              height: 30,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              );
-            }
-
-            // 設定画面への動線
-            if (index == _clubGroups.length + 2) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 28),
-                child: GestureDetector(
-                  onTap: () {
-                    widget.onClose();
-                    Future.microtask(() => context.push('/settings'));
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'クラブの設定を開く',
-                        style: AppTypography.jpSRegular.copyWith(color: AppColors.accent),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.arrow_outward, size: 14, color: AppColors.accent),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            // クラブグループ
-            final group = _clubGroups[index - 2];
-            final clubs = group['clubs'] as List<Club>;
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 16, bottom: 6, left: 4),
-                  child: Text(
-                    group['category'] as String,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Column(
-                    children: List.generate(clubs.length, (i) {
-                      return Column(
-                        children: [
-                          ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 2,
-                            ),
-                            title: Text(
-                              clubs[i].name,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: AppColors.textPrimary,
+              ),
+            ),
+            // クラブリスト
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+                itemCount: _clubGroups.length + 1,
+                itemBuilder: (context, index) {
+                  // 設定画面への動線
+                  if (index == _clubGroups.length) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 40, bottom: 12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: const Color(0x57545456),
+                            width: 0.33,
+                          ),
+                        ),
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.of(context, rootNavigator: true).push(
+                              PageRouteBuilder(
+                                pageBuilder: (_, __, ___) => const ClubSettingsScreen(),
+                                transitionsBuilder: (_, animation, __, child) => SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(1, 0),
+                                    end: Offset.zero,
+                                  ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+                                  child: child,
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.fromLTRB(16, 12, 16, 12),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'クラブを編集',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.accent,
+                                ),
                               ),
                             ),
-                            onTap: () => widget.onClubSelected(clubs[i].id!, clubs[i].name),
                           ),
-                          if (i < clubs.length - 1)
-                            const Divider(
-                              height: 0.5,
-                              indent: 16,
-                              color: AppColors.divider,
+                        ),
+                      ),
+                    );
+                  }
+
+                  // クラブグループ
+                  final group = _clubGroups[index];
+                  final clubs = group['clubs'] as List<Club>;
+
+                  return Padding(
+                    padding: EdgeInsets.only(top: index == 0 ? 0 : 40),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 7, left: 16),
+                          child: Text(
+                            group['category'] as String,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0x993C3C43),
                             ),
-                        ],
-                      );
-                    }),
-                  ),
-                ),
-              ],
-            );
-          },
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: const Color(0x57545456),
+                              width: 0.33,
+                            ),
+                          ),
+                          child: Column(
+                            children: List.generate(clubs.length, (i) {
+                              return Column(
+                                children: [
+                                  InkWell(
+                                    onTap: () => widget.onClubSelected(clubs[i].id!, clubs[i].name),
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          clubs[i].name,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.textMedium,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (i < clubs.length - 1)
+                                    const Divider(
+                                      height: 0.33,
+                                      thickness: 0.33,
+                                      indent: 16,
+                                      color: Color(0x57545456),
+                                    ),
+                                ],
+                              );
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -237,11 +292,10 @@ class _MemoInputPage extends StatefulWidget {
 class _MemoInputPageState extends State<_MemoInputPage> {
   DateTime _selectedDate = DateTime.now();
   final _bodyController = TextEditingController();
+  final _distanceController = TextEditingController();
+  final _distanceFocusNode = FocusNode();
+  final Set<String> _openSections = {};
 
-  bool _showAllItems = false;
-  final Set<String> _expandedItems = {};
-
-  String? _distance;
   String? _shotShape;
   String? _condition;
   String? _wind;
@@ -258,15 +312,31 @@ class _MemoInputPageState extends State<_MemoInputPage> {
   bool _isSaving = false;
 
   @override
+  void initState() {
+    super.initState();
+    _bodyController.addListener(() => setState(() {}));
+    _distanceController.addListener(() => setState(() {}));
+  }
+
+  @override
   void dispose() {
     _bodyController.dispose();
+    _distanceController.dispose();
+    _distanceFocusNode.dispose();
     super.dispose();
   }
 
   String get _formattedDate {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final diff = today.difference(target).inDays;
+    if (diff == 0) return '今日';
+    if (diff == 1) return '昨日';
+    if (diff <= 6) return '$diff日前';
     const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
     final w = weekdays[_selectedDate.weekday - 1];
-    return '${_selectedDate.year}/${_selectedDate.month}/${_selectedDate.day}（$w）';
+    return '${_selectedDate.month}/${_selectedDate.day}（$w）';
   }
 
   void _showDatePicker() {
@@ -280,7 +350,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
             Align(
               alignment: Alignment.centerRight,
               child: CupertinoButton(
-                child: const Text('完了'),
+                child: const Text('完了', style: TextStyle(color: AppColors.accent)),
                 onPressed: () => Navigator.pop(modalContext),
               ),
             ),
@@ -298,43 +368,75 @@ class _MemoInputPageState extends State<_MemoInputPage> {
     );
   }
 
-  void _toggleExpand(String key) {
-    setState(() {
-      if (_expandedItems.contains(key)) {
-        _expandedItems.remove(key);
-      } else {
-        _expandedItems.add(key);
-      }
-    });
-  }
-
   // ── メディア ─────────────────────────────────────────
 
   void _showMediaPicker() {
     if (_images.length >= AppConstants.maxImagesPerMemo && _video != null) return;
 
-    showCupertinoModalPopup(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => CupertinoActionSheet(
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _pickFromLibrary();
-            },
-            child: const Text('ライブラリから選ぶ'),
-          ),
-          CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _pickImage(ImageSource.camera);
-            },
-            child: const Text('写真を撮る'),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('キャンセル'),
+      useRootNavigator: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            ListTile(
+              leading: SvgPicture.asset(
+                'assets/icons/photo_library.svg',
+                width: 24,
+                height: 24,
+                colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+              ),
+              title: Text(
+                'ライブラリから選ぶ',
+                style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickFromLibrary();
+              },
+            ),
+            ListTile(
+              leading: SvgPicture.asset(
+                'assets/icons/camera_add.svg',
+                width: 24,
+                height: 24,
+                colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+              ),
+              title: Text(
+                '写真を撮る',
+                style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Text(
+                  '※動画は1枚、画像は3枚まで追加できます。',
+                  style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -437,7 +539,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
         practicedAt: _selectedDate,
         body: _bodyController.text.isEmpty ? null : _bodyController.text,
         condition: _condition,
-        distance: int.tryParse(_distance ?? ''),
+        distance: int.tryParse(_distanceController.text),
         shotShape: _shotShape,
         wind: _wind,
         isFavorite: false,
@@ -517,282 +619,315 @@ class _MemoInputPageState extends State<_MemoInputPage> {
 
   @override
   Widget build(BuildContext context) {
-    final visibleItems = _showAllItems
-        ? ['distance', 'shotShape', 'condition', 'wind']
-        : ['distance', 'shotShape'];
+    final collapsedChips = <Widget>[
+      if (!_openSections.contains('distance'))
+        _CollapsedChip(label: '飛距離', onTap: () {
+          setState(() => _openSections.add('distance'));
+          Future.microtask(() => _distanceFocusNode.requestFocus());
+        }),
+      if (!_openSections.contains('shotShape'))
+        _CollapsedChip(label: '球筋', onTap: () => setState(() => _openSections.add('shotShape'))),
+      if (!_openSections.contains('condition'))
+        _CollapsedChip(label: '調子', onTap: () => setState(() => _openSections.add('condition'))),
+      if (!_openSections.contains('wind'))
+        _CollapsedChip(label: '風', onTap: () => setState(() => _openSections.add('wind'))),
+    ];
 
-    return Listener(
-      onPointerDown: (_) => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        bottom: false,
+    return Scaffold(
+      backgroundColor: AppColors.backgroundExLow,
+      appBar: AppBar(
+        backgroundColor: AppColors.backgroundExLow,
+        elevation: 0,
+        toolbarHeight: 56 + 8,
+        automaticallyImplyLeading: false,
+        leading: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 28),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16, top: 8, bottom: 6),
+            child: ElevatedButton.icon(
+              onPressed: _isSaving ? null : _saveMemo,
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check_rounded, size: 18, color: Colors.white),
+              label: Text('保存', style: AppTypography.jpMMedium.copyWith(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                disabledBackgroundColor: AppColors.accent.withValues(alpha: 0.4),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                elevation: 0,
+                minimumSize: const Size(0, 44),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        behavior: HitTestBehavior.translucent,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const _DragIndicator(),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () => Navigator.of(context).pop(),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            child: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              child: CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 日付
+                          Center(
+                            child: GestureDetector(
+                              onTap: _showDatePicker,
+                              behavior: HitTestBehavior.opaque,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _formattedDate,
+                                    style: AppTypography.jpSubHeader.copyWith(color: AppColors.textSecondary),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  SvgPicture.asset('assets/icons/calendar.svg', width: 20, height: 20),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                        const Spacer(),
-                        GestureDetector(
-                          onTap: _isSaving ? null : _saveMemo,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: _isSaving
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      color: AppColors.primary,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text(
-                                    '保存',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.primary,
+                          const SizedBox(height: 24),
+                          // クラブ名
+                          Text(
+                            widget.clubName,
+                            style: AppTypography.jpHeader1.copyWith(color: AppColors.textPrimary),
+                          ),
+                          const SizedBox(height: 24),
+                          // メディアエリア
+                          SizedBox(
+                            height: 64,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              children: [
+                                if (_images.length < AppConstants.maxImagesPerMemo || _video == null)
+                                  GestureDetector(
+                                    onTap: _showMediaPicker,
+                                    child: Container(
+                                      width: 64,
+                                      height: 64,
+                                      margin: const EdgeInsets.only(right: 8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(color: AppColors.backgroundMiddle),
+                                      ),
+                                      child: Center(
+                                        child: SvgPicture.asset('assets/icons/add_photo.svg', width: 28, height: 28),
+                                      ),
                                     ),
                                   ),
+                                ..._images.asMap().entries.map((entry) {
+                                  final file = File(entry.value.path);
+                                  return _MediaThumbnail(
+                                    file: file,
+                                    onRemove: () => _removeImage(entry.key),
+                                    onTap: () => _showPreview(file),
+                                  );
+                                }),
+                                if (_video != null)
+                                  _MediaThumbnail(
+                                    file: _videoThumbnailPath != null ? File(_videoThumbnailPath!) : null,
+                                    isVideo: true,
+                                    onRemove: _removeVideo,
+                                    onTap: () => _showPreview(
+                                      _videoThumbnailPath != null ? File(_videoThumbnailPath!) : null,
+                                      isVideo: true,
+                                      videoPath: _video?.path,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: TextField(
+                              controller: _bodyController,
+                              maxLines: null,
+                              expands: true,
+                              textAlignVertical: TextAlignVertical.top,
+                              decoration: InputDecoration(
+                                hintText: '練習内容・気づき',
+                                hintStyle: AppTypography.jpMRegular.copyWith(color: AppColors.textPlaceholder),
+                                border: InputBorder.none,
+                              ),
+                              style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
+                            ),
                           ),
                         ),
+                        if (_openSections.contains('distance'))
+                          _buildDistanceCard(),
+                        if (_openSections.contains('shotShape'))
+                          _buildSectionCard(
+                            label: '球筋',
+                            sectionKey: 'shotShape',
+                            child: _ChipSelector(
+                              options: AppConstants.shotShapeLabels.entries
+                                  .map((e) => (value: e.key, label: e.value, svgPath: 'assets/icons/${e.key}.svg'))
+                                  .toList(),
+                              selected: _shotShape,
+                              onSelected: (v) => setState(() => _shotShape = v),
+                              useGridLayout: true,
+                            ),
+                          ),
+                        if (_openSections.contains('condition'))
+                          _buildSectionCard(
+                            label: '調子',
+                            sectionKey: 'condition',
+                            child: _ChipSelector(
+                              options: AppConstants.conditionLabels.entries
+                                  .map((e) => (value: e.key, label: e.value, svgPath: null))
+                                  .toList(),
+                              selected: _condition,
+                              onSelected: (v) => setState(() => _condition = v),
+                            ),
+                          ),
+                        if (_openSections.contains('wind'))
+                          _buildSectionCard(
+                            label: '風',
+                            sectionKey: 'wind',
+                            child: _ChipSelector(
+                              options: AppConstants.windLabels.entries
+                                  .map((e) => (value: e.key, label: e.value, svgPath: null))
+                                  .toList(),
+                              selected: _wind,
+                              onSelected: (v) => setState(() => _wind = v),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
                       ],
                     ),
-                    Text(
-                      widget.clubName,
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    GestureDetector(
-                      onTap: _showDatePicker,
-                      child: Row(
-                        children: [
-                          Text(
-                            _formattedDate,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Icon(
-                            Icons.calendar_today_outlined,
-                            size: 15,
-                            color: AppColors.textSecondary,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    // メディアエリア（追加ボタン左固定）
-                    SizedBox(
-                      height: 72,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          if (_images.length < AppConstants.maxImagesPerMemo ||
-                              _video == null)
-                            GestureDetector(
-                              onTap: _showMediaPicker,
-                              child: Container(
-                                width: 72,
-                                height: 72,
-                                margin: const EdgeInsets.only(right: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: AppColors.divider),
-                                ),
-                                child: const Icon(
-                                  Icons.add_photo_alternate_outlined,
-                                  color: AppColors.textSecondary,
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                          ..._images.asMap().entries.map((entry) {
-                            final file = File(entry.value.path);
-                            return _MediaThumbnail(
-                              file: file,
-                              onRemove: () => _removeImage(entry.key),
-                              onTap: () => _showPreview(file),
-                            );
-                          }),
-                          if (_video != null)
-                            _MediaThumbnail(
-                              file: _videoThumbnailPath != null
-                                  ? File(_videoThumbnailPath!)
-                                  : null,
-                              isVideo: true,
-                              onRemove: _removeVideo,
-                              onTap: () => _showPreview(
-                                _videoThumbnailPath != null
-                                    ? File(_videoThumbnailPath!)
-                                    : null,
-                                isVideo: true,
-                                videoPath: _video?.path,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: _bodyController,
-                      maxLines: null,
-                      minLines: 5,
-                      decoration: const InputDecoration(
-                        hintText: 'どんなことを意識した？',
-                        hintStyle: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 15,
-                        ),
-                        border: InputBorder.none,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: AppColors.textPrimary,
-                        height: 1.7,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Divider(color: AppColors.divider),
-                    ...visibleItems.map((key) => _buildOptionalItem(key)),
-                    if (!_showAllItems)
-                      InkWell(
-                        onTap: () => setState(() => _showAllItems = true),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Row(
-                            children: [
-                              Icon(Icons.more_horiz, size: 18, color: AppColors.textSecondary),
-                              SizedBox(width: 10),
-                              Text(
-                                'すべて表示',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
+            ),
+            SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Divider(color: AppColors.divider, height: 1),
+                  if (collapsedChips.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Row(children: collapsedChips),
+                    )
+                  else
+                    const SizedBox(height: 16),
+                ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionCard({required String label, required String sectionKey, required Widget child}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF2F3F5)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  Text(label, style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium, fontSize: 14)),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => setState(() => _openSections.remove(sectionKey)),
+                    child: const Icon(Icons.close, size: 20, color: AppColors.textMedium),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            child,
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildOptionalItem(String key) {
-    final isExpanded = _expandedItems.contains(key);
-
-    final configs = {
-      'distance':  (Icons.place_outlined,               '飛距離'),
-      'shotShape': (Icons.north_east,                   '球筋'),
-      'condition': (Icons.sentiment_satisfied_outlined,  '調子'),
-      'wind':      (Icons.air,                           '風'),
-    };
-
-    final (icon, label) = configs[key]!;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: () => _toggleExpand(key),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              children: [
-                Icon(icon, size: 18, color: AppColors.textSecondary),
-                const SizedBox(width: 10),
-                Text(label, style: const TextStyle(fontSize: 15, color: AppColors.textPrimary)),
-                const Spacer(),
-                if (isExpanded)
-                  const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
-              ],
-            ),
-          ),
+  Widget _buildDistanceCard() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF2F3F5)),
         ),
-        if (isExpanded) _buildExpandedContent(key),
-      ],
-    );
-  }
-
-  Widget _buildExpandedContent(String key) {
-    switch (key) {
-      case 'distance':
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 100,
-                child: TextField(
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.right,
-                  onChanged: (v) => setState(() => _distance = v),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
+        child: Row(
+          children: [
+            Text('飛距離', style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium, fontSize: 14)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: TextField(
+                controller: _distanceController,
+                focusNode: _distanceFocusNode,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.right,
+                style: const TextStyle(fontSize: 18, color: AppColors.textPrimary),
+                decoration: const InputDecoration(
+                  border: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFD9D9D9))),
+                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFD9D9D9))),
+                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFD9D9D9))),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  isDense: true,
                 ),
               ),
-              const SizedBox(width: 8),
-              const Text('yd', style: TextStyle(fontSize: 15)),
-            ],
-          ),
-        );
-      case 'shotShape':
-        return _ChipSelector(
-          options: AppConstants.shotShapeLabels.entries
-              .map((e) => (value: e.key, label: e.value))
-              .toList(),
-          selected: _shotShape,
-          onSelected: (v) => setState(() => _shotShape = v),
-        );
-      case 'condition':
-        return _ChipSelector(
-          options: AppConstants.conditionLabels.entries
-              .map((e) => (value: e.key, label: e.value))
-              .toList(),
-          selected: _condition,
-          onSelected: (v) => setState(() => _condition = v),
-        );
-      case 'wind':
-        return _ChipSelector(
-          options: AppConstants.windLabels.entries
-              .map((e) => (value: e.key, label: e.value))
-              .toList(),
-          selected: _wind,
-          onSelected: (v) => setState(() => _wind = v),
-        );
-      default:
-        return const SizedBox.shrink();
-    }
+            ),
+            const SizedBox(width: 6),
+            Text('yd', style: AppTypography.enMMedium.copyWith(color: AppColors.textPlaceholder)),
+            const SizedBox(width: 16),
+            GestureDetector(
+              onTap: () => setState(() => _openSections.remove('distance')),
+              child: const Icon(Icons.close, size: 20, color: AppColors.textMedium),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -800,46 +935,122 @@ class _MemoInputPageState extends State<_MemoInputPage> {
 // チップ選択（球筋・調子・風で共通）
 // ──────────────────────────────────────────────────────
 class _ChipSelector extends StatelessWidget {
-  final List<({String value, String label})> options;
+  final List<({String value, String label, String? svgPath})> options;
   final String? selected;
   final ValueChanged<String?> onSelected;
+  final bool useGridLayout;
 
   const _ChipSelector({
     required this.options,
     required this.selected,
     required this.onSelected,
+    this.useGridLayout = false,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: options.map((opt) {
-          final isSelected = selected == opt.value;
-          return GestureDetector(
-            onTap: () => onSelected(isSelected ? null : opt.value),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : AppColors.divider,
+  Widget _buildChip(({String value, String label, String? svgPath}) opt, {bool compact = false}) {
+    final isSelected = selected == opt.value;
+    return GestureDetector(
+      onTap: () => onSelected(isSelected ? null : opt.value),
+      child: Container(
+        padding: compact
+            ? const EdgeInsets.fromLTRB(4, 8, 4, 8)
+            : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : const Color(0xFFD0D7DE),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (opt.svgPath != null) ...[
+              SvgPicture.asset(
+                opt.svgPath!,
+                width: 20,
+                height: 20,
+                colorFilter: ColorFilter.mode(
+                  isSelected ? Colors.white : AppColors.textSecondary,
+                  BlendMode.srcIn,
                 ),
               ),
+              const SizedBox(width: 4),
+            ],
+            Flexible(
               child: Text(
                 opt.label,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 14,
                   color: isSelected ? Colors.white : AppColors.textPrimary,
                 ),
               ),
             ),
-          );
-        }).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (useGridLayout) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: GridView.count(
+          crossAxisCount: 4,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 2,
+          children: options.map((opt) => _buildChip(opt, compact: true)).toList(),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: options.map((opt) => _buildChip(opt)).toList(),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────
+// 折りたたみ状態のセクションチップ（＋ラベル）
+// ──────────────────────────────────────────────────────
+class _CollapsedChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _CollapsedChip({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 36,
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.only(left: 4, right: 10),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundMiddle,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE1E1E5)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.add, size: 16, color: AppColors.textMedium),
+            const SizedBox(width: 2),
+            Text(label, style: AppTypography.jpMMedium.copyWith(color: AppColors.textMedium, fontSize: 14)),
+          ],
+        ),
       ),
     );
   }
@@ -869,15 +1080,15 @@ class _MediaThumbnail extends StatelessWidget {
         GestureDetector(
           onTap: onTap,
           child: Container(
-            width: 72,
-            height: 72,
+            width: 64,
+            height: 64,
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(16),
               color: AppColors.divider,
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(16),
               child: file != null
                   ? Image.file(file!, fit: BoxFit.cover)
                   : const Center(

@@ -208,17 +208,19 @@ class _ScaffoldWithNav extends StatelessWidget {
         ),
         child: FloatingActionButton(
           onPressed: () async {
-            final size = MediaQuery.of(context).size;
-            final result = await showModalBottomSheet<bool>(
-              context: context,
-              isScrollControlled: true,
-              useRootNavigator: true,
-              useSafeArea: false,
-              backgroundColor: Colors.transparent,
-              constraints: BoxConstraints(maxHeight: size.height * 0.92),
-              builder: (_) => const ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                child: MemoCreateScreen(),
+            final result = await Navigator.of(context, rootNavigator: true).push<bool>(
+              PageRouteBuilder(
+                pageBuilder: (_, __, ___) => const ClipRRect(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  child: MemoCreateScreen(),
+                ),
+                transitionsBuilder: (_, animation, __, child) => SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 1),
+                    end: Offset.zero,
+                  ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+                  child: child,
+                ),
               ),
             );
             if (result == true) {

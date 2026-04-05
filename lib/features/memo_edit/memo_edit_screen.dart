@@ -558,6 +558,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                     Center(
                       child: GestureDetector(
                         onTap: _showDatePicker,
+                        behavior: HitTestBehavior.opaque,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

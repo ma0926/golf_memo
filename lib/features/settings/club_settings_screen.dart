@@ -90,7 +90,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           ),
         ),
         title: const Text(
-          '練習するクラブ',
+          '記録するクラブ',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,

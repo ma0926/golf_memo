@@ -89,7 +89,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
               child: Text(
-                'あなたの練習するクラブを\n選択してください',
+                '記録するクラブを\n選択してください',
                 textAlign: TextAlign.center,
                 style: AppTypography.jpMMedium.copyWith(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.textPrimary, height: 1.5),
               ),

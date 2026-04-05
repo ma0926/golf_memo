@@ -31,7 +31,7 @@ class SettingsScreen extends StatelessWidget {
           _SettingsGroup(
             children: [
               _SettingsRow(
-                label: '練習クラブ',
+                label: '記録するクラブ',
                 onTap: () => context.push('/settings/clubs'),
               ),
             ],
