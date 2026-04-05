@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -17,6 +16,7 @@ import '../settings/club_settings_screen.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/media_preview_screen.dart';
+import '../../shared/widgets/media_picker_screen.dart';
 
 // ──────────────────────────────────────────────────────
 // ルート：ローカルNavigatorでクラブ選択→フォームを管理
@@ -444,42 +444,28 @@ class _MemoInputPageState extends State<_MemoInputPage> {
 
   Future<void> _pickFromLibrary() async {
     final remainingImages = AppConstants.maxImagesPerMemo - _images.length;
-    final limit = remainingImages + (_video == null ? 1 : 0);
-    if (limit <= 0) return;
+    if (remainingImages <= 0 && _video != null) return;
 
-    // limit==1 のとき pickMultipleMedia(limit:1) が iOS で動作しない場合があるため
-    // 単体選択用の pickMedia() にフォールバック
-    final List<XFile> files;
-    if (limit == 1) {
-      final file = await _picker.pickMedia();
-      if (file == null) return;
-      files = [file];
-    } else {
-      files = await _picker.pickMultipleMedia(limit: limit);
-      if (files.isEmpty) return;
+    final result = await Navigator.of(context, rootNavigator: true).push<
+        ({List<XFile> images, XFile? video})?>(
+      MaterialPageRoute(
+        builder: (_) => MediaPickerScreen(
+          maxImages: remainingImages,
+          videoAllowed: _video == null,
+        ),
+      ),
+    );
+
+    if (result == null || !mounted) return;
+
+    if (result.images.isNotEmpty) {
+      setState(() => _images.addAll(result.images));
     }
-
-    final newImages = <XFile>[];
-    XFile? newVideo;
-
-    for (final file in files) {
-      if (_isVideoFile(file)) {
-        if (_video == null && newVideo == null) newVideo = file;
-      } else {
-        if (_images.length + newImages.length < AppConstants.maxImagesPerMemo) {
-          newImages.add(file);
-        }
-      }
+    if (result.video != null) {
+      await _setVideo(result.video!);
     }
-
-    if (newImages.isNotEmpty) setState(() => _images.addAll(newImages));
-    if (newVideo != null) await _setVideo(newVideo);
   }
 
-  bool _isVideoFile(XFile file) {
-    final ext = file.path.split('.').last.toLowerCase();
-    return ['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext);
-  }
 
   Future<void> _pickImage(ImageSource source) async {
     final file = await _picker.pickImage(source: source, imageQuality: 80);

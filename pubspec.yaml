@@ -44,6 +44,7 @@ dependencies:
 
   # 画像・動画の選択
   image_picker: ^1.1.2
+  photo_manager: ^3.5.0
 
   # 動画サムネイル生成
   video_thumbnail: ^0.5.3

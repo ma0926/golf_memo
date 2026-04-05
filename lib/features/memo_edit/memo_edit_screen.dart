@@ -17,6 +17,7 @@ import '../../data/repositories/club_repository.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/media_preview_screen.dart';
+import '../../shared/widgets/media_picker_screen.dart';
 
 class MemoEditScreen extends StatefulWidget {
   final int memoId;
@@ -280,40 +281,28 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
 
   Future<void> _pickFromLibrary() async {
     final remainingImages = AppConstants.maxImagesPerMemo - _totalImageCount;
-    final limit = remainingImages + (!_hasActiveVideo ? 1 : 0);
-    if (limit <= 0) return;
+    if (remainingImages <= 0 && _hasActiveVideo) return;
 
-    final List<XFile> files;
-    if (limit == 1) {
-      final file = await _picker.pickMedia();
-      if (file == null) return;
-      files = [file];
-    } else {
-      files = await _picker.pickMultipleMedia(limit: limit);
-      if (files.isEmpty) return;
+    final result = await Navigator.of(context, rootNavigator: true).push<
+        ({List<XFile> images, XFile? video})?>(
+      MaterialPageRoute(
+        builder: (_) => MediaPickerScreen(
+          maxImages: remainingImages,
+          videoAllowed: !_hasActiveVideo,
+        ),
+      ),
+    );
+
+    if (result == null || !mounted) return;
+
+    if (result.images.isNotEmpty) {
+      setState(() => _newImages.addAll(result.images));
     }
-
-    final newImages = <XFile>[];
-    XFile? newVideo;
-
-    for (final file in files) {
-      if (_isVideoFile(file)) {
-        if (!_hasActiveVideo && newVideo == null) newVideo = file;
-      } else {
-        if (_totalImageCount + newImages.length < AppConstants.maxImagesPerMemo) {
-          newImages.add(file);
-        }
-      }
+    if (result.video != null) {
+      await _setNewVideo(result.video!);
     }
-
-    if (newImages.isNotEmpty) setState(() => _newImages.addAll(newImages));
-    if (newVideo != null) await _setNewVideo(newVideo);
   }
 
-  bool _isVideoFile(XFile file) {
-    final ext = file.path.split('.').last.toLowerCase();
-    return ['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext);
-  }
 
   Future<void> _pickImage(ImageSource source) async {
     final file = await _picker.pickImage(source: source, imageQuality: 80);
