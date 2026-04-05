@@ -37,8 +37,10 @@ class MemoListScreen extends StatelessWidget {
           elevation: 0,
           titleSpacing: 16,
           title: Text(
-            'メモ一覧',
-            style: AppTypography.jpHeader1.copyWith(color: AppColors.textPrimary),
+            '練習記録',
+            style: AppTypography.jpHeader1.copyWith(
+              color: AppColors.textPrimary,
+            ),
           ),
           actions: [
             IconButton(

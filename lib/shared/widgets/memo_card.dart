@@ -61,7 +61,7 @@ class MemoCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   distance!,
-                  style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary, fontStyle: FontStyle.italic),
+                  style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary),
                 ),
               ],
             ],
