@@ -87,6 +87,37 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
     }
   }
 
+  Future<void> _previewImage(AssetEntity asset) async {
+    final file = await asset.originFile;
+    if (file == null || !mounted) return;
+
+    final result = await Navigator.of(context).push<bool?>(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => _ImagePreviewPage(
+          file: file,
+          isSelected: _isImageSelected(asset),
+          canSelect: _selectedImages.length < widget.maxImages || _isImageSelected(asset),
+        ),
+        transitionsBuilder: (_, animation, __, child) => FadeTransition(
+          opacity: animation,
+          child: child,
+        ),
+        transitionDuration: const Duration(milliseconds: 200),
+      ),
+    );
+
+    if (result == null || !mounted) return;
+    setState(() {
+      if (result) {
+        if (!_selectedImages.contains(asset) && _selectedImages.length < widget.maxImages) {
+          _selectedImages.add(asset);
+        }
+      } else {
+        _selectedImages.remove(asset);
+      }
+    });
+  }
+
   Future<void> _previewVideo(AssetEntity asset) async {
     final file = await asset.originFile;
     if (file == null || !mounted) return;
@@ -202,8 +233,8 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                       onTap: () {
                         if (isVideo) {
                           _previewVideo(asset);
-                        } else if (!cannotSelect) {
-                          _toggleImage(asset);
+                        } else {
+                          _previewImage(asset);
                         }
                       },
                       child: Stack(
@@ -239,36 +270,50 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                           // 選択不可オーバーレイ
                           if (cannotSelect)
                             Container(color: Colors.black45),
-                          // 選択インジケーター（右上）
+                          // 選択インジケーター（右上）：タップで直接トグル
                           Positioned(
                             top: 6,
                             right: 6,
-                            child: Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: isSelected ? AppColors.accent : Colors.transparent,
-                                border: Border.all(
-                                  color: isSelected ? AppColors.accent : Colors.white,
-                                  width: 1.5,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                                if (isVideo) {
+                                  if (!cannotSelect || isSelected) {
+                                    setState(() => _selectedVideo = isSelected ? null : asset);
+                                  }
+                                } else {
+                                  if (!cannotSelect || isSelected) {
+                                    _toggleImage(asset);
+                                  }
+                                }
+                              },
+                              child: Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isSelected ? AppColors.accent : Colors.transparent,
+                                  border: Border.all(
+                                    color: isSelected ? AppColors.accent : Colors.white,
+                                    width: 1.5,
+                                  ),
                                 ),
-                              ),
-                              child: isSelected
-                                  ? Center(
-                                      child: isVideo
-                                          ? const Icon(Icons.check,
-                                              color: Colors.white, size: 14)
-                                          : Text(
-                                              '${_imageSelectionIndex(asset) + 1}',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
+                                child: isSelected
+                                    ? Center(
+                                        child: isVideo
+                                            ? const Icon(Icons.check,
+                                                color: Colors.white, size: 14)
+                                            : Text(
+                                                '${_imageSelectionIndex(asset) + 1}',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
                                               ),
-                                            ),
-                                    )
-                                  : null,
+                                      )
+                                    : null,
+                              ),
                             ),
                           ),
                         ],
@@ -276,6 +321,85 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                     );
                   },
                 ),
+    );
+  }
+}
+
+// ── 画像プレビューページ ──────────────────────────────
+class _ImagePreviewPage extends StatelessWidget {
+  final File file;
+  final bool isSelected;
+  final bool canSelect;
+
+  const _ImagePreviewPage({
+    required this.file,
+    required this.isSelected,
+    required this.canSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          '画像プレビュー',
+          style: AppTypography.jpMMedium.copyWith(color: Colors.white),
+        ),
+        centerTitle: true,
+      ),
+      body: Stack(
+        children: [
+          Center(
+            child: InteractiveViewer(
+              child: Image.file(file, fit: BoxFit.contain),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: ElevatedButton(
+                  onPressed: canSelect || isSelected
+                      ? () => Navigator.of(context).pop(!isSelected)
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isSelected ? Colors.white : AppColors.accent,
+                    foregroundColor: isSelected ? AppColors.accent : Colors.white,
+                    disabledBackgroundColor: Colors.white24,
+                    disabledForegroundColor: Colors.white54,
+                    minimumSize: const Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(26),
+                      side: isSelected
+                          ? const BorderSide(color: AppColors.accent)
+                          : BorderSide.none,
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    isSelected
+                        ? '選択を解除する'
+                        : canSelect
+                            ? 'この画像を選択する'
+                            : '選択できる枚数の上限に達しました',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

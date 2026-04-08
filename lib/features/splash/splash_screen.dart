@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_colors.dart';
@@ -38,21 +37,9 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // "GOLF" テキスト
+            // "My" テキスト
             const Text(
-              'GOLF',
-              style: TextStyle(
-                fontFamily: 'Helvetica Neue',
-                fontSize: 56,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF131618),
-                height: 1.0,
-                letterSpacing: 4,
-              ),
-            ),
-            // "Journal" テキスト（イタリック）
-            const Text(
-              'Journal',
+              'My',
               style: TextStyle(
                 fontFamily: 'Georgia',
                 fontSize: 42,
@@ -62,12 +49,17 @@ class _SplashScreenState extends State<SplashScreen> {
                 height: 1.1,
               ),
             ),
-            const SizedBox(height: 64),
-            // ゴルフボールとティーのイラスト
-            SvgPicture.asset(
-              'assets/icons/golf_tee.svg',
-              width: 130,
-              height: 145,
+            // "Golf" テキスト
+            const Text(
+              'Golf',
+              style: TextStyle(
+                fontFamily: 'Helvetica Neue',
+                fontSize: 56,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF131618),
+                height: 1.0,
+                letterSpacing: 4,
+              ),
             ),
           ],
         ),

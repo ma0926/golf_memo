@@ -534,15 +534,15 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
           children: [
             // ── スクロール部分 ──
             Expanded(
-              child: CustomScrollView(
-          slivers: [
-            // ── 上部固定コンテンツ（日付・クラブ・メディア）──
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              sliver: SliverToBoxAdapter(
+              child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                     // 日付
                     Center(
                       child: GestureDetector(
@@ -647,80 +647,69 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 200),
+                        child: TextField(
+                          controller: _bodyController,
+                          maxLines: null,
+                          textAlignVertical: TextAlignVertical.top,
+                          decoration: InputDecoration(
+                            hintText: '練習内容・気づき',
+                            hintStyle: AppTypography.jpMRegular.copyWith(color: AppColors.textPlaceholder),
+                            border: InputBorder.none,
+                          ),
+                          style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
+                        ),
+                      ),
+                    ),
+                    if (_openSections.contains('distance'))
+                      _buildDistanceCard(),
+                    if (_openSections.contains('shotShape'))
+                      _buildSectionCard(
+                        label: '球筋',
+                        sectionKey: 'shotShape',
+                        child: _ChipSelector(
+                          options: AppConstants.shotShapeLabels.entries
+                              .map((e) => (value: e.key, label: e.value, svgPath: 'assets/icons/${e.key}.svg'))
+                              .toList(),
+                          selected: _shotShape,
+                          onSelected: (v) => setState(() => _shotShape = v),
+                          useGridLayout: true,
+                        ),
+                      ),
+                    if (_openSections.contains('condition'))
+                      _buildSectionCard(
+                        label: '調子',
+                        sectionKey: 'condition',
+                        child: _ChipSelector(
+                          options: AppConstants.conditionLabels.entries
+                              .map((e) => (value: e.key, label: e.value, svgPath: null))
+                              .toList(),
+                          selected: _condition,
+                          onSelected: (v) => setState(() => _condition = v),
+                        ),
+                      ),
+                    if (_openSections.contains('wind'))
+                      _buildSectionCard(
+                        label: '風',
+                        sectionKey: 'wind',
+                        child: _ChipSelector(
+                          options: AppConstants.windLabels.entries
+                              .map((e) => (value: e.key, label: e.value, svgPath: null))
+                              .toList(),
+                          selected: _wind,
+                          onSelected: (v) => setState(() => _wind = v),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
-            ),
-            // ── テキスト（残りの縦スペースをすべて埋める）＋展開セクション ──
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // テキストエリア（縦ストレッチ）
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextField(
-                        controller: _bodyController,
-                        maxLines: null,
-                        expands: true,
-                        textAlignVertical: TextAlignVertical.top,
-                        decoration: InputDecoration(
-                          hintText: '練習内容・気づき',
-                          hintStyle: AppTypography.jpMRegular.copyWith(color: AppColors.textPlaceholder),
-                          border: InputBorder.none,
-                        ),
-                        style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
-                      ),
-                    ),
-                  ),
-                  // 展開セクション（テキストの直下）
-                  if (_openSections.contains('distance'))
-                    _buildDistanceCard(),
-                  if (_openSections.contains('shotShape'))
-                    _buildSectionCard(
-                      label: '球筋',
-                      sectionKey: 'shotShape',
-                      child: _ChipSelector(
-                        options: AppConstants.shotShapeLabels.entries
-                            .map((e) => (value: e.key, label: e.value, svgPath: 'assets/icons/${e.key}.svg'))
-                            .toList(),
-                        selected: _shotShape,
-                        onSelected: (v) => setState(() => _shotShape = v),
-                        useGridLayout: true,
-                      ),
-                    ),
-                  if (_openSections.contains('condition'))
-                    _buildSectionCard(
-                      label: '調子',
-                      sectionKey: 'condition',
-                      child: _ChipSelector(
-                        options: AppConstants.conditionLabels.entries
-                            .map((e) => (value: e.key, label: e.value, svgPath: null))
-                            .toList(),
-                        selected: _condition,
-                        onSelected: (v) => setState(() => _condition = v),
-                      ),
-                    ),
-                  if (_openSections.contains('wind'))
-                    _buildSectionCard(
-                      label: '風',
-                      sectionKey: 'wind',
-                      child: _ChipSelector(
-                        options: AppConstants.windLabels.entries
-                            .map((e) => (value: e.key, label: e.value, svgPath: null))
-                            .toList(),
-                        selected: _wind,
-                        onSelected: (v) => setState(() => _wind = v),
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ],
-        ),
             ),
             // ── 固定下部（折りたたみチップのみ） ──
             SafeArea(

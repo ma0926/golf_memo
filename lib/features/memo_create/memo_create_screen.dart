@@ -665,11 +665,12 @@ class _MemoInputPageState extends State<_MemoInputPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: CustomScrollView(
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    sliver: SliverToBoxAdapter(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -747,73 +748,65 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                         ],
                       ),
                     ),
-                  ),
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: TextField(
-                              controller: _bodyController,
-                              maxLines: null,
-                              expands: true,
-                              textAlignVertical: TextAlignVertical.top,
-                              decoration: InputDecoration(
-                                hintText: '練習内容・気づき',
-                                hintStyle: AppTypography.jpMRegular.copyWith(color: AppColors.textPlaceholder),
-                                border: InputBorder.none,
-                              ),
-                              style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
-                            ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 200),
+                        child: TextField(
+                          controller: _bodyController,
+                          maxLines: null,
+                          textAlignVertical: TextAlignVertical.top,
+                          decoration: InputDecoration(
+                            hintText: '練習内容・気づき',
+                            hintStyle: AppTypography.jpMRegular.copyWith(color: AppColors.textPlaceholder),
+                            border: InputBorder.none,
                           ),
+                          style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
                         ),
-                        if (_openSections.contains('distance'))
-                          _buildDistanceCard(),
-                        if (_openSections.contains('shotShape'))
-                          _buildSectionCard(
-                            label: '球筋',
-                            sectionKey: 'shotShape',
-                            child: _ChipSelector(
-                              options: AppConstants.shotShapeLabels.entries
-                                  .map((e) => (value: e.key, label: e.value, svgPath: 'assets/icons/${e.key}.svg'))
-                                  .toList(),
-                              selected: _shotShape,
-                              onSelected: (v) => setState(() => _shotShape = v),
-                              useGridLayout: true,
-                            ),
-                          ),
-                        if (_openSections.contains('condition'))
-                          _buildSectionCard(
-                            label: '調子',
-                            sectionKey: 'condition',
-                            child: _ChipSelector(
-                              options: AppConstants.conditionLabels.entries
-                                  .map((e) => (value: e.key, label: e.value, svgPath: null))
-                                  .toList(),
-                              selected: _condition,
-                              onSelected: (v) => setState(() => _condition = v),
-                            ),
-                          ),
-                        if (_openSections.contains('wind'))
-                          _buildSectionCard(
-                            label: '風',
-                            sectionKey: 'wind',
-                            child: _ChipSelector(
-                              options: AppConstants.windLabels.entries
-                                  .map((e) => (value: e.key, label: e.value, svgPath: null))
-                                  .toList(),
-                              selected: _wind,
-                              onSelected: (v) => setState(() => _wind = v),
-                            ),
-                          ),
-                        const SizedBox(height: 16),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                    if (_openSections.contains('distance'))
+                      _buildDistanceCard(),
+                    if (_openSections.contains('shotShape'))
+                      _buildSectionCard(
+                        label: '球筋',
+                        sectionKey: 'shotShape',
+                        child: _ChipSelector(
+                          options: AppConstants.shotShapeLabels.entries
+                              .map((e) => (value: e.key, label: e.value, svgPath: 'assets/icons/${e.key}.svg'))
+                              .toList(),
+                          selected: _shotShape,
+                          onSelected: (v) => setState(() => _shotShape = v),
+                          useGridLayout: true,
+                        ),
+                      ),
+                    if (_openSections.contains('condition'))
+                      _buildSectionCard(
+                        label: '調子',
+                        sectionKey: 'condition',
+                        child: _ChipSelector(
+                          options: AppConstants.conditionLabels.entries
+                              .map((e) => (value: e.key, label: e.value, svgPath: null))
+                              .toList(),
+                          selected: _condition,
+                          onSelected: (v) => setState(() => _condition = v),
+                        ),
+                      ),
+                    if (_openSections.contains('wind'))
+                      _buildSectionCard(
+                        label: '風',
+                        sectionKey: 'wind',
+                        child: _ChipSelector(
+                          options: AppConstants.windLabels.entries
+                              .map((e) => (value: e.key, label: e.value, svgPath: null))
+                              .toList(),
+                          selected: _wind,
+                          onSelected: (v) => setState(() => _wind = v),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
             SafeArea(
@@ -982,18 +975,28 @@ class _ChipSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (useGridLayout) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: GridView.count(
-          crossAxisCount: 4,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 2,
-          children: options.map((opt) => _buildChip(opt, compact: true)).toList(),
-        ),
+    if (useGridLayout && options.length == 5) {
+      // 3＋2のグリッドレイアウト（球筋用）
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: _buildChip(options[0], compact: true)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildChip(options[1], compact: true)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildChip(options[2], compact: true)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: _buildChip(options[3], compact: true)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildChip(options[4], compact: true)),
+            ],
+          ),
+        ],
       );
     }
     return Padding(

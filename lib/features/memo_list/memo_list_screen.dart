@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../data/models/media.dart';
 import '../../data/models/practice_memo.dart';
 import '../../data/repositories/club_repository.dart';
 import '../../data/repositories/media_repository.dart';
@@ -140,7 +141,8 @@ class _AllMemosTabState extends State<_AllMemosTab> {
 
   List<PracticeMemo> _memos = [];
   Map<int, String> _clubNames = {};
-  Map<int, String?> _thumbnails = {};
+  Map<int, List<Media>> _memoMediaList = {};
+  String _docsPath = '';
   bool _isLoading = true;
   int? _hiddenMemoId;
 
@@ -164,30 +166,38 @@ class _AllMemosTabState extends State<_AllMemosTab> {
     final mediaResults = await Future.wait(
       memos.map((m) => m.id != null
           ? _mediaRepo.getMediaByMemoId(m.id!)
-          : Future.value([])),
+          : Future.value(<Media>[])),
     );
 
     final docsDir = await getApplicationDocumentsDirectory();
-    final thumbnails = <int, String?>{};
+    final memoMediaMap = <int, List<Media>>{};
     for (var i = 0; i < memos.length; i++) {
-      final memo = memos[i];
-      if (memo.id != null && mediaResults[i].isNotEmpty) {
-        final first = mediaResults[i].first;
-        final rawPath = first.isVideo ? first.thumbnailUri : first.uri;
-        if (rawPath != null) {
-          thumbnails[memo.id!] = MediaPathHelper.resolve(rawPath, docsDir.path);
-        }
-      }
+      if (memos[i].id != null) memoMediaMap[memos[i].id!] = mediaResults[i];
     }
 
     if (!mounted) return;
     setState(() {
       _memos = memos;
       _clubNames = {for (final c in clubs) c.id!: c.name};
-      _thumbnails = thumbnails;
+      _memoMediaList = memoMediaMap;
+      _docsPath = docsDir.path;
       _isLoading = false;
       _hiddenMemoId = null;
     });
+  }
+
+  List<MemoMediaItem> _buildMediaItems(int? memoId) {
+    final list = _memoMediaList[memoId];
+    if (list == null || list.isEmpty) return [];
+    return list.take(4).map((m) {
+      final rawDisplay = m.isVideo ? m.thumbnailUri : m.uri;
+      final rawVideo = m.isVideo ? m.uri : null;
+      return (
+        displayPath: rawDisplay != null ? MediaPathHelper.resolve(rawDisplay, _docsPath) : '',
+        isVideo: m.isVideo,
+        videoPath: rawVideo != null ? MediaPathHelper.resolve(rawVideo, _docsPath) : null,
+      );
+    }).toList();
   }
 
   Future<void> _toggleFavorite(PracticeMemo memo) async {
@@ -261,9 +271,12 @@ class _AllMemosTabState extends State<_AllMemosTab> {
                         duration: const Duration(milliseconds: 160),
                         child: MemoCard(
                           clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                          mediaItems: _buildMediaItems(memo.id),
                           distance: memo.distance != null ? '${memo.distance}yd' : null,
+                          shotShape: memo.shotShape,
+                          condition: memo.condition,
+                          wind: memo.wind,
                           bodyText: memo.body,
-                          thumbnailPath: _thumbnails[memo.id],
                           margin: EdgeInsets.zero,
                           onTap: () {
                             setState(() => _hiddenMemoId = memo.id);
@@ -336,7 +349,8 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
 
   List<PracticeMemo> _memos = [];
   Map<int, String> _clubNames = {};
-  Map<int, String?> _thumbnails = {};
+  Map<int, List<Media>> _memoMediaList = {};
+  String _docsPath = '';
   bool _isLoading = true;
 
   @override
@@ -352,30 +366,38 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
     final mediaResults = await Future.wait(
       memos.map((m) => m.id != null
           ? _mediaRepo.getMediaByMemoId(m.id!)
-          : Future.value([])),
+          : Future.value(<Media>[])),
     );
 
     final docsDir = await getApplicationDocumentsDirectory();
-    final thumbnails = <int, String?>{};
+    final memoMediaMap = <int, List<Media>>{};
     for (var i = 0; i < memos.length; i++) {
-      final memo = memos[i];
-      if (memo.id != null && mediaResults[i].isNotEmpty) {
-        final first = mediaResults[i].first;
-        final rawPath = first.isVideo ? first.thumbnailUri : first.uri;
-        if (rawPath != null) {
-          thumbnails[memo.id!] = MediaPathHelper.resolve(rawPath, docsDir.path);
-        }
-      }
+      if (memos[i].id != null) memoMediaMap[memos[i].id!] = mediaResults[i];
     }
 
     if (!mounted) return;
     setState(() {
       _memos = memos;
       _clubNames = {for (final c in clubs) c.id!: c.name};
-      _thumbnails = thumbnails;
+      _memoMediaList = memoMediaMap;
+      _docsPath = docsDir.path;
       _isLoading = false;
       _hiddenMemoId = null;
     });
+  }
+
+  List<MemoMediaItem> _buildMediaItems(int? memoId) {
+    final list = _memoMediaList[memoId];
+    if (list == null || list.isEmpty) return [];
+    return list.take(4).map((m) {
+      final rawDisplay = m.isVideo ? m.thumbnailUri : m.uri;
+      final rawVideo = m.isVideo ? m.uri : null;
+      return (
+        displayPath: rawDisplay != null ? MediaPathHelper.resolve(rawDisplay, _docsPath) : '',
+        isVideo: m.isVideo,
+        videoPath: rawVideo != null ? MediaPathHelper.resolve(rawVideo, _docsPath) : null,
+      );
+    }).toList();
   }
 
   Future<void> _toggleFavorite(PracticeMemo memo) async {
@@ -448,9 +470,12 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
                         duration: const Duration(milliseconds: 160),
                         child: MemoCard(
                           clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                          mediaItems: _buildMediaItems(memo.id),
                           distance: memo.distance != null ? '${memo.distance}yd' : null,
+                          shotShape: memo.shotShape,
+                          condition: memo.condition,
+                          wind: memo.wind,
                           bodyText: memo.body,
-                          thumbnailPath: _thumbnails[memo.id],
                           margin: EdgeInsets.zero,
                           onTap: () {
                             setState(() => _hiddenMemoId = memo.id);

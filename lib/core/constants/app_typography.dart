@@ -21,6 +21,14 @@ class AppTypography {
     height: 1.2,
   );
 
+  /// Header2: 20px / W6 / 行間120%
+  static const TextStyle jpHeader2 = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    fontFamily: 'Hiragino Sans',
+    height: 1.2,
+  );
+
   /// Header3: 18px / W6 / 行間120% — カード内クラブ名・AppBarタイトル
   static const TextStyle jpHeader3 = TextStyle(
     fontSize: 18,
@@ -103,7 +111,7 @@ class AppTypography {
   /// Header4: 16px / W7 / 行間120%
   static const TextStyle enHeader4 = TextStyle(
     fontSize: 16,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     height: 1.2,
   );
 

@@ -3,9 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/media_path_helper.dart';
 import '../../data/models/media.dart';
 import '../../data/models/practice_memo.dart';
 import '../../data/repositories/club_repository.dart';
@@ -31,6 +33,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
   PracticeMemo? _memo;
   String _clubName = '';
   List<Media> _mediaList = [];
+  String _docsPath = '';
   bool _isLoading = true;
   bool _isFavorite = false;
 
@@ -48,11 +51,13 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
     }
     final club = await _clubRepo.getClubById(memo.clubId);
     final media = await _mediaRepo.getMediaByMemoId(widget.memoId);
+    final docsDir = await getApplicationDocumentsDirectory();
 
     setState(() {
       _memo = memo;
       _clubName = club?.name ?? '不明なクラブ';
       _mediaList = media;
+      _docsPath = docsDir.path;
       _isFavorite = memo.isFavorite;
       _isLoading = false;
     });
@@ -231,6 +236,10 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
                   ),
                 ],
               ),
+              if (_mediaList.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _ImageGrid(mediaList: _mediaList, docsPath: _docsPath),
+              ],
               const SizedBox(height: 16),
               _MetaInfoRow(
                 condition: memo.condition,
@@ -244,10 +253,6 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
                   memo.body!,
                   style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
                 ),
-              ],
-              if (_mediaList.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                _MediaRow(mediaList: _mediaList),
               ],
             ],
           ),
@@ -333,76 +338,128 @@ class _MetaChip extends StatelessWidget {
   }
 }
 
-// ── メディア横並びサムネイル ────────────────────────────
-class _MediaRow extends StatelessWidget {
+// ── 画像グリッド ─────────────────────────────────────
+class _ImageGrid extends StatelessWidget {
   final List<Media> mediaList;
+  final String docsPath;
 
-  const _MediaRow({required this.mediaList});
+  const _ImageGrid({required this.mediaList, required this.docsPath});
+
+  void _openPreview(BuildContext context, Media item) {
+    final thumbPath = item.isVideo && item.thumbnailUri != null
+        ? MediaPathHelper.resolve(item.thumbnailUri!, docsPath)
+        : null;
+    final imagePath = !item.isVideo
+        ? MediaPathHelper.resolve(item.uri, docsPath)
+        : null;
+    final videoPath = item.isVideo
+        ? MediaPathHelper.resolve(item.uri, docsPath)
+        : null;
+
+    Navigator.of(context, rootNavigator: true).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.black,
+        transitionDuration: const Duration(milliseconds: 250),
+        reverseTransitionDuration: const Duration(milliseconds: 200),
+        pageBuilder: (_, __, ___) => MediaPreviewScreen(
+          file: thumbPath != null ? File(thumbPath) : (imagePath != null ? File(imagePath) : null),
+          isVideo: item.isVideo,
+          videoPath: videoPath,
+        ),
+        transitionsBuilder: (_, animation, __, child) =>
+            FadeTransition(opacity: animation, child: child),
+      ),
+    );
+  }
+
+  Widget _imgTile(BuildContext context, int index) {
+    final item = mediaList[index];
+    final thumbPath = item.isVideo && item.thumbnailUri != null
+        ? MediaPathHelper.resolve(item.thumbnailUri!, docsPath)
+        : null;
+    final imagePath = !item.isVideo
+        ? MediaPathHelper.resolve(item.uri, docsPath)
+        : null;
+    final displayPath = thumbPath ?? imagePath;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _openPreview(context, item),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (displayPath != null)
+            Image.file(
+              File(displayPath),
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(color: AppColors.backgroundMiddle),
+            )
+          else
+            Container(
+              color: const Color(0xFF2C2C2E),
+              child: const Center(
+                child: Icon(Icons.videocam, color: Colors.white54, size: 32),
+              ),
+            ),
+          if (item.isVideo)
+            const Center(
+              child: Icon(Icons.play_circle_filled, size: 36, color: Colors.white70),
+            ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 92,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: mediaList.length,
-        separatorBuilder: (_, i) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final item = mediaList[index];
-          final isVideo = item.isVideo;
-          final thumbFile = isVideo && item.thumbnailUri != null
-              ? File(item.thumbnailUri!)
-              : null;
-          final imageFile = !isVideo ? File(item.uri) : null;
+    final count = mediaList.length.clamp(0, 4);
+    if (count == 0) return const SizedBox.shrink();
 
-          return GestureDetector(
-            onTap: () {
-              Navigator.of(context, rootNavigator: true).push(
-                PageRouteBuilder(
-                  opaque: false,
-                  barrierColor: Colors.black,
-                  transitionDuration: const Duration(milliseconds: 250),
-                  reverseTransitionDuration: const Duration(milliseconds: 200),
-                  pageBuilder: (_, __, ___) => MediaPreviewScreen(
-                    file: thumbFile ?? imageFile,
-                    isVideo: isVideo,
-                    videoPath: isVideo ? item.uri : null,
-                  ),
-                  transitionsBuilder: (_, animation, __, child) =>
-                      FadeTransition(opacity: animation, child: child),
-                ),
-              );
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                width: 92,
-                height: 92,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (imageFile != null)
-                      Image.file(imageFile, fit: BoxFit.cover)
-                    else if (thumbFile != null)
-                      Image.file(thumbFile, fit: BoxFit.cover)
-                    else
-                      Container(
-                        color: AppColors.divider,
-                        child: const Center(
-                          child: Icon(Icons.videocam, size: 36, color: AppColors.textSecondary),
-                        ),
-                      ),
-                    if (isVideo)
-                      const Center(
-                        child: Icon(Icons.play_circle_filled, size: 36, color: Colors.white70),
-                      ),
-                  ],
-                ),
-              ),
+    Widget grid;
+    if (count == 1) {
+      grid = _imgTile(context, 0);
+    } else if (count == 2) {
+      grid = Row(children: [
+        Expanded(child: _imgTile(context, 0)),
+        const SizedBox(width: 4),
+        Expanded(child: _imgTile(context, 1)),
+      ]);
+    } else if (count == 3) {
+      grid = Row(children: [
+        Expanded(child: _imgTile(context, 0)),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Column(children: [
+            Expanded(child: _imgTile(context, 1)),
+            const SizedBox(height: 4),
+            Expanded(child: _imgTile(context, 2)),
+          ]),
+        ),
+      ]);
+    } else {
+      grid = Row(children: [
+        Expanded(child: _imgTile(context, 0)),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Column(children: [
+            Expanded(child: _imgTile(context, 1)),
+            const SizedBox(height: 4),
+            Expanded(
+              child: Row(children: [
+                Expanded(child: _imgTile(context, 2)),
+                const SizedBox(width: 4),
+                Expanded(child: _imgTile(context, 3)),
+              ]),
             ),
-          );
-        },
-      ),
+          ]),
+        ),
+      ]);
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(height: 165, child: grid),
     );
   }
 }
