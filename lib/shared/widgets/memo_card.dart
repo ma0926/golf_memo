@@ -18,6 +18,7 @@ class MemoCard extends StatelessWidget {
   final String? condition;
   final String? wind;
   final String? bodyText;
+  final String? date;
   final VoidCallback? onTap;
   final EdgeInsetsGeometry margin;
 
@@ -30,6 +31,7 @@ class MemoCard extends StatelessWidget {
     this.condition,
     this.wind,
     this.bodyText,
+    this.date,
     this.onTap,
     this.margin = const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
   });
@@ -180,6 +182,19 @@ class MemoCard extends StatelessWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
+            ),
+          ],
+          if (date != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              date!,
+              style: const TextStyle(
+                fontSize: 12,
+                fontFamily: 'Hiragino Sans',
+                fontWeight: FontWeight.w400,
+                height: 1.5,
+                color: AppColors.textMedium,
+              ),
             ),
           ],
         ],

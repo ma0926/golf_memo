@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/constants/app_typography.dart';
+import '../../core/utils/media_path_helper.dart';
 import '../../data/models/club.dart';
+import '../../data/models/media.dart';
 import '../../data/models/practice_memo.dart';
 import '../../data/repositories/club_repository.dart';
+import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
+import '../../shared/widgets/memo_card.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -194,36 +201,38 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             // 検索バー
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
                 children: [
                   Expanded(
                     child: Container(
-                      height: 40,
+                      height: 48,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.divider),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFF2F3F5)),
                       ),
                       child: Row(
                         children: [
-                          const SizedBox(width: 10),
-                          const Icon(Icons.search, size: 18, color: AppColors.textSecondary),
-                          const SizedBox(width: 6),
+                          const Icon(Icons.search, size: 24, color: AppColors.textSecondary),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: TextField(
                               controller: _searchController,
                               focusNode: _searchFocusNode,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 hintText: 'キーワード検索',
-                                hintStyle: TextStyle(
-                                  fontSize: 14,
+                                hintStyle: AppTypography.jpMRegular.copyWith(
                                   color: AppColors.textSecondary,
                                 ),
                                 border: InputBorder.none,
                                 isDense: true,
+                                contentPadding: EdgeInsets.zero,
                               ),
-                              style: const TextStyle(fontSize: 14),
+                              style: AppTypography.jpMRegular.copyWith(
+                                color: AppColors.textPrimary,
+                              ),
                               onChanged: (_) => setState(() {}),
                             ),
                           ),
@@ -245,9 +254,9 @@ class _SearchScreenState extends State<SearchScreen> {
                   const SizedBox(width: 8),
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child: const Text(
+                    child: Text(
                       'キャンセル',
-                      style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                      style: AppTypography.jpMMedium.copyWith(color: AppColors.textMedium),
                     ),
                   ),
                 ],
@@ -255,7 +264,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             // フィルターチップ（横スクロール）
             SizedBox(
-              height: 36,
+              height: 40,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -285,7 +294,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
-                    label: '記録日',
+                    label: '日付',
                     isSelected: _selectedDate != null,
                     showArrow: true,
                     selectedLabel: _dateLabel,
@@ -301,6 +310,14 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 8),
                   _FilterChip(
+                    label: '球筋',
+                    isSelected: _selectedShotShapes.isNotEmpty,
+                    showArrow: true,
+                    selectedLabel: _shotShapeLabel,
+                    onTap: _openShotShapeSheet,
+                  ),
+                  const SizedBox(width: 8),
+                  _FilterChip(
                     label: '調子',
                     isSelected: _selectedCondition != null,
                     showArrow: true,
@@ -308,14 +325,6 @@ class _SearchScreenState extends State<SearchScreen> {
                         ? AppConstants.conditionLabels[_selectedCondition]
                         : null,
                     onTap: _openConditionSheet,
-                  ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: '球筋',
-                    isSelected: _selectedShotShapes.isNotEmpty,
-                    showArrow: true,
-                    selectedLabel: _shotShapeLabel,
-                    onTap: _openShotShapeSheet,
                   ),
                 ],
               ),
@@ -364,42 +373,50 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDropdownSelected = isSelected && !isToggle;
+    final isActive = isSelected;
+    final bgColor = isActive ? AppColors.primary : Colors.white;
+    final textColor = isActive ? Colors.white : AppColors.textMedium;
+    final borderColor = isActive ? AppColors.primary : const Color(0xFFE1E1E5);
 
-    final borderColor = (isToggle && isSelected) || isDropdownSelected
-        ? AppColors.primary
-        : AppColors.divider;
-    final textColor = (isToggle && isSelected) || isDropdownSelected
-        ? AppColors.primary
-        : AppColors.textPrimary;
-
-    final displayLabel = isDropdownSelected && selectedLabel != null
+    final showCheck = isToggle && isSelected;
+    final hasTrailingIcon = showCheck || showArrow;
+    final displayLabel = (!isToggle && isSelected && selectedLabel != null)
         ? selectedLabel!
         : label;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        height: 40,
+        padding: EdgeInsets.fromLTRB(16, 8, hasTrailingIcon ? 10 : 16, 8),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: bgColor,
+          borderRadius: BorderRadius.circular(999),
           border: Border.all(color: borderColor),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (isToggle && isSelected) ...[
-              const Icon(Icons.check, size: 12, color: AppColors.primary),
-              const SizedBox(width: 4),
-            ],
             Text(
               displayLabel,
-              style: TextStyle(fontSize: 13, color: textColor),
+              style: AppTypography.jpSMedium.copyWith(color: textColor),
             ),
+            if (showCheck) ...[
+              const SizedBox(width: 4),
+              SvgPicture.asset(
+                'assets/icons/filter_check.svg',
+                width: 24,
+                height: 24,
+              ),
+            ],
             if (showArrow) ...[
-              const SizedBox(width: 2),
-              Icon(Icons.keyboard_arrow_down, size: 14, color: textColor),
+              const SizedBox(width: 4),
+              SvgPicture.asset(
+                'assets/icons/filter_arrow_down.svg',
+                width: 21,
+                height: 21,
+                colorFilter: ColorFilter.mode(textColor, BlendMode.srcIn),
+              ),
             ],
           ],
         ),
@@ -484,9 +501,12 @@ class _SearchResultsList extends StatefulWidget {
 class _SearchResultsListState extends State<_SearchResultsList> {
   final _memoRepo = PracticeMemoRepository();
   final _clubRepo = ClubRepository();
+  final _mediaRepo = MediaRepository();
 
   List<PracticeMemo> _results = [];
   Map<int, String> _clubNames = {};
+  Map<int, List<Media>> _memoMediaList = {};
+  String _docsPath = '';
   bool _isLoading = true;
 
   @override
@@ -556,19 +576,51 @@ class _SearchResultsListState extends State<_SearchResultsList> {
       }
     }
 
+    // メディアを読み込む
+    final mediaResults = await Future.wait(
+      results.map((m) => m.id != null
+          ? _mediaRepo.getMediaByMemoId(m.id!)
+          : Future.value(<Media>[])),
+    );
+    final docsDir = await getApplicationDocumentsDirectory();
+    final memoMediaMap = <int, List<Media>>{};
+    for (var i = 0; i < results.length; i++) {
+      if (results[i].id != null) memoMediaMap[results[i].id!] = mediaResults[i];
+    }
+
     if (mounted) {
       setState(() {
         _results = results;
         _clubNames = clubMap;
+        _memoMediaList = memoMediaMap;
+        _docsPath = docsDir.path;
         _isLoading = false;
       });
     }
   }
 
+  List<MemoMediaItem> _buildMediaItems(int? memoId) {
+    final list = _memoMediaList[memoId];
+    if (list == null || list.isEmpty) return [];
+    return list.take(4).map((m) {
+      final rawDisplay = m.isVideo ? m.thumbnailUri : m.uri;
+      final rawVideo = m.isVideo ? m.uri : null;
+      return (
+        displayPath: rawDisplay != null ? MediaPathHelper.resolve(rawDisplay, _docsPath) : '',
+        isVideo: m.isVideo,
+        videoPath: rawVideo != null ? MediaPathHelper.resolve(rawVideo, _docsPath) : null,
+      );
+    }).toList();
+  }
+
   String _formatDate(DateTime dt) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final memoDay = DateTime(dt.year, dt.month, dt.day);
+    if (memoDay == today) return '今日';
     const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
     final w = weekdays[dt.weekday - 1];
-    return '${dt.year}/${dt.month}/${dt.day}（$w）';
+    return '${dt.year}年${dt.month}月${dt.day}日 ${w}曜日';
   }
 
   @override
@@ -592,58 +644,19 @@ class _SearchResultsListState extends State<_SearchResultsList> {
       itemBuilder: (context, index) {
         final memo = _results[index];
         final clubName = _clubNames[memo.clubId] ?? '不明なクラブ';
+        final mediaItems = _buildMediaItems(memo.id);
 
-        return GestureDetector(
+        return MemoCard(
+          clubName: clubName,
+          mediaItems: mediaItems,
+          distance: memo.distance != null ? '${memo.distance}yd' : null,
+          shotShape: memo.shotShape,
+          condition: memo.condition,
+          wind: memo.wind,
+          bodyText: memo.body,
+          date: _formatDate(memo.practicedAt),
           onTap: () => context.push('/memo/${memo.id}'),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.divider, width: 0.8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _formatDate(memo.practicedAt),
-                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      clubName,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (memo.distance != null)
-                      Text(
-                        '${memo.distance}yd',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                  ],
-                ),
-                if (memo.body != null && memo.body!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    memo.body!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                  ),
-                ],
-              ],
-            ),
-          ),
+          margin: const EdgeInsets.only(bottom: 8),
         );
       },
     );
