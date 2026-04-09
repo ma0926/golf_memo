@@ -55,4 +55,24 @@ class AppConstants {
     'yes':  'あり',
     'none': 'なし',
   };
+
+  // 調子のアイコンパス
+  static const Map<String, String> conditionIcons = {
+    'good':   'assets/icons/condition_good.svg',
+    'normal': 'assets/icons/condition_normal.svg',
+    'bad':    'assets/icons/condition_bad.svg',
+  };
+
+  // 調子の塗りアイコンパス（選択時）
+  static const Map<String, String> conditionIconsFilled = {
+    'good':   'assets/icons/condition_good_filled.svg',
+    'normal': 'assets/icons/condition_normal_filled.svg',
+    'bad':    'assets/icons/condition_bad_filled.svg',
+  };
+
+  // 風のアイコンパス
+  static const Map<String, String> windIcons = {
+    'yes':  'assets/icons/wind_yes.svg',
+    'none': 'assets/icons/wind_none.svg',
+  };
 }

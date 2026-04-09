@@ -773,7 +773,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                         sectionKey: 'shotShape',
                         child: _ChipSelector(
                           options: AppConstants.shotShapeLabels.entries
-                              .map((e) => (value: e.key, label: e.value, svgPath: 'assets/icons/${e.key}.svg'))
+                              .map((e) => (value: e.key, label: e.value, svgPath: 'assets/icons/${e.key}.svg', svgPathFilled: null))
                               .toList(),
                           selected: _shotShape,
                           onSelected: (v) => setState(() => _shotShape = v),
@@ -786,7 +786,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                         sectionKey: 'condition',
                         child: _ChipSelector(
                           options: AppConstants.conditionLabels.entries
-                              .map((e) => (value: e.key, label: e.value, svgPath: null))
+                              .map((e) => (value: e.key, label: e.value, svgPath: AppConstants.conditionIcons[e.key], svgPathFilled: AppConstants.conditionIconsFilled[e.key]))
                               .toList(),
                           selected: _condition,
                           onSelected: (v) => setState(() => _condition = v),
@@ -798,7 +798,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                         sectionKey: 'wind',
                         child: _ChipSelector(
                           options: AppConstants.windLabels.entries
-                              .map((e) => (value: e.key, label: e.value, svgPath: null))
+                              .map((e) => (value: e.key, label: e.value, svgPath: AppConstants.windIcons[e.key], svgPathFilled: null))
                               .toList(),
                           selected: _wind,
                           onSelected: (v) => setState(() => _wind = v),
@@ -914,7 +914,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
 // チップ選択（球筋・調子・風で共通）
 // ──────────────────────────────────────────────────────
 class _ChipSelector extends StatelessWidget {
-  final List<({String value, String label, String? svgPath})> options;
+  final List<({String value, String label, String? svgPath, String? svgPathFilled})> options;
   final String? selected;
   final ValueChanged<String?> onSelected;
   final bool useGridLayout;
@@ -926,8 +926,9 @@ class _ChipSelector extends StatelessWidget {
     this.useGridLayout = false,
   });
 
-  Widget _buildChip(({String value, String label, String? svgPath}) opt, {bool compact = false}) {
+  Widget _buildChip(({String value, String label, String? svgPath, String? svgPathFilled}) opt, {bool compact = false}) {
     final isSelected = selected == opt.value;
+    final iconPath = isSelected && opt.svgPathFilled != null ? opt.svgPathFilled! : opt.svgPath;
     return GestureDetector(
       onTap: () => onSelected(isSelected ? null : opt.value),
       child: Container(
@@ -941,30 +942,30 @@ class _ChipSelector extends StatelessWidget {
             color: isSelected ? AppColors.primary : const Color(0xFFD0D7DE),
           ),
         ),
-        child: Row(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (opt.svgPath != null) ...[
+            if (iconPath != null) ...[
               SvgPicture.asset(
-                opt.svgPath!,
+                iconPath,
                 width: 20,
                 height: 20,
-                colorFilter: ColorFilter.mode(
-                  isSelected ? Colors.white : AppColors.textSecondary,
-                  BlendMode.srcIn,
-                ),
+                colorFilter: (isSelected && opt.svgPathFilled != null)
+                    ? null
+                    : ColorFilter.mode(
+                        isSelected ? Colors.white : AppColors.textSecondary,
+                        BlendMode.srcIn,
+                      ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(height: 4),
             ],
-            Flexible(
-              child: Text(
-                opt.label,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
-                ),
+            Text(
+              opt.label,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                color: isSelected ? Colors.white : AppColors.textPrimary,
               ),
             ),
           ],
@@ -1001,10 +1002,13 @@ class _ChipSelector extends StatelessWidget {
     }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: options.map((opt) => _buildChip(opt)).toList(),
+      child: Row(
+        children: [
+          for (int i = 0; i < options.length; i++) ...[
+            Expanded(child: _buildChip(options[i])),
+            if (i < options.length - 1) const SizedBox(width: 8),
+          ],
+        ],
       ),
     );
   }
