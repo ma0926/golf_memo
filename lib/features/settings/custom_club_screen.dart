@@ -123,6 +123,7 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
   void _showCategoryPicker() {
     showModalBottomSheet(
       context: context,
+      enableDrag: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -133,7 +134,7 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
           children: [
             // ドラッグインジケーター + タイトル
             Container(
-              margin: const EdgeInsets.symmetric(vertical: 10),
+              margin: const EdgeInsets.symmetric(vertical: 8),
               width: 36,
               height: 4,
               decoration: BoxDecoration(

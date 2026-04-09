@@ -114,13 +114,9 @@ class _ClubSelectPageState extends State<_ClubSelectPage> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    const Text(
+                    Text(
                       'クラブを選択',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary,
-                      ),
+                      style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
                     ),
                     Align(
                       alignment: Alignment.centerLeft,
@@ -376,6 +372,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
+      enableDrag: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -385,7 +382,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
+              margin: const EdgeInsets.symmetric(vertical: 8),
               width: 36,
               height: 4,
               decoration: BoxDecoration(
@@ -1125,7 +1122,7 @@ class _DragIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       width: 36,
       height: 4,
       decoration: BoxDecoration(

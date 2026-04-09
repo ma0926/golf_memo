@@ -172,7 +172,12 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      enableDrag: true,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.5),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.75,
+      ),
       builder: (sheetContext) => _ClubSelectSheet(
         onClubSelected: (id, name) {
           Navigator.pop(sheetContext);
@@ -210,6 +215,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
+      enableDrag: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -220,7 +226,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
           children: [
             // ドラッグインジケーター
             Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
+              margin: const EdgeInsets.symmetric(vertical: 8),
               width: 36,
               height: 4,
               decoration: BoxDecoration(
@@ -918,7 +924,7 @@ class _ClubSelectSheetState extends State<_ClubSelectSheet> {
                     return Column(
                       children: [
                         Container(
-                          margin: const EdgeInsets.symmetric(vertical: 10),
+                          margin: const EdgeInsets.symmetric(vertical: 8),
                           width: 36,
                           height: 4,
                           decoration: BoxDecoration(
@@ -927,26 +933,25 @@ class _ClubSelectSheetState extends State<_ClubSelectSheet> {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              const Text(
-                                'クラブを選択',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
+                          padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                          child: SizedBox(
+                            height: 44,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Text(
+                                  'クラブを選択',
+                                  style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
                                 ),
-                              ),
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: GestureDetector(
-                                  onTap: () => Navigator.pop(context),
-                                  child: const Icon(Icons.close, color: AppColors.textPrimary),
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: GestureDetector(
+                                    onTap: () => Navigator.pop(context),
+                                    child: const Icon(Icons.close, color: AppColors.textPrimary),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ],

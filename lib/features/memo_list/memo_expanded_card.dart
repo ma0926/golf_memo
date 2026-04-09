@@ -103,6 +103,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
+      enableDrag: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -112,7 +113,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
+              margin: const EdgeInsets.symmetric(vertical: 8),
               width: 36,
               height: 4,
               decoration: BoxDecoration(
