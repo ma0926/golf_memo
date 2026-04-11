@@ -157,19 +157,32 @@ class MemoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            clubName,
-            style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
-            overflow: TextOverflow.ellipsis,
-          ),
           if (hasImages) ...[
-            const SizedBox(height: 16),
             _buildImageGrid(context),
+            const SizedBox(height: 8),
           ],
-          if (hasMeta) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  clubName,
+                  style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (distance != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  distance!,
+                  style: AppTypography.enMMedium.copyWith(color: AppColors.textPrimary),
+                ),
+              ],
+            ],
+          ),
+          if (shotShape != null || condition != null || wind != null) ...[
             const SizedBox(height: 8),
             _MemoMetaRow(
-              distance: distance,
               shotShape: shotShape,
               condition: condition,
               wind: wind,
@@ -210,12 +223,11 @@ class MemoCard extends StatelessWidget {
 
 // ── メタ情報行（一覧カード用） ─────────────────────────
 class _MemoMetaRow extends StatelessWidget {
-  final String? distance;
   final String? shotShape;
   final String? condition;
   final String? wind;
 
-  const _MemoMetaRow({this.distance, this.shotShape, this.condition, this.wind});
+  const _MemoMetaRow({this.shotShape, this.condition, this.wind});
 
   IconData _conditionIcon(String cond) {
     switch (cond) {
@@ -227,63 +239,48 @@ class _MemoMetaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rightItems = <Widget>[
-      if (shotShape != null)
-        Row(mainAxisSize: MainAxisSize.min, children: [
-          SvgPicture.asset(
-            'assets/icons/$shotShape.svg',
-            width: 16,
-            height: 16,
-            colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
-          ),
-          const SizedBox(width: 3),
-          Text(
-            AppConstants.shotShapeLabels[shotShape] ?? shotShape!,
-            style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
-          ),
-        ]),
-      if (condition != null)
-        Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(_conditionIcon(condition!), size: 16, color: AppColors.textMedium),
-          const SizedBox(width: 3),
-          Text(
-            AppConstants.conditionLabels[condition] ?? condition!,
-            style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
-          ),
-        ]),
-      if (wind != null)
-        Row(mainAxisSize: MainAxisSize.min, children: [
-          SvgPicture.asset(
-            AppConstants.windIcons[wind] ?? 'assets/icons/wind_yes.svg',
-            width: 16,
-            height: 16,
-            colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
-          ),
-          const SizedBox(width: 3),
-          Text(
-            AppConstants.windLabels[wind] ?? wind!,
-            style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
-          ),
-        ]),
-    ];
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        if (distance != null)
-          Text(
-            distance!,
-            style: AppTypography.enMMedium.copyWith(color: AppColors.textPrimary),
-          ),
-        if (rightItems.isNotEmpty) ...[
-          const Spacer(),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: rightItems,
-          ),
-        ],
+        if (shotShape != null)
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            SvgPicture.asset(
+              'assets/icons/$shotShape.svg',
+              width: 16,
+              height: 16,
+              colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
+            ),
+            const SizedBox(width: 3),
+            Text(
+              AppConstants.shotShapeLabels[shotShape] ?? shotShape!,
+              style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
+            ),
+          ]),
+        if (condition != null)
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(_conditionIcon(condition!), size: 16, color: AppColors.textMedium),
+            const SizedBox(width: 3),
+            Text(
+              AppConstants.conditionLabels[condition] ?? condition!,
+              style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
+            ),
+          ]),
+        if (wind != null)
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            SvgPicture.asset(
+              AppConstants.windIcons[wind] ?? 'assets/icons/wind_yes.svg',
+              width: 16,
+              height: 16,
+              colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
+            ),
+            const SizedBox(width: 3),
+            Text(
+              AppConstants.windLabels[wind] ?? wind!,
+              style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
+            ),
+          ]),
       ],
     );
   }
