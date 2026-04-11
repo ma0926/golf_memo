@@ -278,7 +278,7 @@ class _MemoMetaRow extends StatelessWidget {
         if (rightItems.isNotEmpty) ...[
           const Spacer(),
           Wrap(
-            spacing: 12,
+            spacing: 8,
             runSpacing: 4,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: rightItems,
