@@ -219,6 +219,10 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_mediaList.isNotEmpty) ...[
+                _ImageGrid(mediaList: _mediaList, docsPath: _docsPath),
+                const SizedBox(height: 16),
+              ],
               Text(
                 _clubName,
                 style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
@@ -237,22 +241,20 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
                   ),
                 ],
               ),
-              if (_mediaList.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _ImageGrid(mediaList: _mediaList, docsPath: _docsPath),
-              ],
-              const SizedBox(height: 16),
-              _MetaInfoRow(
-                condition: memo.condition,
-                distance: memo.distance,
-                shotShape: memo.shotShape,
-                wind: memo.wind,
-              ),
               if (memo.body != null && memo.body!.isNotEmpty) ...[
-                const SizedBox(height: 20),
+                const SizedBox(height: 8),
                 Text(
                   memo.body!,
                   style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
+                ),
+              ],
+              if (memo.distance != null || memo.shotShape != null || memo.condition != null || memo.wind != null) ...[
+                const SizedBox(height: 16),
+                _MetaInfoRow(
+                  condition: memo.condition,
+                  distance: memo.distance,
+                  shotShape: memo.shotShape,
+                  wind: memo.wind,
                 ),
               ],
             ],
@@ -262,7 +264,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
   }
 }
 
-// ── メタ情報の横並び行 ──────────────────────────────────
+// ── メタ情報行（飛距離左・球筋/調子/風右） ──────────────────
 class _MetaInfoRow extends StatelessWidget {
   final String? condition;
   final int? distance;
@@ -271,70 +273,74 @@ class _MetaInfoRow extends StatelessWidget {
 
   const _MetaInfoRow({this.condition, this.distance, this.shotShape, this.wind});
 
-  @override
-  Widget build(BuildContext context) {
-    final chips = <Widget>[
-      if (distance != null)
-        _MetaChip(icon: Icons.place_outlined, label: '${distance}yd'),
-      if (shotShape != null)
-        _MetaChip(
-          icon: Icons.north_east,
-          label: AppConstants.shotShapeLabels[shotShape] ?? shotShape!,
-        ),
-      if (condition != null)
-        _MetaChip(
-          icon: Icons.sentiment_satisfied_outlined,
-          label: AppConstants.conditionLabels[condition] ?? condition!,
-        ),
-      if (wind != null)
-        _MetaChip(
-          icon: Icons.air,
-          label: AppConstants.windLabels[wind] ?? wind!,
-        ),
-    ];
-    if (chips.isEmpty) return const SizedBox.shrink();
-    final spaced = <Widget>[];
-    for (var i = 0; i < chips.length; i++) {
-      spaced.add(Expanded(
-        child: Align(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 96),
-            child: chips[i],
-          ),
-        ),
-      ));
-      if (i < chips.length - 1) spaced.add(const SizedBox(width: 4));
+  IconData _conditionIcon(String cond) {
+    switch (cond) {
+      case 'good': return Icons.sentiment_satisfied_alt;
+      case 'bad': return Icons.sentiment_dissatisfied;
+      default: return Icons.sentiment_neutral;
     }
-    return Row(children: spaced);
   }
-}
-
-class _MetaChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _MetaChip({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundLabel,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16, color: AppColors.textPrimary),
-          const SizedBox(width: 4),
+    final metaItems = <Widget>[
+      if (shotShape != null)
+        Row(mainAxisSize: MainAxisSize.min, children: [
+          SvgPicture.asset(
+            'assets/icons/$shotShape.svg',
+            width: 16,
+            height: 16,
+            colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
+          ),
+          const SizedBox(width: 3),
           Text(
-            label,
-            style: AppTypography.jpSRegular.copyWith(fontSize: 12, color: AppColors.textPrimary),
+            AppConstants.shotShapeLabels[shotShape] ?? shotShape!,
+            style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
+          ),
+        ]),
+      if (condition != null)
+        Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(_conditionIcon(condition!), size: 16, color: AppColors.textMedium),
+          const SizedBox(width: 3),
+          Text(
+            AppConstants.conditionLabels[condition] ?? condition!,
+            style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
+          ),
+        ]),
+      if (wind != null)
+        Row(mainAxisSize: MainAxisSize.min, children: [
+          SvgPicture.asset(
+            AppConstants.windIcons[wind] ?? 'assets/icons/wind_yes.svg',
+            width: 16,
+            height: 16,
+            colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            AppConstants.windLabels[wind] ?? wind!,
+            style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
+          ),
+        ]),
+    ];
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (distance != null)
+          Text(
+            '${distance}yd',
+            style: AppTypography.enMMedium.copyWith(color: AppColors.textPrimary),
+          ),
+        if (metaItems.isNotEmpty) ...[
+          const Spacer(),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: metaItems,
           ),
         ],
-      ),
+      ],
     );
   }
 }
