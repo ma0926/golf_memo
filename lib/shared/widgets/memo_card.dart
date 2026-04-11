@@ -253,7 +253,12 @@ class _MemoMetaRow extends StatelessWidget {
         ]),
       if (wind != null)
         Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.air, size: 16, color: AppColors.textMedium),
+          SvgPicture.asset(
+            AppConstants.windIcons[wind] ?? 'assets/icons/wind_yes.svg',
+            width: 16,
+            height: 16,
+            colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
+          ),
           const SizedBox(width: 3),
           Text(
             AppConstants.windLabels[wind] ?? wind!,
