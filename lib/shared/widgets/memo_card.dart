@@ -159,7 +159,7 @@ class MemoCard extends StatelessWidget {
         children: [
           Text(
             clubName,
-            style: AppTypography.jpHeader2.copyWith(color: AppColors.textPrimary),
+            style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
             overflow: TextOverflow.ellipsis,
           ),
           if (hasImages) ...[
@@ -268,7 +268,7 @@ class _MemoMetaRow extends StatelessWidget {
         if (distance != null)
           Text(
             distance!,
-            style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary),
+            style: AppTypography.enMMedium.copyWith(color: AppColors.textPrimary),
           ),
         if (rightItems.isNotEmpty) ...[
           const Spacer(),
