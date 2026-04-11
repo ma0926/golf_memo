@@ -180,14 +180,6 @@ class MemoCard extends StatelessWidget {
               ],
             ],
           ),
-          if (shotShape != null || condition != null || wind != null) ...[
-            const SizedBox(height: 8),
-            _MemoMetaRow(
-              shotShape: shotShape,
-              condition: condition,
-              wind: wind,
-            ),
-          ],
           if (hasBody) ...[
             const SizedBox(height: 8),
             Text(
@@ -195,6 +187,14 @@ class MemoCard extends StatelessWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
+            ),
+          ],
+          if (shotShape != null || condition != null || wind != null) ...[
+            const SizedBox(height: 8),
+            _MemoMetaRow(
+              shotShape: shotShape,
+              condition: condition,
+              wind: wind,
             ),
           ],
           if (date != null) ...[
