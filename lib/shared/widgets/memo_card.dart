@@ -159,26 +159,12 @@ class MemoCard extends StatelessWidget {
         children: [
           if (hasImages) ...[
             _buildImageGrid(context),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
           ],
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Text(
-                  clubName,
-                  style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (distance != null) ...[
-                const SizedBox(width: 8),
-                Text(
-                  distance!,
-                  style: AppTypography.enMMedium.copyWith(color: AppColors.textPrimary),
-                ),
-              ],
-            ],
+          Text(
+            clubName,
+            style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
+            overflow: TextOverflow.ellipsis,
           ),
           if (hasBody) ...[
             const SizedBox(height: 8),
@@ -189,16 +175,29 @@ class MemoCard extends StatelessWidget {
               style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
             ),
           ],
-          if (shotShape != null || condition != null || wind != null) ...[
-            const SizedBox(height: 8),
-            _MemoMetaRow(
-              shotShape: shotShape,
-              condition: condition,
-              wind: wind,
+          if (distance != null || shotShape != null || condition != null || wind != null) ...[
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (distance != null)
+                  Text(
+                    distance!,
+                    style: AppTypography.enMMedium.copyWith(color: AppColors.textPrimary),
+                  ),
+                if (shotShape != null || condition != null || wind != null) ...[
+                  const Spacer(),
+                  _MemoMetaRow(
+                    shotShape: shotShape,
+                    condition: condition,
+                    wind: wind,
+                  ),
+                ],
+              ],
             ),
           ],
           if (date != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Text(
               date!,
               style: const TextStyle(
