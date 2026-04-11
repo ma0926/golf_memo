@@ -115,10 +115,11 @@ class AppTypography {
     height: 1.2,
   );
 
-  /// M/Medium: 16px / W5 / 行間150%
+  /// M/Medium: 16px / W510 / 行間150%
   static const TextStyle enMMedium = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w500,
+    fontVariations: [FontVariation('wght', 510)],
     height: 1.5,
   );
 
