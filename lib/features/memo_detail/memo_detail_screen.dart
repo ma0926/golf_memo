@@ -245,7 +245,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
                 ),
               ],
               if (memo.distance != null || memo.shotShape != null || memo.condition != null || memo.wind != null) ...[
-                const SizedBox(height: 16),
+                SizedBox(height: (memo.body != null && memo.body!.isNotEmpty) ? 12 : 16),
                 _MetaInfoRow(
                   condition: memo.condition,
                   distance: memo.distance,
@@ -329,9 +329,13 @@ class _MetaInfoRow extends StatelessWidget {
         if (distance != null)
           Text(
             '${distance}yd',
-            style: AppTypography.enMMedium.copyWith(
-              color: AppColors.textPrimary,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
               fontStyle: FontStyle.normal,
+              fontVariations: [FontVariation('ital', 0.0)],
+              height: 1.5,
+              color: AppColors.textPrimary,
             ),
           ),
         if (metaItems.isNotEmpty) ...[
