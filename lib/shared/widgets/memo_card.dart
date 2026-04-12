@@ -159,8 +159,9 @@ class MemoCard extends StatelessWidget {
         children: [
           Text(
             clubName,
-            style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
+            style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
             overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
           if (hasBody) ...[
             const SizedBox(height: 8),
@@ -172,7 +173,7 @@ class MemoCard extends StatelessWidget {
             ),
           ],
           if (distance != null || shotShape != null || condition != null || wind != null) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: hasBody ? 12 : 16),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
