@@ -157,10 +157,6 @@ class MemoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (hasImages) ...[
-            _buildImageGrid(context),
-            const SizedBox(height: 16),
-          ],
           Text(
             clubName,
             style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
@@ -195,6 +191,10 @@ class MemoCard extends StatelessWidget {
                 ],
               ],
             ),
+          ],
+          if (hasImages) ...[
+            const SizedBox(height: 16),
+            _buildImageGrid(context),
           ],
           if (date != null) ...[
             const SizedBox(height: 16),

@@ -219,10 +219,6 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_mediaList.isNotEmpty) ...[
-                _ImageGrid(mediaList: _mediaList, docsPath: _docsPath),
-                const SizedBox(height: 16),
-              ],
               Text(
                 _clubName,
                 style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
@@ -256,6 +252,10 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
                   shotShape: memo.shotShape,
                   wind: memo.wind,
                 ),
+              ],
+              if (_mediaList.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _ImageGrid(mediaList: _mediaList, docsPath: _docsPath),
               ],
             ],
           ),
@@ -329,7 +329,10 @@ class _MetaInfoRow extends StatelessWidget {
         if (distance != null)
           Text(
             '${distance}yd',
-            style: AppTypography.enMMedium.copyWith(color: AppColors.textPrimary),
+            style: AppTypography.enMMedium.copyWith(
+              color: AppColors.textPrimary,
+              fontStyle: FontStyle.normal,
+            ),
           ),
         if (metaItems.isNotEmpty) ...[
           const Spacer(),
