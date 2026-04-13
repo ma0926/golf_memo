@@ -204,16 +204,21 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
     );
   }
 
+  String _formatDate(DateTime dt) => '${dt.year}/${dt.month}/${dt.day}';
+
+  String _weekday(DateTime dt) {
+    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+    return weekdays[dt.weekday - 1];
+  }
+
   @override
   Widget build(BuildContext context) {
     final memo = _memo;
-    const weekdayNames = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日', '日曜日'];
-    final weekday = weekdayNames[memo.practicedAt.weekday - 1];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: IconButton(
@@ -243,35 +248,43 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Section 1
-              Text(
-                weekday,
-                style: AppTypography.jpSubHeader.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 8),
               Text(
                 _clubName,
-                style: AppTypography.jpHeader1.copyWith(color: AppColors.textPrimary),
+                style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
               ),
-              // Section 2: media grid
-              if (_mediaList.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _ImageGrid(mediaList: _mediaList, docsPath: _docsPath),
-              ],
-              const SizedBox(height: 16),
-              _MetaChipsRow(
-                distance: memo.distance,
-                condition: memo.condition,
-                shotShape: memo.shotShape,
-                wind: memo.wind,
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text(
+                    _formatDate(memo.practicedAt),
+                    style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _weekday(memo.practicedAt),
+                    style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
+                  ),
+                ],
               ),
-              // Section 3: body text
               if (memo.body != null && memo.body!.isNotEmpty) ...[
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
                 Text(
                   memo.body!,
                   style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
                 ),
+              ],
+              if (memo.distance != null || memo.shotShape != null || memo.condition != null || memo.wind != null) ...[
+                SizedBox(height: (memo.body != null && memo.body!.isNotEmpty) ? 12 : 16),
+                _MetaInfoRow(
+                  condition: memo.condition,
+                  distance: memo.distance,
+                  shotShape: memo.shotShape,
+                  wind: memo.wind,
+                ),
+              ],
+              if (_mediaList.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _ImageGrid(mediaList: _mediaList, docsPath: _docsPath),
               ],
             ],
           ),
@@ -281,96 +294,89 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
   }
 }
 
-// ── メタ情報行 ──────────────────────────────────────
-class _MetaChipsRow extends StatelessWidget {
-  final int? distance;
+// ── メタ情報行（飛距離左・球筋/調子/風右） ──────────────────
+class _MetaInfoRow extends StatelessWidget {
   final String? condition;
+  final int? distance;
   final String? shotShape;
   final String? wind;
 
-  const _MetaChipsRow({this.distance, this.condition, this.shotShape, this.wind});
+  const _MetaInfoRow({this.condition, this.distance, this.shotShape, this.wind});
 
-  @override
-  Widget build(BuildContext context) {
-    final items = <Widget>[
-      if (distance != null)
-        Text(
-          '${distance}yd',
-          style: AppTypography.enHeader2.copyWith(
-            color: AppColors.textPrimary,
-            fontStyle: FontStyle.italic,
-          ),
-        ),
-      if (shotShape != null)
-        _MetaItem(
-          svgPath: 'assets/icons/$shotShape.svg',
-          label: AppConstants.shotShapeLabels[shotShape] ?? shotShape!,
-          iconTextGap: 0,
-          applyColorFilter: true,
-        ),
-      if (condition != null)
-        _MetaItem(
-          icon: Icons.sentiment_satisfied_outlined,
-          label: AppConstants.conditionLabels[condition] ?? condition!,
-        ),
-      if (wind != null)
-        wind == 'none'
-            ? const _MetaItem(
-                svgPath: 'assets/icons/wind_none.svg',
-                label: '風なし',
-              )
-            : _MetaItem(
-                icon: Icons.air,
-                label: AppConstants.windLabels[wind!] ?? wind!,
-              ),
-    ];
-    if (items.isEmpty) return const SizedBox.shrink();
-
-    return Wrap(
-      spacing: 16,
-      runSpacing: 8,
-      children: items,
-    );
+  IconData _conditionIcon(String cond) {
+    switch (cond) {
+      case 'good': return Icons.sentiment_satisfied_alt;
+      case 'bad': return Icons.sentiment_dissatisfied;
+      default: return Icons.sentiment_neutral;
+    }
   }
-}
-
-class _MetaItem extends StatelessWidget {
-  final IconData? icon;
-  final String? svgPath;
-  final String label;
-  final double iconTextGap;
-  final bool applyColorFilter;
-
-  const _MetaItem({
-    this.icon,
-    this.svgPath,
-    required this.label,
-    this.iconTextGap = 4,
-    this.applyColorFilter = false,
-  }) : assert(icon != null || svgPath != null);
 
   @override
   Widget build(BuildContext context) {
-    final iconWidget = svgPath != null
-        ? SvgPicture.asset(
-            svgPath!,
+    final metaItems = <Widget>[
+      if (shotShape != null)
+        Row(mainAxisSize: MainAxisSize.min, children: [
+          SvgPicture.asset(
+            'assets/icons/$shotShape.svg',
             width: 16,
             height: 16,
-            colorFilter: applyColorFilter
-                ? const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn)
-                : null,
-          )
-        : Icon(icon, size: 16, color: AppColors.textSecondary);
+            colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            AppConstants.shotShapeLabels[shotShape] ?? shotShape!,
+            style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
+          ),
+        ]),
+      if (condition != null)
+        Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(_conditionIcon(condition!), size: 16, color: AppColors.textMedium),
+          const SizedBox(width: 3),
+          Text(
+            AppConstants.conditionLabels[condition] ?? condition!,
+            style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
+          ),
+        ]),
+      if (wind != null)
+        Row(mainAxisSize: MainAxisSize.min, children: [
+          SvgPicture.asset(
+            AppConstants.windIcons[wind] ?? 'assets/icons/wind_yes.svg',
+            width: 16,
+            height: 16,
+            colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            AppConstants.windLabels[wind] ?? wind!,
+            style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
+          ),
+        ]),
+    ];
 
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        iconWidget,
-        SizedBox(width: iconTextGap),
-        Text(
-          label,
-          style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
-        ),
+        if (distance != null)
+          Text(
+            '${distance}yd',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              fontStyle: FontStyle.normal,
+              fontVariations: [FontVariation('ital', 0.0)],
+              height: 1.5,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        if (metaItems.isNotEmpty) ...[
+          const Spacer(),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: metaItems,
+          ),
+        ],
       ],
     );
   }
