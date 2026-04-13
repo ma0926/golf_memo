@@ -498,18 +498,15 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.backgroundExLow,
         elevation: 0,
-        toolbarHeight: 56 + 8,
+        toolbarHeight: 56,
         automaticallyImplyLeading: false,
-        leading: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: IconButton(
-            icon: SvgPicture.asset('assets/icons/close.svg', width: 30, height: 30),
-            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          ),
+        leading: IconButton(
+          icon: SvgPicture.asset('assets/icons/close.svg', width: 30, height: 30),
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16, top: 8, bottom: 6),
+            padding: const EdgeInsets.only(right: 16, top: 0, bottom: 0),
             child: ElevatedButton.icon(
               onPressed: (_isSaving || !_hasChanges) ? null : _saveChanges,
               icon: _isSaving
@@ -559,7 +556,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                           children: [
                             Text(
                               _formattedDate,
-                              style: AppTypography.jpSubHeader.copyWith(color: AppColors.textSecondary),
+                              style: AppTypography.jpSMedium.copyWith(color: AppColors.textSecondary),
                             ),
                             const SizedBox(width: 6),
                             SvgPicture.asset('assets/icons/calendar.svg', width: 20, height: 20),
@@ -567,112 +564,57 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     // クラブ名
                     GestureDetector(
                       onTap: _showClubSelect,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            _clubName,
-                            style: AppTypography.jpHeader1.copyWith(color: AppColors.textPrimary),
+                          Hero(
+                            tag: 'memo_club_${widget.memoId}',
+                            child: Material(
+                              type: MaterialType.transparency,
+                              child: Text(
+                                _clubName,
+                                style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 6),
                           SvgPicture.asset('assets/icons/edit_pen.svg', width: 20, height: 20),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    // メディアエリア
-                    SizedBox(
-                      height: 64,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          if (_totalImageCount < AppConstants.maxImagesPerMemo || !_hasActiveVideo)
-                            GestureDetector(
-                              onTap: _showMediaPicker,
-                              child: Container(
-                                width: 64,
-                                height: 64,
-                                margin: const EdgeInsets.only(right: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.backgroundMiddle),
-                                ),
-                                child: Center(
-                                  child: SvgPicture.asset('assets/icons/add_photo.svg', width: 28, height: 28),
-                                ),
-                              ),
-                            ),
-                          ...activeExistingImages.map((m) {
-                            final file = File(MediaPathHelper.resolve(m.uri, _docsPath));
-                            return _MediaThumbnail(
-                              file: file,
-                              onRemove: () => _removeExistingMedia(m.id!),
-                              onTap: () => _showPreview(file),
-                            );
-                          }),
-                          if (activeExistingVideo != null)
-                            _MediaThumbnail(
-                              file: activeExistingVideo.thumbnailUri != null
-                                  ? File(MediaPathHelper.resolve(activeExistingVideo.thumbnailUri!, _docsPath))
-                                  : null,
-                              isVideo: true,
-                              onRemove: () => _removeExistingMedia(activeExistingVideo.id!),
-                              onTap: () => _showPreview(
-                                activeExistingVideo.thumbnailUri != null
-                                    ? File(MediaPathHelper.resolve(activeExistingVideo.thumbnailUri!, _docsPath))
-                                    : null,
-                                isVideo: true,
-                                videoPath: MediaPathHelper.resolve(activeExistingVideo.uri, _docsPath),
-                              ),
-                            ),
-                          ..._newImages.asMap().entries.map((entry) {
-                            final file = File(entry.value.path);
-                            return _MediaThumbnail(
-                              file: file,
-                              onRemove: () => _removeNewImage(entry.key),
-                              onTap: () => _showPreview(file),
-                            );
-                          }),
-                          if (_newVideo != null)
-                            _MediaThumbnail(
-                              file: _newVideoThumbnailPath != null ? File(_newVideoThumbnailPath!) : null,
-                              isVideo: true,
-                              onRemove: _removeNewVideo,
-                              onTap: () => _showPreview(
-                                _newVideoThumbnailPath != null ? File(_newVideoThumbnailPath!) : null,
-                                isVideo: true,
-                                videoPath: _newVideo?.path,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 8),
                         ],
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(minHeight: 200),
-                        child: TextField(
-                          controller: _bodyController,
-                          maxLines: null,
-                          textAlignVertical: TextAlignVertical.top,
-                          decoration: InputDecoration(
-                            hintText: '練習内容・気づき',
-                            hintStyle: AppTypography.jpMRegular.copyWith(color: AppColors.textPlaceholder),
-                            border: InputBorder.none,
-                          ),
-                          style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
+                      child: TextField(
+                        controller: _bodyController,
+                        maxLines: null,
+                        textAlignVertical: TextAlignVertical.top,
+                        decoration: InputDecoration(
+                          hintText: '練習内容・気づき',
+                          hintStyle: AppTypography.jpMRegular.copyWith(color: AppColors.textPlaceholder, letterSpacing: 0, wordSpacing: 0),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                          isDense: true,
                         ),
+                        style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary, letterSpacing: 0, wordSpacing: 0),
                       ),
                     ),
+                    Builder(builder: (context) {
+                      final hasMeta = _shotShape != null || _condition != null || _wind != null || _distanceController.text.isNotEmpty;
+                      final hasBody = _bodyController.text.isNotEmpty;
+                      // 詳細画面と同様：メタあり＝(body有無で12/16) + メタ行高(21px) + 16、メタなし＝16
+                      final gap = hasMeta ? (hasBody ? 49.0 : 53.0) : 16.0;
+                      return SizedBox(height: gap);
+                    }),
+                    _buildEditMediaGrid(),
                     if (_openSections.contains('distance'))
                       _buildDistanceCard(),
                     if (_openSections.contains('shotShape'))
@@ -725,17 +667,141 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Divider(color: AppColors.divider, height: 1),
-                  if (collapsedChips.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Row(children: collapsedChips),
-                    )
-                  else
-                    const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    child: Row(
+                      children: [
+                        ...collapsedChips,
+                        const Spacer(),
+                        if (_totalImageCount < AppConstants.maxImagesPerMemo || !_hasActiveVideo)
+                          GestureDetector(
+                            onTap: _showMediaPicker,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundMiddle,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Center(
+                                child: SvgPicture.asset('assets/icons/add_photo.svg', width: 22, height: 22),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEditMediaGrid() {
+    final activeImages = _existingMedia
+        .where((m) => m.isImage && !_removedMediaIds.contains(m.id))
+        .toList();
+    final activeVideo = _existingMedia
+        .where((m) => m.isVideo && !_removedMediaIds.contains(m.id))
+        .firstOrNull;
+
+    final items = <({File? file, bool isVideo, VoidCallback onRemove})>[];
+    for (final m in activeImages) {
+      items.add((
+        file: File(MediaPathHelper.resolve(m.uri, _docsPath)),
+        isVideo: false,
+        onRemove: () => _removeExistingMedia(m.id!),
+      ));
+    }
+    if (activeVideo != null) {
+      items.add((
+        file: activeVideo.thumbnailUri != null
+            ? File(MediaPathHelper.resolve(activeVideo.thumbnailUri!, _docsPath))
+            : null,
+        isVideo: true,
+        onRemove: () => _removeExistingMedia(activeVideo.id!),
+      ));
+    }
+    for (var i = 0; i < _newImages.length; i++) {
+      final idx = i;
+      items.add((
+        file: File(_newImages[idx].path),
+        isVideo: false,
+        onRemove: () => _removeNewImage(idx),
+      ));
+    }
+    if (_newVideo != null) {
+      items.add((
+        file: _newVideoThumbnailPath != null ? File(_newVideoThumbnailPath!) : null,
+        isVideo: true,
+        onRemove: _removeNewVideo,
+      ));
+    }
+
+    final count = items.length.clamp(0, 4);
+    if (count == 0) return const SizedBox.shrink();
+
+    Widget tile(int index) {
+      final item = items[index];
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          if (item.file != null)
+            Image.file(item.file!, fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(color: AppColors.backgroundMiddle))
+          else
+            Container(color: const Color(0xFF2C2C2E),
+                child: const Center(child: Icon(Icons.videocam, color: Colors.white54, size: 32))),
+          if (item.isVideo)
+            const Center(child: Icon(Icons.play_circle_filled, size: 36, color: Colors.white70)),
+          Positioned(
+            top: 4, right: 4,
+            child: GestureDetector(
+              onTap: item.onRemove,
+              child: Container(
+                width: 22, height: 22,
+                decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                child: const Icon(Icons.close, color: Colors.white, size: 14),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    Widget grid;
+    if (count == 1) {
+      grid = tile(0);
+    } else if (count == 2) {
+      grid = Row(children: [Expanded(child: tile(0)), const SizedBox(width: 4), Expanded(child: tile(1))]);
+    } else if (count == 3) {
+      grid = Row(children: [
+        Expanded(child: tile(0)),
+        const SizedBox(width: 4),
+        Expanded(child: Column(children: [Expanded(child: tile(1)), const SizedBox(height: 4), Expanded(child: tile(2))])),
+      ]);
+    } else {
+      grid = Row(children: [
+        Expanded(child: tile(0)),
+        const SizedBox(width: 4),
+        Expanded(child: Column(children: [
+          Expanded(child: tile(1)),
+          const SizedBox(height: 4),
+          Expanded(child: Row(children: [Expanded(child: tile(2)), const SizedBox(width: 4), Expanded(child: tile(3))])),
+        ])),
+      ]);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+      child: Hero(
+        tag: 'memo_images_${widget.memoId}',
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(height: 165, child: grid),
         ),
       ),
     );

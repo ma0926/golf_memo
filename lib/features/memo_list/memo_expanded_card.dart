@@ -137,11 +137,10 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
                 final result = await Navigator.of(context, rootNavigator: true).push<bool>(
                   PageRouteBuilder(
                     pageBuilder: (_, __, ___) => MemoEditScreen(memoId: widget.memo.id!),
-                    transitionsBuilder: (_, animation, __, child) => SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 1),
-                        end: Offset.zero,
-                      ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+                    transitionDuration: const Duration(milliseconds: 350),
+                    reverseTransitionDuration: const Duration(milliseconds: 300),
+                    transitionsBuilder: (_, animation, __, child) => FadeTransition(
+                      opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
                       child: child,
                     ),
                   ),
@@ -204,11 +203,10 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
     );
   }
 
-  String _formatDate(DateTime dt) => '${dt.year}/${dt.month}/${dt.day}';
-
-  String _weekday(DateTime dt) {
+  String _formattedDate(DateTime dt) {
     const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
-    return weekdays[dt.weekday - 1];
+    final w = weekdays[dt.weekday - 1];
+    return '${dt.month}/${dt.day}（$w）';
   }
 
   @override
@@ -248,29 +246,28 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _clubName,
-                style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
+              Center(
+                child: Text(
+                  _formattedDate(memo.practicedAt),
+                  style: AppTypography.jpSMedium.copyWith(color: AppColors.textSecondary),
+                ),
               ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(
-                    _formatDate(memo.practicedAt),
-                    style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
+              const SizedBox(height: 16),
+              Hero(
+                tag: 'memo_club_${_memo.id}',
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Text(
+                    _clubName,
+                    style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _weekday(memo.practicedAt),
-                    style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
-                  ),
-                ],
+                ),
               ),
               if (memo.body != null && memo.body!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   memo.body!,
-                  style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
+                  style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary, letterSpacing: 0, wordSpacing: 0),
                 ),
               ],
               if (memo.distance != null || memo.shotShape != null || memo.condition != null || memo.wind != null) ...[
@@ -284,7 +281,10 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
               ],
               if (_mediaList.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                _ImageGrid(mediaList: _mediaList, docsPath: _docsPath),
+                Hero(
+                  tag: 'memo_images_${_memo.id}',
+                  child: _ImageGrid(mediaList: _mediaList, docsPath: _docsPath),
+                ),
               ],
             ],
           ),

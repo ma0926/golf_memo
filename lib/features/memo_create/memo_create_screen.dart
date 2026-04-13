@@ -681,7 +681,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                                 children: [
                                   Text(
                                     _formattedDate,
-                                    style: AppTypography.jpSubHeader.copyWith(color: AppColors.textSecondary),
+                                    style: AppTypography.jpSMedium.copyWith(color: AppColors.textSecondary),
                                   ),
                                   const SizedBox(width: 6),
                                   SvgPicture.asset('assets/icons/calendar.svg', width: 20, height: 20),
@@ -689,79 +689,33 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           // クラブ名
                           Text(
                             widget.clubName,
-                            style: AppTypography.jpHeader1.copyWith(color: AppColors.textPrimary),
+                            style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
                           ),
-                          const SizedBox(height: 24),
-                          // メディアエリア
-                          SizedBox(
-                            height: 64,
-                            child: ListView(
-                              scrollDirection: Axis.horizontal,
-                              children: [
-                                if (_images.length < AppConstants.maxImagesPerMemo || _video == null)
-                                  GestureDetector(
-                                    onTap: _showMediaPicker,
-                                    child: Container(
-                                      width: 64,
-                                      height: 64,
-                                      margin: const EdgeInsets.only(right: 8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(color: AppColors.backgroundMiddle),
-                                      ),
-                                      child: Center(
-                                        child: SvgPicture.asset('assets/icons/add_photo.svg', width: 28, height: 28),
-                                      ),
-                                    ),
-                                  ),
-                                ..._images.asMap().entries.map((entry) {
-                                  final file = File(entry.value.path);
-                                  return _MediaThumbnail(
-                                    file: file,
-                                    onRemove: () => _removeImage(entry.key),
-                                    onTap: () => _showPreview(file),
-                                  );
-                                }),
-                                if (_video != null)
-                                  _MediaThumbnail(
-                                    file: _videoThumbnailPath != null ? File(_videoThumbnailPath!) : null,
-                                    isVideo: true,
-                                    onRemove: _removeVideo,
-                                    onTap: () => _showPreview(
-                                      _videoThumbnailPath != null ? File(_videoThumbnailPath!) : null,
-                                      isVideo: true,
-                                      videoPath: _video?.path,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 8),
                         ],
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(minHeight: 200),
-                        child: TextField(
-                          controller: _bodyController,
-                          maxLines: null,
-                          textAlignVertical: TextAlignVertical.top,
-                          decoration: InputDecoration(
-                            hintText: '練習内容・気づき',
-                            hintStyle: AppTypography.jpMRegular.copyWith(color: AppColors.textPlaceholder),
-                            border: InputBorder.none,
-                          ),
-                          style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
+                      child: TextField(
+                        controller: _bodyController,
+                        maxLines: null,
+                        textAlignVertical: TextAlignVertical.top,
+                        decoration: InputDecoration(
+                          hintText: '練習内容・気づき',
+                          hintStyle: AppTypography.jpMRegular.copyWith(color: AppColors.textPlaceholder, letterSpacing: 0, wordSpacing: 0),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                          isDense: true,
                         ),
+                        style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary, letterSpacing: 0, wordSpacing: 0),
                       ),
                     ),
+                    _buildCreateMediaGrid(),
                     if (_openSections.contains('distance'))
                       _buildDistanceCard(),
                     if (_openSections.contains('shotShape'))
@@ -813,18 +767,116 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Divider(color: AppColors.divider, height: 1),
-                  if (collapsedChips.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Row(children: collapsedChips),
-                    )
-                  else
-                    const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    child: Row(
+                      children: [
+                        ...collapsedChips,
+                        const Spacer(),
+                        if (_images.length < AppConstants.maxImagesPerMemo || _video == null)
+                          GestureDetector(
+                            onTap: _showMediaPicker,
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Center(
+                                child: SvgPicture.asset('assets/icons/add_photo.svg', width: 22, height: 22),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCreateMediaGrid() {
+    final items = <({File? file, bool isVideo, VoidCallback onRemove})>[];
+    for (var i = 0; i < _images.length; i++) {
+      final idx = i;
+      items.add((
+        file: File(_images[idx].path),
+        isVideo: false,
+        onRemove: () => _removeImage(idx),
+      ));
+    }
+    if (_video != null) {
+      items.add((
+        file: _videoThumbnailPath != null ? File(_videoThumbnailPath!) : null,
+        isVideo: true,
+        onRemove: _removeVideo,
+      ));
+    }
+
+    final count = items.length.clamp(0, 4);
+    if (count == 0) return const SizedBox.shrink();
+
+    Widget tile(int index) {
+      final item = items[index];
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          if (item.file != null)
+            Image.file(item.file!, fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(color: AppColors.backgroundMiddle))
+          else
+            Container(color: const Color(0xFF2C2C2E),
+                child: const Center(child: Icon(Icons.videocam, color: Colors.white54, size: 32))),
+          if (item.isVideo)
+            const Center(child: Icon(Icons.play_circle_filled, size: 36, color: Colors.white70)),
+          Positioned(
+            top: 4, right: 4,
+            child: GestureDetector(
+              onTap: item.onRemove,
+              child: Container(
+                width: 22, height: 22,
+                decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                child: const Icon(Icons.close, color: Colors.white, size: 14),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    Widget grid;
+    if (count == 1) {
+      grid = tile(0);
+    } else if (count == 2) {
+      grid = Row(children: [Expanded(child: tile(0)), const SizedBox(width: 4), Expanded(child: tile(1))]);
+    } else if (count == 3) {
+      grid = Row(children: [
+        Expanded(child: tile(0)),
+        const SizedBox(width: 4),
+        Expanded(child: Column(children: [Expanded(child: tile(1)), const SizedBox(height: 4), Expanded(child: tile(2))])),
+      ]);
+    } else {
+      grid = Row(children: [
+        Expanded(child: tile(0)),
+        const SizedBox(width: 4),
+        Expanded(child: Column(children: [
+          Expanded(child: tile(1)),
+          const SizedBox(height: 4),
+          Expanded(child: Row(children: [Expanded(child: tile(2)), const SizedBox(width: 4), Expanded(child: tile(3))])),
+        ])),
+      ]);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(height: 165, child: grid),
       ),
     );
   }
