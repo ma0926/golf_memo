@@ -8,7 +8,7 @@ class SheetDragHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.only(top: 8, bottom: 20),
       width: 36,
       height: 4,
       decoration: BoxDecoration(

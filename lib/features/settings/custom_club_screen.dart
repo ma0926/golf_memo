@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/club.dart';
 import '../../data/repositories/club_repository.dart';
@@ -135,15 +136,12 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SheetDragHandle(),
-            const Padding(
-              padding: EdgeInsets.only(bottom: 16),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
               child: Text(
                 'クラブのカテゴリ',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+                textAlign: TextAlign.center,
+                style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
               ),
             ),
             // カテゴリ一覧
@@ -213,7 +211,7 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
               child: Text(
                 '保存',
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: _canSave ? AppColors.primary : AppColors.textSecondary,
                 ),

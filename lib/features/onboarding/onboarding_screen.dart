@@ -7,6 +7,7 @@ import '../../core/constants/app_typography.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/club.dart';
 import '../../data/repositories/club_repository.dart';
+import '../../shared/widgets/app_buttons.dart';
 import '../settings/custom_club_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -146,23 +147,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: SizedBox(
+          child: AppPrimaryButton(
+            label: '次へ',
+            onPressed: _onNext,
+            color: _buttonColor,
             height: 52,
-            child: ElevatedButton(
-              onPressed: _onNext,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _buttonColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              child: const Text(
-                '次へ',
-                style: AppTypography.jpHeader4,
-              ),
-            ),
+            borderRadius: 12,
           ),
         ),
       ),

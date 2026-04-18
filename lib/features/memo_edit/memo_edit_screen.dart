@@ -18,6 +18,7 @@ import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/media_preview_screen.dart';
 import '../../shared/widgets/media_picker_screen.dart';
+import '../../shared/widgets/app_buttons.dart';
 import '../../shared/widgets/app_list_tile.dart';
 import '../../shared/widgets/sheet_drag_handle.dart';
 
@@ -177,25 +178,29 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
       enableDrag: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.5),
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.75,
-      ),
-      builder: (sheetContext) => _ClubSelectSheet(
-        onClubSelected: (id, name) {
-          Navigator.pop(sheetContext);
-          if (mounted) {
-            setState(() {
-              _clubId = id;
-              _clubName = name;
+      builder: (sheetContext) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollController) => _ClubSelectSheet(
+          scrollController: scrollController,
+          onClubSelected: (id, name) {
+            Navigator.pop(sheetContext);
+            if (mounted) {
+              setState(() {
+                _clubId = id;
+                _clubName = name;
+              });
+            }
+          },
+          onOpenSettings: () {
+            Navigator.pop(sheetContext);
+            Future.microtask(() {
+              if (mounted) context.push('/settings');
             });
-          }
-        },
-        onOpenSettings: () {
-          Navigator.pop(sheetContext);
-          Future.microtask(() {
-            if (mounted) context.push('/settings');
-          });
-        },
+          },
+        ),
       ),
     );
   }
@@ -500,24 +505,15 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16, top: 0, bottom: 0),
-            child: ElevatedButton.icon(
-              onPressed: _isSaving ? null : _saveChanges,
-              icon: _isSaving
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                    )
-                  : const Icon(Icons.check_rounded, size: 18, color: Colors.white),
-              label: Text('保存', style: AppTypography.jpMMedium.copyWith(color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                disabledBackgroundColor: AppColors.accent.withValues(alpha: 0.4),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                elevation: 0,
-                minimumSize: const Size(0, 44),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
+            child: AppPrimaryButton(
+              label: '保存',
+              onPressed: _saveChanges,
+              isLoading: _isSaving,
+              icon: const Icon(Icons.check_rounded, size: 18, color: Colors.white),
+              color: AppColors.accent,
+              borderRadius: 24,
+              fullWidth: false,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
             ),
           ),
         ],
@@ -921,10 +917,12 @@ class _CollapsedChip extends StatelessWidget {
 class _ClubSelectSheet extends StatefulWidget {
   final void Function(int clubId, String clubName) onClubSelected;
   final VoidCallback? onOpenSettings;
+  final ScrollController? scrollController;
 
   const _ClubSelectSheet({
     required this.onClubSelected,
     this.onOpenSettings,
+    this.scrollController,
   });
 
   @override
@@ -970,7 +968,7 @@ class _ClubSelectSheetState extends State<_ClubSelectSheet> {
                 child: Center(child: CircularProgressIndicator()),
               )
             : ListView.builder(
-                shrinkWrap: true,
+                controller: widget.scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: _clubGroups.length + 2,
                 itemBuilder: (context, index) {
@@ -988,6 +986,7 @@ class _ClubSelectSheetState extends State<_ClubSelectSheet> {
                               children: [
                                 Text(
                                   'クラブを選択',
+                                  textAlign: TextAlign.center,
                                   style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
                                 ),
                                 Align(

@@ -17,6 +17,7 @@ import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/media_preview_screen.dart';
 import '../../shared/widgets/media_picker_screen.dart';
+import '../../shared/widgets/app_buttons.dart';
 import '../../shared/widgets/app_list_tile.dart';
 import '../../shared/widgets/sheet_drag_handle.dart';
 
@@ -101,13 +102,13 @@ class _ClubSelectPageState extends State<_ClubSelectPage> {
       );
     }
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // グラバー
-            const SheetDragHandle(),
             // ヘッダー
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
@@ -118,6 +119,7 @@ class _ClubSelectPageState extends State<_ClubSelectPage> {
                   children: [
                     Text(
                       'クラブを選択',
+                      textAlign: TextAlign.center,
                       style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
                     ),
                     Align(
@@ -225,6 +227,7 @@ class _ClubSelectPageState extends State<_ClubSelectPage> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -590,24 +593,15 @@ class _MemoInputPageState extends State<_MemoInputPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16, top: 8, bottom: 6),
-            child: ElevatedButton.icon(
-              onPressed: _isSaving ? null : _saveMemo,
-              icon: _isSaving
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                    )
-                  : const Icon(Icons.check_rounded, size: 18, color: Colors.white),
-              label: Text('保存', style: AppTypography.jpMMedium.copyWith(color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                disabledBackgroundColor: AppColors.accent.withValues(alpha: 0.4),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                elevation: 0,
-                minimumSize: const Size(0, 44),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
+            child: AppPrimaryButton(
+              label: '保存',
+              onPressed: _saveMemo,
+              isLoading: _isSaving,
+              icon: const Icon(Icons.check_rounded, size: 18, color: Colors.white),
+              color: AppColors.accent,
+              borderRadius: 24,
+              fullWidth: false,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
             ),
           ),
         ],

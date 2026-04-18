@@ -12,6 +12,8 @@ import '../../data/models/practice_memo.dart';
 import '../../data/repositories/club_repository.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
+import '../../shared/widgets/app_buttons.dart';
+import '../../shared/widgets/app_list_tile.dart';
 import '../../shared/widgets/memo_card.dart';
 import '../memo_list/memo_expanded_card.dart';
 import '../../shared/widgets/sheet_drag_handle.dart';
@@ -93,25 +95,53 @@ class _SearchScreenState extends State<SearchScreen> {
 
   // ── フィルターシートを開く ────────────────────────
   void _openClubSheet() {
-    _showFilterSheet(
-      title: 'クラブ',
-      child: _ClubFilterContent(
-        selectedId: _selectedClubId,
-        onApply: (id, name) => setState(() {
-          _selectedClubId = id;
-          _selectedClubName = name;
-        }),
-        onClear: () => setState(() {
-          _selectedClubId = null;
-          _selectedClubName = null;
-        }),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.35,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Column(
+            children: [
+              const SheetDragHandle(),
+              Text(
+                'クラブ',
+                textAlign: TextAlign.center,
+                style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: _ClubFilterContent(
+                  scrollController: scrollController,
+                  selectedId: _selectedClubId,
+                  onApply: (id, name) => setState(() {
+                    _selectedClubId = id;
+                    _selectedClubName = name;
+                  }),
+                  onClear: () => setState(() {
+                    _selectedClubId = null;
+                    _selectedClubName = null;
+                  }),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   void _openDateSheet() {
     _showFilterSheet(
-      title: '記録日',
+      title: '日付',
       child: _DateFilterContent(
         selected: _selectedDate,
         onSelect: (value) {
@@ -158,7 +188,8 @@ class _SearchScreenState extends State<SearchScreen> {
       showButtons: false,
       child: _ShotShapeFilterContent(
         selected: _selectedShotShapes,
-        onChanged: (values) => setState(() => _selectedShotShapes = values),
+        onApply: (values) => setState(() => _selectedShotShapes = values),
+        onClear: () => setState(() => _selectedShotShapes = {}),
       ),
     );
   }
@@ -440,11 +471,8 @@ class _FilterSheetWrapper extends StatelessWidget {
           const SheetDragHandle(),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
+            textAlign: TextAlign.center,
+            style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
           ),
           const SizedBox(height: 16),
           child,
@@ -673,11 +701,13 @@ class _ClubFilterContent extends StatefulWidget {
   final int? selectedId;
   final void Function(int id, String name) onApply;
   final VoidCallback onClear;
+  final ScrollController? scrollController;
 
   const _ClubFilterContent({
     required this.selectedId,
     required this.onApply,
     required this.onClear,
+    this.scrollController,
   });
 
   @override
@@ -686,7 +716,7 @@ class _ClubFilterContent extends StatefulWidget {
 
 class _ClubFilterContentState extends State<_ClubFilterContent> {
   final _clubRepo = ClubRepository();
-  List<Club> _clubs = [];
+  List<Map<String, dynamic>> _clubGroups = [];
   bool _isLoading = true;
 
   @override
@@ -696,9 +726,15 @@ class _ClubFilterContentState extends State<_ClubFilterContent> {
   }
 
   Future<void> _loadClubs() async {
-    final clubs = await _clubRepo.getActiveClubs();
+    final clubs = await _clubRepo.getActiveOnClubs();
+    final grouped = <String, List<Club>>{};
+    for (final club in clubs) {
+      grouped.putIfAbsent(club.category, () => []).add(club);
+    }
     setState(() {
-      _clubs = clubs;
+      _clubGroups = grouped.entries
+          .map((e) => {'category': e.key, 'clubs': e.value})
+          .toList();
       _isLoading = false;
     });
   }
@@ -712,32 +748,49 @@ class _ClubFilterContentState extends State<_ClubFilterContent> {
       );
     }
 
-    return SizedBox(
-      height: 280,
-      child: ListView(
-        children: _clubs.map((club) {
-          final isSelected = widget.selectedId == club.id;
+    return ListView.builder(
+        controller: widget.scrollController,
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        itemCount: _clubGroups.length,
+        itemBuilder: (context, groupIndex) {
+          final group = _clubGroups[groupIndex];
+          final clubs = group['clubs'] as List<Club>;
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ListTile(
-                title: Text(club.name),
-                trailing: isSelected
-                    ? const Icon(Icons.check, color: AppColors.primary)
-                    : null,
-                onTap: () {
-                  if (isSelected) {
-                    widget.onClear();
-                  } else {
-                    widget.onApply(club.id!, club.name);
-                  }
-                  Navigator.pop(context);
-                },
+              Padding(
+                padding: EdgeInsets.only(top: groupIndex == 0 ? 0 : 16),
+                child: SizedBox(
+                  height: 48,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      group['category'] as String,
+                      style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
+                    ),
+                  ),
+                ),
               ),
-              const Divider(height: 0.5, indent: 16, color: AppColors.divider),
+              ...clubs.map((club) {
+                final isSelected = widget.selectedId == club.id;
+                return AppListTile(
+                  title: club.name,
+                  trailing: isSelected
+                      ? const Icon(Icons.check, color: AppColors.primary)
+                      : null,
+                  onTap: () {
+                    if (isSelected) {
+                      widget.onClear();
+                    } else {
+                      widget.onApply(club.id!, club.name);
+                    }
+                    Navigator.pop(context);
+                  },
+                );
+              }),
             ],
           );
-        }).toList(),
-      ),
+        },
     );
   }
 }
@@ -758,38 +811,21 @@ class _DateFilterContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.divider),
-          ),
-          child: Column(
-            children: List.generate(_options.length, (i) {
-              final opt = _options[i];
-              final isSelected = selected == opt.value;
-              return Column(
-                children: [
-                  ListTile(
-                    title: Text(opt.label),
-                    trailing: isSelected
-                        ? const Icon(Icons.check, color: Colors.blue)
-                        : null,
-                    onTap: () => onSelect(opt.value),
-                  ),
-                  if (i < _options.length - 1)
-                    const Divider(height: 0.5, indent: 16, color: AppColors.divider),
-                ],
-              );
-            }),
-          ),
-        ),
-        const SizedBox(height: 24),
-      ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: _options.map((opt) {
+          final isSelected = selected == opt.value;
+          return AppListTile(
+            title: opt.label,
+            trailing: isSelected
+                ? const Icon(Icons.check, color: AppColors.primary)
+                : null,
+            onTap: () => onSelect(opt.value),
+          );
+        }).toList(),
+      ),
     );
   }
 }
@@ -836,43 +872,80 @@ class _DistanceFilterContentState extends State<_DistanceFilterContent> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: Row(
             children: [
               Expanded(
-                child: TextField(
-                  controller: _minCtrl,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.right,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFF2F3F5)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _minCtrl,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            isDense: true,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text('yd', style: AppTypography.enMMedium.copyWith(color: AppColors.textPlaceholder)),
+                    ],
                   ),
                 ),
               ),
               const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Text('yd 〜', style: TextStyle(fontSize: 15)),
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text('〜', style: TextStyle(fontSize: 16, color: AppColors.textMedium)),
               ),
               Expanded(
-                child: TextField(
-                  controller: _maxCtrl,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.right,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFF2F3F5)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _maxCtrl,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            isDense: true,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text('yd', style: AppTypography.enMMedium.copyWith(color: AppColors.textPlaceholder)),
+                    ],
                   ),
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.only(left: 8),
-                child: Text('yd', style: TextStyle(fontSize: 15)),
               ),
             ],
           ),
         ),
         _SheetButtons(
+          applyColor: AppColors.primary,
           onApply: () {
             widget.onApply(
               int.tryParse(_minCtrl.text),
@@ -905,40 +978,64 @@ class _ConditionFilterContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final entries = AppConstants.conditionLabels.entries.toList();
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.divider),
-          ),
-          child: Column(
-            children: List.generate(entries.length, (i) {
-              final e = entries[i];
-              final isSelected = selected == e.key;
-              return Column(
-                children: [
-                  ListTile(
-                    title: Text(e.value),
-                    trailing: isSelected
-                        ? const Icon(Icons.check, color: AppColors.primary)
-                        : null,
-                    onTap: () {
-                      onApply(isSelected ? null : e.key);
-                      Navigator.pop(context);
-                    },
-                  ),
-                  if (i < entries.length - 1)
-                    const Divider(height: 0.5, indent: 16, color: AppColors.divider),
-                ],
-              );
-            }),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (int i = 0; i < entries.length; i++) ...[
+            _buildChip(context, entries[i]),
+            if (i < entries.length - 1) const SizedBox(height: 8),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChip(BuildContext context, MapEntry<String, String> e) {
+    final isSelected = selected == e.key;
+    final iconPath = isSelected
+        ? AppConstants.conditionIconsFilled[e.key]
+        : AppConstants.conditionIcons[e.key];
+    return GestureDetector(
+      onTap: () {
+        onApply(isSelected ? null : e.key);
+        Navigator.pop(context);
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : const Color(0xFFD0D7DE),
           ),
         ),
-      ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (iconPath != null) ...[
+              SvgPicture.asset(
+                iconPath,
+                width: 20,
+                height: 20,
+                colorFilter: isSelected
+                    ? null
+                    : const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
+              ),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              e.value,
+              style: TextStyle(
+                fontSize: 14,
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -946,11 +1043,13 @@ class _ConditionFilterContent extends StatelessWidget {
 // ── 球筋フィルター（マルチセレクト） ─────────────────────
 class _ShotShapeFilterContent extends StatefulWidget {
   final Set<String> selected;
-  final ValueChanged<Set<String>> onChanged;
+  final ValueChanged<Set<String>> onApply;
+  final VoidCallback onClear;
 
   const _ShotShapeFilterContent({
     required this.selected,
-    required this.onChanged,
+    required this.onApply,
+    required this.onClear,
   });
 
   @override
@@ -966,59 +1065,98 @@ class _ShotShapeFilterContentState extends State<_ShotShapeFilterContent> {
     _temp = Set.from(widget.selected);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: AppConstants.shotShapeLabels.entries.map((e) {
-          final isSelected = _temp.contains(e.key);
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                if (isSelected) {
-                  _temp.remove(e.key);
-                } else {
-                  _temp.add(e.key);
-                }
-              });
-              widget.onChanged(Set.from(_temp));
-            },
-            child: Container(
-              width: (MediaQuery.of(context).size.width - 52) / 3,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.1)
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : AppColors.divider,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.north_east,
-                    size: 20,
-                    color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    e.value,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+  Widget _buildChip(MapEntry<String, String> e) {
+    final isSelected = _temp.contains(e.key);
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (isSelected) {
+            _temp.remove(e.key);
+          } else {
+            _temp.add(e.key);
+          }
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : const Color(0xFFD0D7DE),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/icons/${e.key}.svg',
+              width: 20,
+              height: 20,
+              colorFilter: ColorFilter.mode(
+                isSelected ? Colors.white : AppColors.textSecondary,
+                BlendMode.srcIn,
               ),
             ),
-          );
-        }).toList(),
+            const SizedBox(height: 4),
+            Text(
+              e.value,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = AppConstants.shotShapeLabels.entries.toList();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(child: _buildChip(entries[0])),
+                  const SizedBox(width: 8),
+                  Expanded(child: _buildChip(entries[1])),
+                  const SizedBox(width: 8),
+                  Expanded(child: _buildChip(entries[2])),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(child: _buildChip(entries[3])),
+                  const SizedBox(width: 8),
+                  Expanded(child: _buildChip(entries[4])),
+                ],
+              ),
+            ],
+          ),
+        ),
+        _SheetButtons(
+          applyColor: AppColors.primary,
+          onApply: () {
+            widget.onApply(Set.from(_temp));
+            Navigator.pop(context);
+          },
+          onClear: () {
+            widget.onClear();
+            Navigator.pop(context);
+          },
+        ),
+      ],
     );
   }
 }
@@ -1027,8 +1165,13 @@ class _ShotShapeFilterContentState extends State<_ShotShapeFilterContent> {
 class _SheetButtons extends StatelessWidget {
   final VoidCallback onApply;
   final VoidCallback onClear;
+  final Color applyColor;
 
-  const _SheetButtons({required this.onApply, required this.onClear});
+  const _SheetButtons({
+    required this.onApply,
+    required this.onClear,
+    this.applyColor = AppColors.primary,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1036,30 +1179,14 @@ class _SheetButtons extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Column(
         children: [
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: onApply,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                elevation: 0,
-              ),
-              child: const Text(
-                '適用',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-              ),
-            ),
+          AppPrimaryButton(
+            label: '適用',
+            onPressed: onApply,
+            color: applyColor,
           ),
-          TextButton(
+          AppTextButton(
+            label: 'クリア',
             onPressed: onClear,
-            child: const Text(
-              'クリア',
-              style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
-            ),
           ),
         ],
       ),

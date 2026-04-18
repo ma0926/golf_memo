@@ -644,6 +644,7 @@ class _ClubSelectSheet extends StatelessWidget {
                 alignment: Alignment.center,
                 children: [
                   Text('クラブを選択',
+                      textAlign: TextAlign.center,
                       style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary)),
                   Align(
                     alignment: Alignment.centerRight,
