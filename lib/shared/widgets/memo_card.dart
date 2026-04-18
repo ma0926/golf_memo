@@ -1,13 +1,11 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_typography.dart';
-import 'media_preview_screen.dart';
+import 'media_grid.dart';
 
-/// メディアアイテムの表示情報
-typedef MemoMediaItem = ({String displayPath, bool isVideo, String? videoPath});
+export 'media_grid.dart' show MemoMediaItem;
 
 // 記録一覧の1枚のカード
 class MemoCard extends StatelessWidget {
@@ -36,109 +34,9 @@ class MemoCard extends StatelessWidget {
     this.margin = const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
   });
 
-  void _openPreview(BuildContext context, MemoMediaItem item) {
-    Navigator.of(context, rootNavigator: true).push(
-      PageRouteBuilder(
-        opaque: false,
-        barrierColor: Colors.black,
-        transitionDuration: const Duration(milliseconds: 250),
-        reverseTransitionDuration: const Duration(milliseconds: 200),
-        pageBuilder: (_, __, ___) => MediaPreviewScreen(
-          file: item.displayPath.isNotEmpty ? File(item.displayPath) : null,
-          isVideo: item.isVideo,
-          videoPath: item.videoPath,
-        ),
-        transitionsBuilder: (_, animation, __, child) =>
-            FadeTransition(opacity: animation, child: child),
-      ),
-    );
-  }
-
-  Widget _imgTile(BuildContext context, int index) {
-    final item = mediaItems[index];
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => _openPreview(context, item),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (item.displayPath.isNotEmpty)
-            Image.file(
-              File(item.displayPath),
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: AppColors.backgroundMiddle),
-            )
-          else
-            Container(
-              color: const Color(0xFF2C2C2E),
-              child: const Center(
-                child: Icon(Icons.videocam, color: Colors.white54, size: 32),
-              ),
-            ),
-          if (item.isVideo)
-            const Center(
-              child: Icon(Icons.play_circle_filled, size: 36, color: Colors.white70),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildImageGrid(BuildContext context) {
-    final count = mediaItems.length.clamp(0, 4);
-    if (count == 0) return const SizedBox.shrink();
-
-    Widget grid;
-    if (count == 1) {
-      grid = _imgTile(context, 0);
-    } else if (count == 2) {
-      grid = Row(children: [
-        Expanded(child: _imgTile(context, 0)),
-        const SizedBox(width: 4),
-        Expanded(child: _imgTile(context, 1)),
-      ]);
-    } else if (count == 3) {
-      grid = Row(children: [
-        Expanded(child: _imgTile(context, 0)),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Column(children: [
-            Expanded(child: _imgTile(context, 1)),
-            const SizedBox(height: 4),
-            Expanded(child: _imgTile(context, 2)),
-          ]),
-        ),
-      ]);
-    } else {
-      grid = Row(children: [
-        Expanded(child: _imgTile(context, 0)),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Column(children: [
-            Expanded(child: _imgTile(context, 1)),
-            const SizedBox(height: 4),
-            Expanded(
-              child: Row(children: [
-                Expanded(child: _imgTile(context, 2)),
-                const SizedBox(width: 4),
-                Expanded(child: _imgTile(context, 3)),
-              ]),
-            ),
-          ]),
-        ),
-      ]);
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(height: 165, child: grid),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final hasImages = mediaItems.isNotEmpty;
-    final hasMeta = distance != null || shotShape != null || condition != null || wind != null;
     final hasBody = bodyText != null && bodyText!.isNotEmpty;
 
     final content = Container(
@@ -172,8 +70,12 @@ class MemoCard extends StatelessWidget {
               style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
             ),
           ],
+          if (hasImages) ...[
+            const SizedBox(height: 16),
+            MediaGrid(items: mediaItems),
+          ],
           if (distance != null || shotShape != null || condition != null || wind != null) ...[
-            SizedBox(height: hasBody ? 12 : 16),
+            const SizedBox(height: 16),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -192,10 +94,6 @@ class MemoCard extends StatelessWidget {
                 ],
               ],
             ),
-          ],
-          if (hasImages) ...[
-            const SizedBox(height: 16),
-            _buildImageGrid(context),
           ],
           if (date != null) ...[
             const SizedBox(height: 16),

@@ -1,8 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/constants/app_typography.dart';
+import '../../shared/widgets/app_list_tile.dart';
+import '../../shared/widgets/app_section_title.dart';
 import '../../data/models/club.dart';
 import '../../data/repositories/club_repository.dart';
 
@@ -65,7 +69,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.white,
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -73,20 +77,18 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
     final grouped = _groupedClubs;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
-        leading: TextButton(
+        leading: IconButton(
           onPressed: () => context.pop(),
-          style: TextButton.styleFrom(padding: EdgeInsets.zero),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.chevron_left, color: AppColors.textPrimary, size: 20),
-              Text('戻る', style: TextStyle(fontSize: 14, color: AppColors.textPrimary)),
-            ],
+          icon: SvgPicture.asset(
+            'assets/icons/chevron_left.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
           ),
         ),
         title: const Text(
@@ -101,35 +103,38 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       ),
       body: Column(
         children: [
+          const SizedBox(height: 8),
           // カテゴリタブ
           _buildTabRow(),
           // クラブリスト
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               children: [
                 ...grouped.entries.map((e) => _buildCategoryGroup(e.key, e.value)),
                 // カスタムクラブ追加ボタン
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: GestureDetector(
-                    onTap: () async {
-                      await context.push('/settings/clubs/new');
-                      _load();
-                    },
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                GestureDetector(
+                  onTap: () async {
+                    await context.push('/settings/clubs/new');
+                    _load();
+                  },
+                  child: SizedBox(
+                    height: 56,
+                    child: Row(
                       children: [
-                        Icon(Icons.add, size: 15, color: Colors.blue),
-                        SizedBox(width: 4),
+                        const Icon(Icons.add, size: 16, color: Color(0xFF0051FF)),
+                        const SizedBox(width: 4),
                         Text(
                           'カスタムクラブを追加',
-                          style: TextStyle(fontSize: 14, color: Colors.blue),
+                          style: AppTypography.jpMMedium.copyWith(
+                            color: const Color(0xFF0051FF),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
               ],
             ),
           ),
@@ -152,20 +157,20 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           return GestureDetector(
             onTap: () => setState(() => _selectedTab = tab),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+              height: 32,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.textPrimary : Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                color: isSelected ? AppColors.primary : Colors.white,
+                borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                  color: isSelected ? AppColors.textPrimary : AppColors.divider,
+                  color: isSelected ? AppColors.primary : AppColors.divider,
                 ),
               ),
+              alignment: Alignment.center,
               child: Text(
                 tab,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                style: AppTypography.jpSMedium.copyWith(
+                  color: isSelected ? Colors.white : AppColors.textMedium,
                 ),
               ),
             ),
@@ -175,53 +180,32 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
     );
   }
 
+
   Widget _buildCategoryGroup(String category, List<Club> clubs) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 16, bottom: 6, left: 4),
-          child: Text(
-            category,
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            children: List.generate(clubs.length, (i) {
-              final club = clubs[i];
-              return Column(
-                children: [
-                  ListTile(
-                    title: Text(
-                      club.name,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    trailing: CupertinoSwitch(
-                      value: club.isActive,
-                      onChanged: (v) => _toggleClub(club, v),
-                      activeTrackColor: Colors.green,
-                    ),
-                    onTap: club.isCustom
-                        ? () async {
-                            await context.push('/settings/clubs/${club.id}/edit');
-                            _load();
-                          }
-                        : null,
-                  ),
-                  if (i < clubs.length - 1)
-                    const Divider(height: 0.5, indent: 16, color: AppColors.divider),
-                ],
-              );
-            }),
-          ),
+        AppSectionTitle(title: category),
+        Column(
+          children: clubs.map((club) {
+            return AppListTile(
+              title: club.name,
+              trailing: Transform.scale(
+                scale: 0.8,
+                child: CupertinoSwitch(
+                  value: club.isActive,
+                  onChanged: (v) => _toggleClub(club, v),
+                  activeTrackColor: Colors.green,
+                ),
+              ),
+              onTap: club.isCustom
+                  ? () async {
+                      await context.push('/settings/clubs/${club.id}/edit');
+                      _load();
+                    }
+                  : null,
+            );
+          }).toList(),
         ),
       ],
     );

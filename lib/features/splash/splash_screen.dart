@@ -37,28 +37,21 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // "My" テキスト
+            Image.asset(
+              'assets/images/logo.png',
+              width: 88,
+              height: 98,
+            ),
+            const SizedBox(height: 8),
             const Text(
-              'My',
+              'My GOLF',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Georgia',
-                fontSize: 42,
-                fontWeight: FontWeight.w700,
+                fontSize: 32,
                 fontStyle: FontStyle.italic,
-                color: Color(0xFF131618),
-                height: 1.1,
-              ),
-            ),
-            // "Golf" テキスト
-            const Text(
-              'Golf',
-              style: TextStyle(
-                fontFamily: 'Helvetica Neue',
-                fontSize: 56,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF131618),
-                height: 1.0,
-                letterSpacing: 4,
+                color: Color(0xFF23264E),
               ),
             ),
           ],
@@ -67,4 +60,3 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
-

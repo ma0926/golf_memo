@@ -10,6 +10,8 @@ import '../../data/models/practice_memo.dart';
 import '../../data/repositories/club_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../app.dart' show memoCreatedNotifier;
+import '../../shared/widgets/app_list_tile.dart';
+import '../../shared/widgets/sheet_drag_handle.dart';
 
 // ── 1日分のデータ ─────────────────────────────────────
 class _DayData {
@@ -634,15 +636,7 @@ class _ClubSelectSheet extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(),
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -672,15 +666,18 @@ class _ClubSelectSheet extends StatelessWidget {
                 children: [
                   for (final entry in grouped.entries) ...[
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
-                      child: Text(entry.key,
-                          style: AppTypography.jpSRegular.copyWith(fontSize: 12, color: AppColors.textSecondary)),
+                      padding: const EdgeInsets.only(top: 16),
+                      child: SizedBox(
+                        height: 48,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(entry.key,
+                              style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary)),
+                        ),
+                      ),
                     ),
-                    ...entry.value.map((club) => ListTile(
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 20),
-                          title: Text(club.name,
-                              style: AppTypography.jpMRegular.copyWith(fontSize: 15, color: AppColors.textPrimary)),
+                    ...entry.value.map((club) => AppListTile(
+                          title: club.name,
                           trailing: club.id == selectedClubId
                               ? const Icon(Icons.check, color: AppColors.primary)
                               : null,

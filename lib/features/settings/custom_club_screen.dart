@@ -5,6 +5,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/club.dart';
 import '../../data/repositories/club_repository.dart';
+import '../../shared/widgets/app_list_tile.dart';
+import '../../shared/widgets/sheet_drag_handle.dart';
 
 class CustomClubScreen extends StatefulWidget {
   final int? clubId; // null = 新規, 非null = 既存クラブを編集
@@ -132,16 +134,7 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ドラッグインジケーター + タイトル
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(),
             const Padding(
               padding: EdgeInsets.only(bottom: 16),
               child: Text(
@@ -154,47 +147,22 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
               ),
             ),
             // カテゴリ一覧
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.divider),
-              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
-                children: List.generate(
-                  AppConstants.clubCategories.length,
-                  (i) {
-                    final cat = AppConstants.clubCategories[i];
-                    final isSelected = _selectedCategory == cat;
-                    return Column(
-                      children: [
-                        ListTile(
-                          title: Text(
-                            cat,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          trailing: isSelected
-                              ? const Icon(Icons.check, color: AppColors.primary)
-                              : null,
-                          onTap: () {
-                            setState(() => _selectedCategory = cat);
-                            Navigator.pop(ctx);
-                          },
-                        ),
-                        if (i < AppConstants.clubCategories.length - 1)
-                          const Divider(
-                            height: 0.5,
-                            indent: 16,
-                            color: AppColors.divider,
-                          ),
-                      ],
-                    );
-                  },
-                ),
+                children: AppConstants.clubCategories.map((cat) {
+                  final isSelected = _selectedCategory == cat;
+                  return AppListTile(
+                    title: cat,
+                    trailing: isSelected
+                        ? const Icon(Icons.check, color: AppColors.primary)
+                        : null,
+                    onTap: () {
+                      setState(() => _selectedCategory = cat);
+                      Navigator.pop(ctx);
+                    },
+                  );
+                }).toList(),
               ),
             ),
             const SizedBox(height: 32),

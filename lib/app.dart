@@ -124,7 +124,7 @@ final _router = GoRouter(
         },
       ),
     ),
-    // 設定（右からスライドイン）
+    // 設定（下からスライドイン）
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
       path: '/settings',
@@ -133,7 +133,7 @@ final _router = GoRouter(
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
             position: Tween<Offset>(
-              begin: const Offset(1, 0),
+              begin: const Offset(0, 1),
               end: Offset.zero,
             ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
             child: child,

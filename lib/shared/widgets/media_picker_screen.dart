@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:video_player/video_player.dart';
@@ -345,7 +346,12 @@ class _ImagePreviewPage extends StatelessWidget {
         backgroundColor: Colors.black,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: SvgPicture.asset(
+            'assets/icons/chevron_left.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -446,7 +452,12 @@ class _VideoPreviewPageState extends State<_VideoPreviewPage> {
         backgroundColor: Colors.black,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: SvgPicture.asset(
+            'assets/icons/chevron_left.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(

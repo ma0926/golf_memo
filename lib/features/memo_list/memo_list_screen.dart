@@ -37,10 +37,15 @@ class MemoListScreen extends StatelessWidget {
           backgroundColor: AppColors.background,
           elevation: 0,
           titleSpacing: 16,
-          title: Text(
-            '練習記録',
-            style: AppTypography.jpHeader1.copyWith(
-              color: AppColors.textPrimary,
+          title: const Text(
+            'My GOLF',
+            style: TextStyle(
+              fontFamily: 'Georgia',
+              fontSize: 24,
+              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF23264E),
+              height: 1.0,
             ),
           ),
           actions: [

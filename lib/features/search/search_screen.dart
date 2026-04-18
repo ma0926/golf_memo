@@ -1,6 +1,6 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
@@ -13,6 +13,8 @@ import '../../data/repositories/club_repository.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/memo_card.dart';
+import '../memo_list/memo_expanded_card.dart';
+import '../../shared/widgets/sheet_drag_handle.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -189,16 +191,7 @@ class _SearchScreenState extends State<SearchScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ドラッグインジケーター
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(),
             // 検索バー
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -264,7 +257,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             // フィルターチップ（横スクロール）
             SizedBox(
-              height: 40,
+              height: 32,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -387,8 +380,8 @@ class _FilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 40,
-        padding: EdgeInsets.fromLTRB(16, 8, hasTrailingIcon ? 10 : 16, 8),
+        height: 32,
+        padding: EdgeInsets.fromLTRB(16, 4, hasTrailingIcon ? 10 : 16, 4),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(999),
@@ -444,15 +437,7 @@ class _FilterSheetWrapper extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.divider,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+          const SheetDragHandle(),
           Text(
             title,
             style: const TextStyle(
@@ -646,17 +631,37 @@ class _SearchResultsListState extends State<_SearchResultsList> {
         final clubName = _clubNames[memo.clubId] ?? '不明なクラブ';
         final mediaItems = _buildMediaItems(memo.id);
 
-        return MemoCard(
-          clubName: clubName,
-          mediaItems: mediaItems,
-          distance: memo.distance != null ? '${memo.distance}yd' : null,
-          shotShape: memo.shotShape,
-          condition: memo.condition,
-          wind: memo.wind,
-          bodyText: memo.body,
-          date: _formatDate(memo.practicedAt),
-          onTap: () => context.push('/memo/${memo.id}'),
-          margin: const EdgeInsets.only(bottom: 8),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: OpenContainer<bool>(
+            transitionDuration: const Duration(milliseconds: 400),
+            transitionType: ContainerTransitionType.fade,
+            openColor: Colors.white,
+            closedColor: Colors.white,
+            closedElevation: 0,
+            openElevation: 0,
+            closedShape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(24)),
+            ),
+            onClosed: (_) => _search(),
+            closedBuilder: (context, openContainer) => MemoCard(
+              clubName: clubName,
+              mediaItems: mediaItems,
+              distance: memo.distance != null ? '${memo.distance}yd' : null,
+              shotShape: memo.shotShape,
+              condition: memo.condition,
+              wind: memo.wind,
+              bodyText: memo.body,
+              date: _formatDate(memo.practicedAt),
+              onTap: openContainer,
+              margin: EdgeInsets.zero,
+            ),
+            openBuilder: (context, _) => MemoExpandedCard(
+              memo: memo,
+              clubName: clubName,
+              onChanged: _search,
+            ),
+          ),
         );
       },
     );

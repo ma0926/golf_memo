@@ -17,6 +17,8 @@ import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/media_preview_screen.dart';
 import '../../shared/widgets/media_picker_screen.dart';
+import '../../shared/widgets/app_list_tile.dart';
+import '../../shared/widgets/sheet_drag_handle.dart';
 
 // ──────────────────────────────────────────────────────
 // ルート：ローカルNavigatorでクラブ選択→フォームを管理
@@ -105,7 +107,7 @@ class _ClubSelectPageState extends State<_ClubSelectPage> {
         child: Column(
           children: [
             // グラバー
-            const _DragIndicator(),
+            const SheetDragHandle(),
             // ヘッダー
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
@@ -196,66 +198,27 @@ class _ClubSelectPageState extends State<_ClubSelectPage> {
                   final group = _clubGroups[index];
                   final clubs = group['clubs'] as List<Club>;
 
-                  return Padding(
-                    padding: EdgeInsets.only(top: index == 0 ? 0 : 40),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 7, left: 16),
-                          child: Text(
-                            group['category'] as String,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0x993C3C43),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(top: index == 0 ? 0 : 16),
+                        child: SizedBox(
+                          height: 48,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              group['category'] as String,
+                              style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
                             ),
                           ),
                         ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: const Color(0x57545456),
-                              width: 0.33,
-                            ),
-                          ),
-                          child: Column(
-                            children: List.generate(clubs.length, (i) {
-                              return Column(
-                                children: [
-                                  InkWell(
-                                    onTap: () => widget.onClubSelected(clubs[i].id!, clubs[i].name),
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                                      child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          clubs[i].name,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w500,
-                                            color: AppColors.textMedium,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (i < clubs.length - 1)
-                                    const Divider(
-                                      height: 0.33,
-                                      thickness: 0.33,
-                                      indent: 16,
-                                      color: Color(0x57545456),
-                                    ),
-                                ],
-                              );
-                            }),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      ...List.generate(clubs.length, (i) => AppListTile(
+                        title: clubs[i].name,
+                        onTap: () => widget.onClubSelected(clubs[i].id!, clubs[i].name),
+                      )),
+                    ],
                   );
                 },
               ),
@@ -381,15 +344,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(),
             ListTile(
               leading: SvgPicture.asset(
                 'assets/icons/photo_library.svg',
@@ -520,7 +475,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
       final memo = PracticeMemo(
         clubId: widget.clubId,
         practicedAt: _selectedDate,
-        body: _bodyController.text.isEmpty ? null : _bodyController.text,
+        body: _bodyController.text.trimRight().isEmpty ? null : _bodyController.text.trimRight(),
         condition: _condition,
         distance: int.tryParse(_distanceController.text),
         shotShape: _shotShape,
@@ -623,12 +578,14 @@ class _MemoInputPageState extends State<_MemoInputPage> {
         elevation: 0,
         toolbarHeight: 56 + 8,
         automaticallyImplyLeading: false,
-        leading: Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 28),
-            onPressed: () => Navigator.of(context).pop(),
+        leading: IconButton(
+          icon: SvgPicture.asset(
+            'assets/icons/chevron_left.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
           ),
+          onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           Padding(
@@ -1161,26 +1118,6 @@ class _MediaThumbnail extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ──────────────────────────────────────────────────────
-// ドラッグインジケーター
-// ──────────────────────────────────────────────────────
-class _DragIndicator extends StatelessWidget {
-  const _DragIndicator();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      width: 36,
-      height: 4,
-      decoration: BoxDecoration(
-        color: AppColors.divider,
-        borderRadius: BorderRadius.circular(2),
-      ),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 
@@ -13,16 +14,13 @@ class TermsScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
-        leading: TextButton(
+        leading: IconButton(
           onPressed: () => context.pop(),
-          style: TextButton.styleFrom(padding: EdgeInsets.zero),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.chevron_left, color: AppColors.textPrimary, size: 20),
-              Text('戻る',
-                  style: TextStyle(fontSize: 14, color: AppColors.textPrimary)),
-            ],
+          icon: SvgPicture.asset(
+            'assets/icons/chevron_left.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
           ),
         ),
         title: const Text(

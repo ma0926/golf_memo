@@ -18,6 +18,8 @@ import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/media_preview_screen.dart';
 import '../../shared/widgets/media_picker_screen.dart';
+import '../../shared/widgets/app_list_tile.dart';
+import '../../shared/widgets/sheet_drag_handle.dart';
 
 class MemoEditScreen extends StatefulWidget {
   final int memoId;
@@ -92,7 +94,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
       _clubId = memo.clubId;
       _clubName = club?.name ?? '不明なクラブ';
       _selectedDate = memo.practicedAt;
-      _bodyController.text = memo.body ?? '';
+      _bodyController.text = (memo.body ?? '').trimRight();
       _distanceController.text = memo.distance?.toString() ?? '';
       _shotShape = memo.shotShape;
       _condition = memo.condition;
@@ -224,16 +226,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ドラッグインジケーター
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(),
             // ライブラリから選ぶ
             ListTile(
               leading: SvgPicture.asset(
@@ -369,7 +362,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
         id: _memo!.id,
         clubId: _clubId,
         practicedAt: _selectedDate,
-        body: _bodyController.text.isEmpty ? null : _bodyController.text,
+        body: _bodyController.text.trimRight().isEmpty ? null : _bodyController.text.trimRight(),
         condition: _condition,
         distance: distanceText.isEmpty ? null : int.tryParse(distanceText),
         shotShape: _shotShape,
@@ -508,7 +501,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 16, top: 0, bottom: 0),
             child: ElevatedButton.icon(
-              onPressed: (_isSaving || !_hasChanges) ? null : _saveChanges,
+              onPressed: _isSaving ? null : _saveChanges,
               icon: _isSaving
                   ? const SizedBox(
                       width: 16,
@@ -607,14 +600,10 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                         style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary, letterSpacing: 0, wordSpacing: 0),
                       ),
                     ),
-                    Builder(builder: (context) {
-                      final hasMeta = _shotShape != null || _condition != null || _wind != null || _distanceController.text.isNotEmpty;
-                      final hasBody = _bodyController.text.isNotEmpty;
-                      // 詳細画面と同様：メタあり＝(body有無で12/16) + メタ行高(21px) + 16、メタなし＝16
-                      final gap = hasMeta ? (hasBody ? 49.0 : 53.0) : 16.0;
-                      return SizedBox(height: gap);
-                    }),
+                    const SizedBox(height: 16),
                     _buildEditMediaGrid(),
+                    if (_openSections.contains('distance') || _openSections.contains('shotShape') || _openSections.contains('condition') || _openSections.contains('wind'))
+                      const SizedBox(height: 16),
                     if (_openSections.contains('distance'))
                       _buildDistanceCard(),
                     if (_openSections.contains('shotShape'))
@@ -989,15 +978,7 @@ class _ClubSelectSheetState extends State<_ClubSelectSheet> {
                   if (index == 0) {
                     return Column(
                       children: [
-                        Container(
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          width: 36,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: AppColors.divider,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
+                        const SheetDragHandle(),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
                           child: SizedBox(
@@ -1053,50 +1034,22 @@ class _ClubSelectSheetState extends State<_ClubSelectSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(top: 16, bottom: 6, left: 4),
-                        child: Text(
-                          group['category'] as String,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
+                        padding: const EdgeInsets.only(top: 16),
+                        child: SizedBox(
+                          height: 48,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              group['category'] as String,
+                              style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
+                            ),
                           ),
                         ),
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          children: List.generate(clubs.length, (i) {
-                            return Column(
-                              children: [
-                                ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 2,
-                                  ),
-                                  title: Text(
-                                    clubs[i].name,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  onTap: () =>
-                                      widget.onClubSelected(clubs[i].id!, clubs[i].name),
-                                ),
-                                if (i < clubs.length - 1)
-                                  const Divider(
-                                    height: 0.5,
-                                    indent: 16,
-                                    color: AppColors.divider,
-                                  ),
-                              ],
-                            );
-                          }),
-                        ),
-                      ),
+                      ...List.generate(clubs.length, (i) => AppListTile(
+                        title: clubs[i].name,
+                        onTap: () => widget.onClubSelected(clubs[i].id!, clubs[i].name),
+                      )),
                     ],
                   );
                 },

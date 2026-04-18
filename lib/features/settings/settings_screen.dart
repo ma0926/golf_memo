@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../shared/widgets/app_list_tile.dart';
+
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -9,9 +12,9 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: IconButton(
@@ -25,34 +28,22 @@ class SettingsScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
-          // 練習クラブ
-          _SettingsGroup(
-            children: [
-              _SettingsRow(
-                label: '記録するクラブ',
-                onTap: () => context.push('/settings/clubs'),
-              ),
-            ],
+          _SettingsRow(
+            label: '記録するクラブ',
+            icon: 'assets/icons/settings_club.svg',
+            onTap: () => context.push('/settings/clubs'),
           ),
-          const SizedBox(height: 32),
-          // このアプリについて
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Text(
-              'このアプリについて',
-              style: AppTypography.jpSRegular.copyWith(fontSize: 13, color: AppColors.textSecondary),
-            ),
+          _SettingsRow(
+            label: 'お問い合わせ',
+            icon: 'assets/icons/settings_contact.svg',
+            onTap: () {},
           ),
-          _SettingsGroup(
-            children: [
-              _SettingsRow(label: 'お問い合わせ', onTap: () {}),
-              _SettingsRow(
-                label: '規約・ライセンス',
-                onTap: () => context.push('/settings/terms'),
-              ),
-            ],
+          _SettingsRow(
+            label: '規約・ライセンス',
+            icon: 'assets/icons/settings_terms.svg',
+            onTap: () => context.push('/settings/terms'),
           ),
         ],
       ),
@@ -60,48 +51,24 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-class _SettingsGroup extends StatelessWidget {
-  final List<Widget> children;
-
-  const _SettingsGroup({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        children: List.generate(children.length * 2 - 1, (i) {
-          if (i.isOdd) {
-            return const Divider(height: 0.5, indent: 16, color: AppColors.divider);
-          }
-          return children[i ~/ 2];
-        }),
-      ),
-    );
-  }
-}
-
 class _SettingsRow extends StatelessWidget {
   final String label;
+  final String icon;
   final VoidCallback onTap;
 
-  const _SettingsRow({required this.label, required this.onTap});
+  const _SettingsRow({required this.label, required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(
-        label,
-        style: AppTypography.jpMRegular.copyWith(fontSize: 15, color: AppColors.textPrimary),
+    return AppListTile(
+      title: label,
+      leading: SvgPicture.asset(
+        icon,
+        width: 24,
+        height: 24,
+        colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
       ),
-      trailing: const Icon(
-        Icons.chevron_right,
-        color: AppColors.textSecondary,
-        size: 20,
-      ),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
       onTap: onTap,
     );
   }
