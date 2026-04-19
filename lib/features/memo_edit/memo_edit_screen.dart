@@ -19,6 +19,7 @@ import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/media_preview_screen.dart';
 import '../../shared/widgets/media_picker_screen.dart';
 import '../../shared/widgets/app_buttons.dart';
+import '../../shared/widgets/app_distance_input.dart';
 import '../../shared/widgets/app_list_tile.dart';
 import '../../shared/widgets/sheet_drag_handle.dart';
 
@@ -827,51 +828,10 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
   }
 
   Widget _buildDistanceCard() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFF2F3F5)),
-        ),
-        child: Row(
-          children: [
-            Text('飛距離', style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium, fontSize: 14)),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextField(
-                controller: _distanceController,
-                focusNode: _distanceFocusNode,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: 18, color: AppColors.textPrimary),
-                decoration: const InputDecoration(
-                  border: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFD9D9D9)),
-                  ),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFD9D9D9)),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFD9D9D9)),
-                  ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  isDense: true,
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text('yd', style: AppTypography.enMMedium.copyWith(color: AppColors.textPlaceholder)),
-            const SizedBox(width: 16),
-            GestureDetector(
-              onTap: () => setState(() => _openSections.remove('distance')),
-              child: const Icon(Icons.close, size: 20, color: AppColors.textMedium),
-            ),
-          ],
-        ),
-      ),
+    return AppDistanceInput(
+      controller: _distanceController,
+      focusNode: _distanceFocusNode,
+      onClose: () => setState(() => _openSections.remove('distance')),
     );
   }
 }
