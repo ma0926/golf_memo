@@ -41,7 +41,9 @@ class ReportScreen extends StatefulWidget {
   State<ReportScreen> createState() => _ReportScreenState();
 }
 
-class _ReportScreenState extends State<ReportScreen> {
+class _ReportScreenState extends State<ReportScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   final _memoRepo = PracticeMemoRepository();
   final _clubRepo = ClubRepository();
 
@@ -59,12 +61,22 @@ class _ReportScreenState extends State<ReportScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) return;
+      setState(() {
+        _periodDays = _tabController.index == 0 ? 30 : 60;
+        _isLoading = true;
+      });
+      _loadData();
+    });
     _init();
     memoCreatedNotifier.addListener(_loadData);
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     memoCreatedNotifier.removeListener(_loadData);
     super.dispose();
   }
@@ -147,6 +159,7 @@ class _ReportScreenState extends State<ReportScreen> {
         builder: (_, scrollController) => _ClubSelectSheet(
           clubs: _clubs,
           selectedClubId: _selectedClub?.id,
+          availableClubIds: _clubAvgDistances.keys.toSet(),
           scrollController: scrollController,
         ),
       ),
@@ -164,40 +177,39 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // タイトル
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: Text(
-                'レポート',
-                style: AppTypography.jpHeader1.copyWith(color: AppColors.textPrimary),
-              ),
-            ),
-            // 期間タブ
-            AppTabBar(
-              labels: const ['1ヶ月', '6ヶ月'],
-              selectedIndex: _periodDays == 30 ? 0 : 1,
-              onChanged: (i) {
-                setState(() {
-                  _periodDays = i == 0 ? 30 : 180;
-                  _isLoading = true;
-                });
-                _loadData();
-              },
-            ),
-            // コンテンツ
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildBody(),
-            ),
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleSpacing: 16,
+        title: Text(
+          'レポート',
+          style: AppTypography.jpHeader1.copyWith(color: AppColors.textPrimary),
+        ),
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: AppColors.textPrimary,
+          unselectedLabelColor: AppColors.textSecondary,
+          indicator: const UnderlineTabIndicator(
+            borderSide: BorderSide(color: AppColors.textPrimary, width: 2.0),
+            borderRadius: BorderRadius.zero,
+            insets: EdgeInsets.symmetric(horizontal: 16),
+          ),
+          indicatorSize: TabBarIndicatorSize.tab,
+          dividerColor: AppColors.primaryMiddle,
+          dividerHeight: 0.3,
+          labelStyle: AppTypography.jpHeader4,
+          unselectedLabelStyle: AppTypography.jpHeader4,
+          tabs: const [
+            Tab(text: '30日', height: 38),
+            Tab(text: '60日', height: 38),
           ],
         ),
       ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildBody(),
     );
   }
 
@@ -212,7 +224,7 @@ class _ReportScreenState extends State<ReportScreen> {
     }
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 36, 16, 100),
       children: [
         // セクション1: クラブ別平均飛距離テーブル
         _SectionTitle(title: 'クラブ別平均飛距離'),
@@ -312,7 +324,7 @@ class _ClubDistanceTable extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            'この期間のデータがありません',
+            'データがありません',
             style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
           ),
         ),
@@ -330,36 +342,29 @@ class _ClubDistanceTable extends StatelessWidget {
           final i = entry.key;
           final club = entry.value;
           final avg = avgDistances[club.id]!;
-          final isLast = i == rows.length - 1;
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        club.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.enMMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    club.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.enMMedium.copyWith(
+                      color: AppColors.textSecondary,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${avg.round()}y',
-                      style: AppTypography.enMMedium.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              if (!isLast)
-                const Divider(height: 1, color: Color(0xFFF2F3F5)),
-            ],
+                const SizedBox(width: 8),
+                Text(
+                  '${avg.round()}y',
+                  style: AppTypography.enMMedium.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
           );
         }).toList(),
       ),
@@ -418,7 +423,7 @@ class _DistanceChartCard extends StatelessWidget {
               height: 120,
               child: Center(
                 child: Text(
-                  'この期間の飛距離データがありません',
+                  'データがありません',
                   style: AppTypography.jpSRegular.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -465,19 +470,10 @@ class _ChartDetailSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 日付 + 平均飛距離
-        Row(
-          children: [
-            Text(
-              _formatDate(dayData.date),
-              style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
-            ),
-            const Spacer(),
-            Text(
-              '${dayData.avgDistance.round()}yd',
-              style: AppTypography.jpHeader2.copyWith(color: AppColors.textPrimary),
-            ),
-          ],
+        // 日付
+        Text(
+          _formatDate(dayData.date),
+          style: AppTypography.jpSRegular.copyWith(color: AppColors.textPrimary),
         ),
         // メモ一覧
         ...dayData.memos.map((memo) => _MemoDetailRow(
@@ -530,6 +526,7 @@ class _MemoDetailRowState extends State<_MemoDetailRow> {
   @override
   Widget build(BuildContext context) {
     final memo = widget.memo;
+    final hasBody = memo.body != null && memo.body!.isNotEmpty;
     final hasThumbnail = _mediaLoaded && _firstMedia != null;
     final thumbPath = hasThumbnail
         ? MediaPathHelper.resolve(
@@ -537,6 +534,7 @@ class _MemoDetailRowState extends State<_MemoDetailRow> {
             widget.docsPath,
           )
         : null;
+    final hasMeta = memo.shotShape != null || memo.condition != null || memo.wind != null;
 
     return GestureDetector(
       onTap: memo.id != null ? () => widget.onDetailTap(memo.id!) : null,
@@ -545,63 +543,48 @@ class _MemoDetailRowState extends State<_MemoDetailRow> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // メモ本文 + サムネイル
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // テキスト
-                Expanded(
-                  child: memo.body != null && memo.body!.isNotEmpty
-                      ? Text(
-                          memo.body!,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.jpMRegular.copyWith(
-                            color: AppColors.textMedium,
-                          ),
-                        )
-                      : const SizedBox.shrink(),
+            // 本文（1行・超過は末尾 ...）
+            if (hasBody)
+              Text(
+                memo.body!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
+              ),
+            // 画像（本文の下・フル幅）
+            if (hasThumbnail && thumbPath != null) ...[
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(
+                  File(thumbPath),
+                  width: double.infinity,
+                  height: 140,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
-                // サムネイル
-                if (hasThumbnail && thumbPath != null) ...[
-                  const SizedBox(width: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      File(thumbPath),
-                      width: 72,
-                      height: 72,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox(width: 72, height: 72),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            // タグ行
-            if (memo.shotShape != null || memo.condition != null || memo.wind != null) ...[
-              const SizedBox(height: 10),
+              ),
+            ],
+            // 飛距離 + メタ情報（MemoCard 下部行と同じ）
+            if (memo.distance != null || hasMeta) ...[
+              const SizedBox(height: 16),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  if (memo.shotShape != null) ...[
-                    _TagItem(
-                      iconPath: 'assets/icons/${memo.shotShape}.svg',
-                      label: AppConstants.shotShapeLabels[memo.shotShape] ?? memo.shotShape!,
+                  if (memo.distance != null)
+                    Text(
+                      '${memo.distance}yd',
+                      style: AppTypography.enMMedium
+                          .copyWith(color: AppColors.textPrimary),
                     ),
-                    const SizedBox(width: 16),
+                  if (hasMeta) ...[
+                    const Spacer(),
+                    _ReportMetaRow(
+                      shotShape: memo.shotShape,
+                      condition: memo.condition,
+                      wind: memo.wind,
+                    ),
                   ],
-                  if (memo.condition != null) ...[
-                    _TagItem(
-                      iconPath: AppConstants.conditionIcons[memo.condition]!,
-                      label: AppConstants.conditionLabels[memo.condition] ?? memo.condition!,
-                    ),
-                    const SizedBox(width: 16),
-                  ],
-                  if (memo.wind != null)
-                    _TagItem(
-                      iconPath: AppConstants.windIcons[memo.wind]!,
-                      label: AppConstants.windLabels[memo.wind] ?? memo.wind!,
-                    ),
                 ],
               ),
             ],
@@ -612,31 +595,104 @@ class _MemoDetailRowState extends State<_MemoDetailRow> {
   }
 }
 
-class _TagItem extends StatelessWidget {
-  final String iconPath;
-  final String label;
+// ── メタ情報行（MemoCard._MemoMetaRow と同スタイル）─────
+class _ReportMetaRow extends StatelessWidget {
+  final String? shotShape;
+  final String? condition;
+  final String? wind;
 
-  const _TagItem({required this.iconPath, required this.label});
+  const _ReportMetaRow({this.shotShape, this.condition, this.wind});
+
+  IconData _conditionIcon(String cond) {
+    switch (cond) {
+      case 'good': return Icons.sentiment_satisfied_alt;
+      case 'bad':  return Icons.sentiment_dissatisfied;
+      default:     return Icons.sentiment_neutral;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        SvgPicture.asset(
-          iconPath,
-          width: 14,
-          height: 14,
-          colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
-        ),
+        if (shotShape != null)
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            SvgPicture.asset(
+              'assets/icons/$shotShape.svg',
+              width: 16,
+              height: 16,
+              colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
+            ),
+            const SizedBox(width: 3),
+            Text(
+              AppConstants.shotShapeLabels[shotShape] ?? shotShape!,
+              style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
+            ),
+          ]),
+        if (condition != null)
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(_conditionIcon(condition!), size: 16, color: AppColors.textMedium),
+            const SizedBox(width: 3),
+            Text(
+              AppConstants.conditionLabels[condition] ?? condition!,
+              style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
+            ),
+          ]),
+        if (wind != null)
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            SvgPicture.asset(
+              AppConstants.windIcons[wind] ?? 'assets/icons/wind_yes.svg',
+              width: 16,
+              height: 16,
+              colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
+            ),
+            const SizedBox(width: 3),
+            Text(
+              AppConstants.windLabels[wind] ?? wind!,
+              style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
+            ),
+          ]),
       ],
     );
   }
+}
+
+Widget _emptyTitle(double value, TitleMeta meta) => const SizedBox.shrink();
+
+// ── アクティブドット（グロー付き）────────────────────
+class _GlowDotPainter extends FlDotPainter {
+  const _GlowDotPainter();
+
+  @override
+  void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas) {
+    // 外側グロー: 12px, rgba(139, 168, 255, 0.60)
+    canvas.drawCircle(
+      offsetInCanvas,
+      12,
+      Paint()..color = const Color(0x998BA8FF),
+    );
+    // 内側ドット: accent, radius 6
+    canvas.drawCircle(
+      offsetInCanvas,
+      6,
+      Paint()..color = AppColors.accent,
+    );
+  }
+
+  @override
+  Size getSize(FlSpot spot) => const Size(24, 24);
+
+  @override
+  Color get mainColor => AppColors.accent;
+
+  @override
+  FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) => b;
+
+  @override
+  List<Object?> get props => [];
 }
 
 // ── 飛距離折れ線グラフ ────────────────────────────────
@@ -688,7 +744,6 @@ class _DistanceChart extends StatelessWidget {
         maxX: (data.length - 1).toDouble().clamp(0, double.infinity),
         minY: minY,
         maxY: maxY,
-        clipData: const FlClipData.all(),
         lineTouchData: LineTouchData(
           handleBuiltInTouches: false,
           touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
@@ -725,10 +780,12 @@ class _DistanceChart extends StatelessWidget {
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, percent, barData, index) {
-                final isSelected = index == selectedIndex;
+                if (index == selectedIndex) {
+                  return const _GlowDotPainter();
+                }
                 return FlDotCirclePainter(
-                  radius: isSelected ? 6 : 3,
-                  color: isSelected ? AppColors.accent : Colors.white,
+                  radius: 3,
+                  color: Colors.white,
                   strokeWidth: 2,
                   strokeColor: AppColors.accent,
                 );
@@ -742,22 +799,27 @@ class _DistanceChart extends StatelessWidget {
         ],
         titlesData: FlTitlesData(
           topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          leftTitles: AxisTitles(
+          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 40,
+              reservedSize: 52,
               interval: yInterval,
               getTitlesWidget: (value, meta) {
                 if (value == meta.min || value == meta.max) {
                   return const SizedBox.shrink();
                 }
-                return Text(
-                  '${value.toInt()}y',
-                  style: AppTypography.enSMedium100.copyWith(
-                    color: AppColors.textPlaceholder,
+                return Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: Text(
+                    '${value.toInt()}y',
+                    softWrap: false,
+                    style: AppTypography.enSMedium100.copyWith(
+                      fontSize: 11,
+                      color: AppColors.textMedium,
+                    ),
+                    textAlign: TextAlign.left,
                   ),
-                  textAlign: TextAlign.right,
                 );
               },
             ),
@@ -778,7 +840,8 @@ class _DistanceChart extends StatelessWidget {
                   child: Text(
                     '${date.month}/${date.day}',
                     style: AppTypography.enSMedium100.copyWith(
-                      color: AppColors.textPlaceholder,
+                      fontSize: 11,
+                      color: AppColors.textMedium,
                     ),
                   ),
                 );
@@ -798,7 +861,7 @@ class _DistanceChart extends StatelessWidget {
         borderData: FlBorderData(
           show: true,
           border: const Border(
-            left: BorderSide(color: AppColors.divider, width: 1),
+            right: BorderSide(color: AppColors.divider, width: 1),
             bottom: BorderSide(color: AppColors.divider, width: 1),
           ),
         ),
@@ -811,11 +874,13 @@ class _DistanceChart extends StatelessWidget {
 class _ClubSelectSheet extends StatelessWidget {
   final List<Club> clubs;
   final int? selectedClubId;
+  final Set<int> availableClubIds;
   final ScrollController scrollController;
 
   const _ClubSelectSheet({
     required this.clubs,
     required this.scrollController,
+    required this.availableClubIds,
     this.selectedClubId,
   });
 
@@ -856,7 +921,6 @@ class _ClubSelectSheet extends StatelessWidget {
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppColors.divider),
             Expanded(
               child: ListView(
                 controller: scrollController,
@@ -878,13 +942,21 @@ class _ClubSelectSheet extends StatelessWidget {
                         ),
                       ),
                     ),
-                    ...entry.value.map((club) => AppListTile(
-                          title: club.name,
-                          trailing: club.id == selectedClubId
-                              ? const Icon(Icons.check, color: AppColors.primary)
-                              : null,
-                          onTap: () => Navigator.pop(context, club),
-                        )),
+                    ...entry.value.map((club) {
+                          final hasData = availableClubIds.contains(club.id);
+                          return AppListTile(
+                            title: club.name,
+                            titleColor: hasData
+                                ? AppColors.textPrimary
+                                : AppColors.textPlaceholder,
+                            trailing: club.id == selectedClubId
+                                ? const Icon(Icons.check, color: AppColors.primary)
+                                : null,
+                            onTap: hasData
+                                ? () => Navigator.pop(context, club)
+                                : null,
+                          );
+                        }),
                   ],
                   const SizedBox(height: 16),
                 ],
