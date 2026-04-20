@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'core/constants/app_colors.dart';
 import 'core/theme/app_theme.dart';
 
-import 'features/splash/splash_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/memo_list/memo_list_screen.dart';
 import 'features/memo_detail/memo_detail_screen.dart';
@@ -21,15 +20,10 @@ import 'features/settings/terms_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
-final _router = GoRouter(
+GoRouter _buildRouter(String initialLocation) => GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/splash',
+  initialLocation: initialLocation,
   routes: [
-    // スプラッシュ
-    GoRoute(
-      path: '/splash',
-      builder: (context, state) => const SplashScreen(),
-    ),
     // オンボーディング（初回のみ）
     GoRoute(
       path: '/onboarding',
@@ -37,8 +31,13 @@ final _router = GoRouter(
     ),
     // ホーム・レポートをシェルで包み、ボトムナビを固定する
     StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) =>
-          _ScaffoldWithNav(navigationShell: navigationShell),
+      pageBuilder: (context, state, navigationShell) => CustomTransitionPage(
+        key: state.pageKey,
+        child: _ScaffoldWithNav(navigationShell: navigationShell),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+        transitionsBuilder: (_, __, ___, child) => child,
+      ),
       branches: [
         StatefulShellBranch(
           routes: [
@@ -167,21 +166,6 @@ final _router = GoRouter(
   ],
 );
 
-// FABをNavBar上辺から16px上に出すカスタム位置
-class _CenterAboveNavBar extends FloatingActionButtonLocation {
-  const _CenterAboveNavBar();
-
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    final double fabX = (scaffoldGeometry.scaffoldSize.width -
-            scaffoldGeometry.floatingActionButtonSize.width) /
-        2.0;
-    // FAB bottom = contentBottom + diameter - 16 → FAB top = contentBottom - 16
-    final double fabY = scaffoldGeometry.contentBottom - 16.0;
-    return Offset(fabX, fabY);
-  }
-}
-
 /// 詳細画面が開いているかどうか（BottomAppBar非表示に使用）
 final isDetailOpen = ValueNotifier<bool>(false);
 
@@ -199,45 +183,48 @@ class _ScaffoldWithNav extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       body: navigationShell,
-      floatingActionButton: ValueListenableBuilder<bool>(
-        valueListenable: isDetailOpen,
-        builder: (_, open, child) => AnimatedOpacity(
-          opacity: open ? 0.0 : 1.0,
-          duration: const Duration(milliseconds: 300),
-          child: IgnorePointer(ignoring: open, child: child),
-        ),
-        child: FloatingActionButton(
-          onPressed: () async {
-            final result = await Navigator.of(context, rootNavigator: true).push<bool>(
-              PageRouteBuilder(
-                pageBuilder: (_, __, ___) => const ClipRRect(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                  child: MemoCreateScreen(),
-                ),
-                transitionsBuilder: (_, animation, __, child) => SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 1),
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
-                  child: child,
+      // FABはメモ一覧タブのみ右下に表示
+      floatingActionButton: navigationShell.currentIndex == 0
+          ? ValueListenableBuilder<bool>(
+              valueListenable: isDetailOpen,
+              builder: (_, open, child) => AnimatedOpacity(
+                opacity: open ? 0.0 : 1.0,
+                duration: const Duration(milliseconds: 300),
+                child: IgnorePointer(ignoring: open, child: child),
+              ),
+              child: FloatingActionButton(
+                onPressed: () async {
+                  final result = await Navigator.of(context, rootNavigator: true).push<bool>(
+                    PageRouteBuilder(
+                      pageBuilder: (_, __, ___) => const ClipRRect(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                        child: MemoCreateScreen(),
+                      ),
+                      transitionsBuilder: (_, animation, __, child) => SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+                        child: child,
+                      ),
+                    ),
+                  );
+                  if (result == true) {
+                    memoCreatedNotifier.value++;
+                  }
+                },
+                backgroundColor: AppColors.primary,
+                shape: const CircleBorder(),
+                elevation: 3,
+                child: SvgPicture.asset(
+                  'assets/icons/add_2.svg',
+                  width: 24,
+                  height: 24,
                 ),
               ),
-            );
-            if (result == true) {
-              memoCreatedNotifier.value++;
-            }
-          },
-          backgroundColor: AppColors.primary,
-          shape: const CircleBorder(),
-          elevation: 3,
-          child: SvgPicture.asset(
-            'assets/icons/add_2.svg',
-            width: 24,
-            height: 24,
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: const _CenterAboveNavBar(),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: ValueListenableBuilder<bool>(
         valueListenable: isDetailOpen,
         builder: (_, open, child) => AnimatedOpacity(
@@ -309,8 +296,28 @@ class _ScaffoldWithNav extends StatelessWidget {
   }
 }
 
-class App extends StatelessWidget {
-  const App({super.key});
+class App extends StatefulWidget {
+  final String initialRoute;
+  const App({super.key, required this.initialRoute});
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = _buildRouter(widget.initialRoute);
+  }
+
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

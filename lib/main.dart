@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 
 void main() async {
@@ -18,5 +19,10 @@ void main() async {
     return false;
   };
 
-  runApp(const App());
+  // ネイティブ起動画面が表示されている間にルート判定
+  final prefs = await SharedPreferences.getInstance();
+  final completed = prefs.getBool('onboarding_completed') ?? false;
+  final initialRoute = completed ? '/home' : '/onboarding';
+
+  runApp(App(initialRoute: initialRoute));
 }
