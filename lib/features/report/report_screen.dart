@@ -335,7 +335,6 @@ class _ClubDistanceTable extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF2F3F5)),
       ),
       child: Column(
         children: rows.asMap().entries.map((entry) {
@@ -397,17 +396,10 @@ class _DistanceChartCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF2F3F5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // クラブ名タイトル
-          Text(
-            selectedClub?.name ?? '—',
-            style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
-          ),
-          const SizedBox(height: 24),
           // グラフ
           if (chartData.isNotEmpty)
             SizedBox(
@@ -433,8 +425,6 @@ class _DistanceChartCard extends StatelessWidget {
           // 詳細セクション
           if (selectedIdx != null && chartData.isNotEmpty) ...[
             const SizedBox(height: 20),
-            const Divider(height: 1, color: Color(0xFFF2F3F5)),
-            const SizedBox(height: 16),
             _ChartDetailSection(
               dayData: chartData[selectedIdx!],
               docsPath: docsPath,
@@ -470,125 +460,56 @@ class _ChartDetailSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 日付
-        Text(
-          _formatDate(dayData.date),
-          style: AppTypography.jpSRegular.copyWith(color: AppColors.textPrimary),
+        // 日付 + 飛距離
+        Row(
+          children: [
+            Text(
+              _formatDate(dayData.date),
+              style: AppTypography.jpSRegular.copyWith(color: AppColors.textPrimary),
+            ),
+            const Spacer(),
+            Text(
+              '${dayData.avgDistance.round()}yd',
+              style: AppTypography.enMMedium.copyWith(color: AppColors.textPrimary),
+            ),
+          ],
         ),
-        // メモ一覧
-        ...dayData.memos.map((memo) => _MemoDetailRow(
-              memo: memo,
-              docsPath: docsPath,
-              onDetailTap: onDetailTap,
-            )),
+        // メタ情報（最初の1件のみ）
+        Builder(builder: (_) {
+          final first = dayData.memos.firstWhere(
+            (m) => m.shotShape != null || m.condition != null || m.wind != null,
+            orElse: () => dayData.memos.first,
+          );
+          return _MemoDetailRow(memo: first, onDetailTap: onDetailTap);
+        }),
       ],
     );
   }
 }
 
 // ── メモ詳細行 ────────────────────────────────────────
-class _MemoDetailRow extends StatefulWidget {
+class _MemoDetailRow extends StatelessWidget {
   final PracticeMemo memo;
-  final String docsPath;
   final ValueChanged<int> onDetailTap;
 
   const _MemoDetailRow({
     required this.memo,
-    required this.docsPath,
     required this.onDetailTap,
   });
 
   @override
-  State<_MemoDetailRow> createState() => _MemoDetailRowState();
-}
-
-class _MemoDetailRowState extends State<_MemoDetailRow> {
-  final _mediaRepo = MediaRepository();
-  Media? _firstMedia;
-  bool _mediaLoaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMedia();
-  }
-
-  Future<void> _loadMedia() async {
-    if (widget.memo.id == null) return;
-    final mediaList = await _mediaRepo.getMediaByMemoId(widget.memo.id!);
-    if (!mounted) return;
-    setState(() {
-      _firstMedia = mediaList.isNotEmpty ? mediaList.first : null;
-      _mediaLoaded = true;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final memo = widget.memo;
-    final hasBody = memo.body != null && memo.body!.isNotEmpty;
-    final hasThumbnail = _mediaLoaded && _firstMedia != null;
-    final thumbPath = hasThumbnail
-        ? MediaPathHelper.resolve(
-            _firstMedia!.thumbnailUri ?? _firstMedia!.uri,
-            widget.docsPath,
-          )
-        : null;
     final hasMeta = memo.shotShape != null || memo.condition != null || memo.wind != null;
+    if (!hasMeta) return const SizedBox.shrink();
 
     return GestureDetector(
-      onTap: memo.id != null ? () => widget.onDetailTap(memo.id!) : null,
+      onTap: memo.id != null ? () => onDetailTap(memo.id!) : null,
       child: Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 本文（1行・超過は末尾 ...）
-            if (hasBody)
-              Text(
-                memo.body!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.jpMRegular.copyWith(color: AppColors.textMedium),
-              ),
-            // 画像（本文の下・フル幅）
-            if (hasThumbnail && thumbPath != null) ...[
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.file(
-                  File(thumbPath),
-                  width: double.infinity,
-                  height: 140,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
-              ),
-            ],
-            // 飛距離 + メタ情報（MemoCard 下部行と同じ）
-            if (memo.distance != null || hasMeta) ...[
-              const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (memo.distance != null)
-                    Text(
-                      '${memo.distance}yd',
-                      style: AppTypography.enMMedium
-                          .copyWith(color: AppColors.textPrimary),
-                    ),
-                  if (hasMeta) ...[
-                    const Spacer(),
-                    _ReportMetaRow(
-                      shotShape: memo.shotShape,
-                      condition: memo.condition,
-                      wind: memo.wind,
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ],
+        padding: const EdgeInsets.only(top: 8),
+        child: _ReportMetaRow(
+          shotShape: memo.shotShape,
+          condition: memo.condition,
+          wind: memo.wind,
         ),
       ),
     );
@@ -793,7 +714,14 @@ class _DistanceChart extends StatelessWidget {
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: AppColors.accent.withAlpha(20),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.accent.withOpacity(0.2),
+                  AppColors.accent.withOpacity(0.0),
+                ],
+              ),
             ),
           ),
         ],
@@ -861,7 +789,6 @@ class _DistanceChart extends StatelessWidget {
         borderData: FlBorderData(
           show: true,
           border: const Border(
-            right: BorderSide(color: AppColors.divider, width: 1),
             bottom: BorderSide(color: AppColors.divider, width: 1),
           ),
         ),
