@@ -17,10 +17,6 @@ class SettingsScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.textPrimary, size: 22),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
         title: Text(
           '設定',
           style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),

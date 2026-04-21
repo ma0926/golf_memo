@@ -14,8 +14,6 @@ import 'memo_expanded_card.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/utils/media_path_helper.dart';
 import '../../app.dart' show isDetailOpen, memoCreatedNotifier;
-import '../settings/settings_screen.dart';
-import '../search/search_screen.dart';
 
 // 日付ごとのグループ
 class _DateGroup {
@@ -48,43 +46,6 @@ class MemoListScreen extends StatelessWidget {
               height: 1.0,
             ),
           ),
-          actions: [
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              icon: SvgPicture.asset('assets/icons/Icon Button.svg', width: 48, height: 48),
-              onPressed: () => Navigator.of(context, rootNavigator: true).push(
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => const SettingsScreen(),
-                  transitionsBuilder: (_, animation, __, child) => SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(1, 0),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
-                    child: child,
-                  ),
-                ),
-              ),
-            ),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              icon: SvgPicture.asset('assets/icons/Icon Button-1.svg', width: 48, height: 48),
-              onPressed: () => Navigator.of(context, rootNavigator: true).push(
-                PageRouteBuilder(
-                  pageBuilder: (_, __, ___) => const SearchScreen(),
-                  transitionsBuilder: (_, animation, __, child) => SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(1, 0),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
-                    child: child,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-          ],
           bottom: const TabBar(
             labelColor: AppColors.textPrimary,
             unselectedLabelColor: AppColors.textSecondary,

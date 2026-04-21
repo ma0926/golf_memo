@@ -166,6 +166,22 @@ GoRouter _buildRouter(String initialLocation) => GoRouter(
   ],
 );
 
+// FABをナビバーから20px上に配置するカスタム位置
+class _EndAboveNavBar extends FloatingActionButtonLocation {
+  const _EndAboveNavBar();
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    final double fabX = scaffoldGeometry.scaffoldSize.width
+        - scaffoldGeometry.floatingActionButtonSize.width
+        - 16;
+    final double fabY = scaffoldGeometry.contentBottom
+        - scaffoldGeometry.floatingActionButtonSize.height
+        - 20;
+    return Offset(fabX, fabY);
+  }
+}
+
 /// 詳細画面が開いているかどうか（BottomAppBar非表示に使用）
 final isDetailOpen = ValueNotifier<bool>(false);
 
@@ -224,7 +240,7 @@ class _ScaffoldWithNav extends StatelessWidget {
               ),
             )
           : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButtonLocation: const _EndAboveNavBar(),
       bottomNavigationBar: ValueListenableBuilder<bool>(
         valueListenable: isDetailOpen,
         builder: (_, open, child) => AnimatedOpacity(
@@ -239,30 +255,22 @@ class _ScaffoldWithNav extends StatelessWidget {
             height: 0.33,
             color: const Color(0x4D000000), // #000000 30%opacity
           ),
-          BottomAppBar(
+          ColoredBox(
             color: Colors.white,
-            elevation: 8,
-            padding: EdgeInsets.zero,
-            child: SizedBox(
-              height: 40,
-              child: Row(
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                height: 49, // iOS標準タブバー高さ
+                child: Row(
                 children: [
                   Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () => navigationShell.goBranch(0),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/view_agenda.svg',
-                          width: 28,
-                          height: 28,
-                          colorFilter: ColorFilter.mode(
-                            navigationShell.currentIndex == 0
-                                ? AppColors.primary
-                                : AppColors.textSecondary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
+                      child: _NavItem(
+                        icon: 'assets/icons/view_agenda.svg',
+                        label: 'ホーム',
+                        selected: navigationShell.currentIndex == 0,
                       ),
                     ),
                   ),
@@ -270,18 +278,46 @@ class _ScaffoldWithNav extends StatelessWidget {
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () => navigationShell.goBranch(1),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/show_chart.svg',
-                          width: 28,
-                          height: 28,
-                          colorFilter: ColorFilter.mode(
-                            navigationShell.currentIndex == 1
-                                ? AppColors.primary
-                                : AppColors.textSecondary,
-                            BlendMode.srcIn,
-                          ),
+                      child: _NavItem(
+                        icon: 'assets/icons/show_chart.svg',
+                        label: 'レポート',
+                        selected: navigationShell.currentIndex == 1,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Navigator.of(context, rootNavigator: true).push(
+                        PageRouteBuilder(
+                          pageBuilder: (_, __, ___) => const SearchScreen(),
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
+                          transitionsBuilder: (_, __, ___, child) => child,
                         ),
+                      ),
+                      child: const _NavItem(
+                        icon: 'assets/icons/Icon Button-1.svg',
+                        label: '検索',
+                        selected: false,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Navigator.of(context, rootNavigator: true).push(
+                        PageRouteBuilder(
+                          pageBuilder: (_, __, ___) => const SettingsScreen(),
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
+                          transitionsBuilder: (_, __, ___, child) => child,
+                        ),
+                      ),
+                      child: const _NavItem(
+                        icon: 'assets/icons/Icon Button.svg',
+                        label: '設定',
+                        selected: false,
                       ),
                     ),
                   ),
@@ -289,8 +325,50 @@ class _ScaffoldWithNav extends StatelessWidget {
               ),
             ),
           ),
+        ),
         ],
       ),
+      ),
+    );
+  }
+}
+
+// ── ナビバーアイテム（アイコン＋ラベル）────────────────
+class _NavItem extends StatelessWidget {
+  final String icon;
+  final String label;
+  final bool selected;
+
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? AppColors.primary : AppColors.textSecondary;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset(
+            icon,
+            width: 25,
+            height: 25,
+            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: color,
+              fontWeight: FontWeight.w400,
+              height: 1.2,
+            ),
+          ),
+        ],
       ),
     );
   }
