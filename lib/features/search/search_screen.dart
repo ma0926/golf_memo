@@ -398,9 +398,9 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isActive = isSelected;
-    final bgColor = isActive ? AppColors.primary : Colors.white;
-    final textColor = isActive ? Colors.white : AppColors.textMedium;
-    final borderColor = isActive ? AppColors.primary : const Color(0xFFE1E1E5);
+    final bgColor = isActive ? AppColors.accent : const Color(0x8CFFFFFF);
+    final textColor = isActive ? Colors.white : const Color(0xFF6B7280);
+    final borderColor = isActive ? AppColors.accent : const Color(0xCCFFFFFF);
 
     final showCheck = isToggle && isSelected;
     final hasTrailingIcon = showCheck || showArrow;
@@ -417,6 +417,9 @@ class _FilterChip extends StatelessWidget {
           color: bgColor,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(color: borderColor),
+          boxShadow: isActive
+              ? const [BoxShadow(color: Color(0x403D6B8A), blurRadius: 12, offset: Offset(0, 4))]
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -518,6 +521,8 @@ class _SearchResultsListState extends State<_SearchResultsList> {
 
   List<PracticeMemo> _results = [];
   Map<int, String> _clubNames = {};
+  Map<int, String> _clubCategories = {};
+  Map<int, bool> _clubIsCustom = {};
   Map<int, List<Media>> _memoMediaList = {};
   String _docsPath = '';
   bool _isLoading = true;
@@ -579,6 +584,8 @@ class _SearchResultsListState extends State<_SearchResultsList> {
       final allClubs = await _clubRepo.getActiveClubs();
       for (final c in allClubs) {
         clubMap[c.id!] = c.name;
+        _clubCategories[c.id!] = c.category;
+        _clubIsCustom[c.id!] = c.isCustom;
       }
       // 削除済みクラブは個別に取得
       for (final memo in results) {
@@ -659,8 +666,23 @@ class _SearchResultsListState extends State<_SearchResultsList> {
         final clubName = _clubNames[memo.clubId] ?? '不明なクラブ';
         final mediaItems = _buildMediaItems(memo.id);
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x0D000000), // rgba(0,0,0,0.05)
+                blurRadius: 20,
+                offset: Offset(0, 0),
+              ),
+              BoxShadow(
+                color: Color(0x0A007BFF), // rgba(0,123,255,0.04)
+                blurRadius: 40,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
           child: OpenContainer<bool>(
             transitionDuration: const Duration(milliseconds: 400),
             transitionType: ContainerTransitionType.fade,
@@ -674,6 +696,8 @@ class _SearchResultsListState extends State<_SearchResultsList> {
             onClosed: (_) => _search(),
             closedBuilder: (context, openContainer) => MemoCard(
               clubName: clubName,
+              clubCategory: _clubCategories[memo.clubId],
+              clubIsCustom: _clubIsCustom[memo.clubId] ?? false,
               mediaItems: mediaItems,
               distance: memo.distance != null ? '${memo.distance}yd' : null,
               shotShape: memo.shotShape,

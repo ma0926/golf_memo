@@ -29,7 +29,7 @@ GoRouter _buildRouter(String initialLocation) => GoRouter(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
     ),
-    // ホーム・レポートをシェルで包み、ボトムナビを固定する
+    // ボトムナビ共有シェル（ホーム・レポート・検索・設定）
     StatefulShellRoute.indexedStack(
       pageBuilder: (context, state, navigationShell) => CustomTransitionPage(
         key: state.pageKey,
@@ -39,22 +39,38 @@ GoRouter _buildRouter(String initialLocation) => GoRouter(
         transitionsBuilder: (_, __, ___, child) => child,
       ),
       branches: [
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/home',
-              builder: (context, state) => const MemoListScreen(),
-            ),
-          ],
-        ),
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/report',
-              builder: (context, state) => const ReportScreen(),
-            ),
-          ],
-        ),
+        StatefulShellBranch(routes: [
+          GoRoute(path: '/home', builder: (_, __) => const MemoListScreen()),
+        ]),
+        StatefulShellBranch(routes: [
+          GoRoute(path: '/report', builder: (_, __) => const ReportScreen()),
+        ]),
+        StatefulShellBranch(routes: [
+          GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
+        ]),
+        StatefulShellBranch(routes: [
+          GoRoute(
+            path: '/settings',
+            builder: (_, __) => const SettingsScreen(),
+            routes: [
+              GoRoute(
+                path: 'clubs',
+                builder: (_, __) => const ClubSettingsScreen(),
+                routes: [
+                  GoRoute(path: 'new', builder: (_, __) => const CustomClubScreen()),
+                  GoRoute(
+                    path: ':clubId/edit',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['clubId']!);
+                      return CustomClubScreen(clubId: id);
+                    },
+                  ),
+                ],
+              ),
+              GoRoute(path: 'terms', builder: (_, __) => const TermsScreen()),
+            ],
+          ),
+        ]),
       ],
     ),
     // 記録作成（下からスライドアップ・:idより先に定義する必要あり）
@@ -104,63 +120,6 @@ GoRouter _buildRouter(String initialLocation) => GoRouter(
       builder: (context, state) {
         final id = int.parse(state.pathParameters['id']!);
         return MemoDetailScreen(memoId: id);
-      },
-    ),
-    // 検索（Container Transform: スケール＋フェード）
-    GoRoute(
-      path: '/search',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const SearchScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
-          return FadeTransition(
-            opacity: curved,
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.92, end: 1.0).animate(curved),
-              child: child,
-            ),
-          );
-        },
-      ),
-    ),
-    // 設定（下からスライドイン）
-    GoRoute(
-      parentNavigatorKey: _rootNavigatorKey,
-      path: '/settings',
-      pageBuilder: (context, state) => CustomTransitionPage(
-        child: const SettingsScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 1),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
-            child: child,
-          );
-        },
-      ),
-    ),
-    // 練習するクラブ
-    GoRoute(
-      path: '/settings/clubs',
-      builder: (context, state) => const ClubSettingsScreen(),
-    ),
-    // 規約・ライセンス
-    GoRoute(
-      path: '/settings/terms',
-      builder: (context, state) => const TermsScreen(),
-    ),
-    // カスタムクラブ新規作成（:clubId より先に定義する必要あり）
-    GoRoute(
-      path: '/settings/clubs/new',
-      builder: (context, state) => const CustomClubScreen(),
-    ),
-    // カスタムクラブ編集
-    GoRoute(
-      path: '/settings/clubs/:clubId/edit',
-      builder: (context, state) {
-        final id = int.parse(state.pathParameters['clubId']!);
-        return CustomClubScreen(clubId: id);
       },
     ),
   ],
@@ -260,7 +219,7 @@ class _ScaffoldWithNav extends StatelessWidget {
             child: SafeArea(
               top: false,
               child: SizedBox(
-                height: 49, // iOS標準タブバー高さ
+                height: 80,
                 child: Row(
                 children: [
                   Expanded(
@@ -288,36 +247,22 @@ class _ScaffoldWithNav extends StatelessWidget {
                   Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTap: () => Navigator.of(context, rootNavigator: true).push(
-                        PageRouteBuilder(
-                          pageBuilder: (_, __, ___) => const SearchScreen(),
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
-                          transitionsBuilder: (_, __, ___, child) => child,
-                        ),
-                      ),
-                      child: const _NavItem(
+                      onTap: () => navigationShell.goBranch(2),
+                      child: _NavItem(
                         icon: 'assets/icons/Icon Button-1.svg',
                         label: '検索',
-                        selected: false,
+                        selected: navigationShell.currentIndex == 2,
                       ),
                     ),
                   ),
                   Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTap: () => Navigator.of(context, rootNavigator: true).push(
-                        PageRouteBuilder(
-                          pageBuilder: (_, __, ___) => const SettingsScreen(),
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
-                          transitionsBuilder: (_, __, ___, child) => child,
-                        ),
-                      ),
-                      child: const _NavItem(
+                      onTap: () => navigationShell.goBranch(3),
+                      child: _NavItem(
                         icon: 'assets/icons/Icon Button.svg',
                         label: '設定',
-                        selected: false,
+                        selected: navigationShell.currentIndex == 3,
                       ),
                     ),
                   ),
@@ -354,8 +299,8 @@ class _NavItem extends StatelessWidget {
         children: [
           SvgPicture.asset(
             icon,
-            width: 25,
-            height: 25,
+            width: 24,
+            height: 24,
             colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
           ),
           const SizedBox(height: 3),

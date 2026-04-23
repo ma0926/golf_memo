@@ -9,7 +9,7 @@ class AppColors {
   // Figma: Primary/Middle
   static const Color primaryMiddle   = Color(0xFF4B5E96);
   // Figma: Accent
-  static const Color accent          = Color(0xFF007BFF);
+  static const Color accent          = Color(0xFF3D6B8A);
   // Figma: Colors/Red（Destructive）
   static const Color destructive     = Color(0xFFFF3B30);
 
@@ -29,7 +29,7 @@ class AppColors {
   // Figma: Background/Ex-Low
   static const Color backgroundExLow = Color(0xFFFCFCFD);
   // Figma: Background/Low
-  static const Color background      = Color(0xFFF6F7F9);
+  static const Color background      = Color(0xFFF0F2F5);
   // Figma: Background/Middle
   static const Color backgroundMiddle = Color(0xFFE6EAEE);
   // Figma: Backgrounds/Primary（カード・シート・入力エリア）

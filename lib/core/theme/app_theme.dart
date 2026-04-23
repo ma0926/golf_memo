@@ -8,8 +8,7 @@ class AppTheme {
   static ThemeData get light => ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-        // iOSではSF Pro（英字）とHiragino Sans（日本語）がシステムで自動切替されます
-        fontFamily: 'Hiragino Sans',
+        // JP styles explicitly set 'Hiragino Sans'; EN styles omit fontFamily to use SF Pro
         tabBarTheme: const TabBarThemeData(
           indicator: UnderlineTabIndicator(
             borderSide: BorderSide(color: AppColors.primary, width: 2.0),

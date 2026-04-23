@@ -1044,11 +1044,14 @@ class _ChipSelector extends StatelessWidget {
             ? const EdgeInsets.fromLTRB(4, 8, 4, 8)
             : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.white,
+          color: isSelected ? AppColors.accent : const Color(0x8CFFFFFF),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFD0D7DE),
+            color: isSelected ? AppColors.accent : const Color(0xCCFFFFFF),
           ),
+          boxShadow: isSelected
+              ? const [BoxShadow(color: Color(0x403D6B8A), blurRadius: 12, offset: Offset(0, 4))]
+              : null,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1062,7 +1065,7 @@ class _ChipSelector extends StatelessWidget {
                 colorFilter: (isSelected && opt.svgPathFilled != null)
                     ? null
                     : ColorFilter.mode(
-                        isSelected ? Colors.white : AppColors.textPlaceholder,
+                        isSelected ? Colors.white : const Color(0xFF6B7280),
                         BlendMode.srcIn,
                       ),
               ),
@@ -1073,7 +1076,7 @@ class _ChipSelector extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: AppTypography.jpMMedium.copyWith(
                 fontSize: 14,
-                color: isSelected ? Colors.white : AppColors.textPlaceholder,
+                color: isSelected ? Colors.white : const Color(0xFF6B7280),
               ),
             ),
           ],

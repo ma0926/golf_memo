@@ -244,9 +244,12 @@ class _ReportScreenState extends State<ReportScreen>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: AppColors.primary),
+                  color: AppColors.accent,
+                  border: Border.all(color: AppColors.accent),
                   borderRadius: BorderRadius.circular(999),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x403D6B8A), blurRadius: 12, offset: Offset(0, 4)),
+                  ],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -254,14 +257,14 @@ class _ReportScreenState extends State<ReportScreen>
                     Text(
                       _selectedClub?.name ?? '—',
                       style: AppTypography.jpSMedium.copyWith(
-                        color: AppColors.textPrimary,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(width: 4),
                     const Icon(
                       Icons.keyboard_arrow_down,
                       size: 16,
-                      color: AppColors.textPrimary,
+                      color: Colors.white,
                     ),
                   ],
                 ),
@@ -357,7 +360,7 @@ class _ClubDistanceTable extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${avg.round()}y',
+                  '${avg.round()}yd',
                   style: AppTypography.enMMedium.copyWith(
                     color: AppColors.textPrimary,
                   ),
@@ -714,12 +717,12 @@ class _DistanceChart extends StatelessWidget {
             ),
             belowBarData: BarAreaData(
               show: true,
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.accent.withOpacity(0.2),
-                  AppColors.accent.withOpacity(0.0),
+                  Color(0xFFB1D9F4),       // #B1D9F4
+                  Color(0x08EBF2F8),       // rgba(235,242,248,0.03)
                 ],
               ),
             ),

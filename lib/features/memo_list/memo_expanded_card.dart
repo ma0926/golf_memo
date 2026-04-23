@@ -9,8 +9,9 @@ import '../../data/models/practice_memo.dart';
 import '../../data/repositories/club_repository.dart';
 import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
+import '../../core/constants/app_constants.dart';
 import '../../shared/widgets/media_grid.dart';
-import '../../shared/widgets/memo_meta_row.dart';
+import '../../shared/widgets/memo_card.dart' show ClubBadge;
 import '../../shared/widgets/sheet_drag_handle.dart';
 import '../memo_edit/memo_edit_screen.dart';
 
@@ -19,17 +20,42 @@ import '../memo_edit/memo_edit_screen.dart';
 class MemoExpandedCard extends StatefulWidget {
   final PracticeMemo memo;
   final String clubName;
+  final String? clubCategory;
+  final bool clubIsCustom;
   final VoidCallback? onChanged;
 
   const MemoExpandedCard({
     super.key,
     required this.memo,
     required this.clubName,
+    this.clubCategory,
+    this.clubIsCustom = false,
     this.onChanged,
   });
 
   @override
   State<MemoExpandedCard> createState() => _MemoExpandedCardState();
+}
+
+class _MetaChip extends StatelessWidget {
+  final String label;
+  const _MetaChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF2F3F5)),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.jpSMedium.copyWith(color: const Color(0xFF2F5269)),
+      ),
+    );
+  }
 }
 
 class _MemoExpandedCardState extends State<MemoExpandedCard>
@@ -40,6 +66,8 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
 
   late PracticeMemo _memo;
   late String _clubName;
+  String? _clubCategory;
+  bool _clubIsCustom = false;
   List<Media> _mediaList = [];
   String _docsPath = '';
   late bool _isFavorite;
@@ -53,6 +81,8 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
     super.initState();
     _memo = widget.memo;
     _clubName = widget.clubName;
+    _clubCategory = widget.clubCategory;
+    _clubIsCustom = widget.clubIsCustom;
     _isFavorite = widget.memo.isFavorite;
     _loadMedia();
     // カードの拡大アニメーション（400ms）が終わってからコンテンツをフェードイン
@@ -70,6 +100,8 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
     setState(() {
       _memo = memo;
       _clubName = club?.name ?? '不明なクラブ';
+      _clubCategory = club?.category;
+      _clubIsCustom = club?.isCustom ?? false;
       _isFavorite = memo.isFavorite;
       _mediaList = media;
     });
@@ -253,37 +285,87 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
                 ),
               ),
               const SizedBox(height: 16),
-              Hero(
-                tag: 'memo_club_${_memo.id}',
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: Text(
-                    _clubName,
-                    style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
+              // ヘッダー: バッジ + クラブ名 + 飛距離
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ClubBadge(
+                    name: _clubName,
+                    category: _clubCategory,
+                    isCustom: _clubIsCustom,
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _clubName,
+                        style: AppTypography.jpSMedium.copyWith(
+                          color: AppColors.textMedium,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            memo.distance != null ? '${memo.distance}' : '--',
+                            style: AppTypography.enHeader4.copyWith(
+                              color: memo.distance != null
+                                  ? AppColors.textPrimary
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            'yd',
+                            style: AppTypography.enHeader4.copyWith(
+                              color: memo.distance != null
+                                  ? AppColors.textPrimary
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
+              // 本文
               if (memo.body != null && memo.body!.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 Text(
                   memo.body!.trim(),
-                  style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary, letterSpacing: 0, wordSpacing: 0),
+                  style: AppTypography.jpMRegular.copyWith(
+                    color: AppColors.textPrimary,
+                    letterSpacing: 0,
+                    wordSpacing: 0,
+                  ),
                 ),
               ],
+              // メディア
               if (_mediaList.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Hero(
-                  tag: 'memo_images_${_memo.id}',
-                  child: MediaGrid(items: MediaGrid.fromMedia(_mediaList, _docsPath)),
-                ),
+                MediaGrid(items: MediaGrid.fromMedia(_mediaList, _docsPath)),
               ],
-              if (memo.distance != null || memo.shotShape != null || memo.condition != null || memo.wind != null) ...[
+              // メタチップ
+              if (memo.shotShape != null || memo.condition != null || memo.wind != null) ...[
                 const SizedBox(height: 16),
-                MemoMetaRow(
-                  condition: memo.condition,
-                  distance: memo.distance,
-                  shotShape: memo.shotShape,
-                  wind: memo.wind,
+                Wrap(
+                  spacing: 2,
+                  runSpacing: 2,
+                  children: [
+                    if (memo.shotShape != null)
+                      _MetaChip(label: AppConstants.shotShapeLabels[memo.shotShape] ?? memo.shotShape!),
+                    if (memo.condition != null)
+                      _MetaChip(label: AppConstants.conditionLabels[memo.condition] ?? memo.condition!),
+                    if (memo.wind != null)
+                      _MetaChip(label: '風${AppConstants.windLabels[memo.wind] ?? memo.wind!}'),
+                  ],
                 ),
               ],
             ],

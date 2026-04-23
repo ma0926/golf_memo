@@ -107,6 +107,8 @@ class _AllMemosTabState extends State<_AllMemosTab> {
 
   List<PracticeMemo> _memos = [];
   Map<int, String> _clubNames = {};
+  Map<int, String> _clubCategories = {};
+  Map<int, bool> _clubIsCustom = {};
   Map<int, List<Media>> _memoMediaList = {};
   String _docsPath = '';
   bool _isLoading = true;
@@ -145,6 +147,8 @@ class _AllMemosTabState extends State<_AllMemosTab> {
     setState(() {
       _memos = memos;
       _clubNames = {for (final c in clubs) c.id!: c.name};
+      _clubCategories = {for (final c in clubs) c.id!: c.category};
+      _clubIsCustom = {for (final c in clubs) c.id!: c.isCustom};
       _memoMediaList = memoMediaMap;
       _docsPath = docsDir.path;
       _isLoading = false;
@@ -216,8 +220,23 @@ class _AllMemosTabState extends State<_AllMemosTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _DateHeader(date: group.date),
-              ...group.memos.map((memo) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              ...group.memos.map((memo) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(24)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x0D000000), // rgba(0,0,0,0.05)
+                          blurRadius: 20,
+                          offset: Offset(0, 0),
+                        ),
+                        BoxShadow(
+                          color: Color(0x0A007BFF), // rgba(0,123,255,0.04)
+                          blurRadius: 40,
+                          offset: Offset(0, 8),
+                        ),
+                      ],
+                    ),
                     child: OpenContainer<bool>(
                       transitionDuration: const Duration(milliseconds: 400),
                       transitionType: ContainerTransitionType.fade,
@@ -237,6 +256,8 @@ class _AllMemosTabState extends State<_AllMemosTab> {
                         duration: const Duration(milliseconds: 160),
                         child: MemoCard(
                           clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                          clubCategory: _clubCategories[memo.clubId],
+                          clubIsCustom: _clubIsCustom[memo.clubId] ?? false,
                           mediaItems: _buildMediaItems(memo.id),
                           distance: memo.distance != null ? '${memo.distance}yd' : null,
                           shotShape: memo.shotShape,
@@ -254,6 +275,8 @@ class _AllMemosTabState extends State<_AllMemosTab> {
                       openBuilder: (context, _) => MemoExpandedCard(
                         memo: memo,
                         clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                        clubCategory: _clubCategories[memo.clubId],
+                        clubIsCustom: _clubIsCustom[memo.clubId] ?? false,
                       ),
                     ),
                   )),
@@ -293,7 +316,7 @@ class _DateHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(32, 12, 24, 8),
       child: Text(
         _label(),
-        style: AppTypography.jpSubHeader.copyWith(color: AppColors.textMedium),
+        style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium),
       ),
     );
   }
@@ -315,6 +338,8 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
 
   List<PracticeMemo> _memos = [];
   Map<int, String> _clubNames = {};
+  Map<int, String> _clubCategories = {};
+  Map<int, bool> _clubIsCustom = {};
   Map<int, List<Media>> _memoMediaList = {};
   String _docsPath = '';
   bool _isLoading = true;
@@ -345,6 +370,8 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
     setState(() {
       _memos = memos;
       _clubNames = {for (final c in clubs) c.id!: c.name};
+      _clubCategories = {for (final c in clubs) c.id!: c.category};
+      _clubIsCustom = {for (final c in clubs) c.id!: c.isCustom};
       _memoMediaList = memoMediaMap;
       _docsPath = docsDir.path;
       _isLoading = false;
@@ -415,8 +442,23 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _DateHeader(date: group.date),
-              ...group.memos.map((memo) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              ...group.memos.map((memo) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(24)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x0D000000), // rgba(0,0,0,0.05)
+                          blurRadius: 20,
+                          offset: Offset(0, 0),
+                        ),
+                        BoxShadow(
+                          color: Color(0x0A007BFF), // rgba(0,123,255,0.04)
+                          blurRadius: 40,
+                          offset: Offset(0, 8),
+                        ),
+                      ],
+                    ),
                     child: OpenContainer<bool>(
                       transitionDuration: const Duration(milliseconds: 400),
                       transitionType: ContainerTransitionType.fade,
@@ -436,6 +478,8 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
                         duration: const Duration(milliseconds: 160),
                         child: MemoCard(
                           clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                          clubCategory: _clubCategories[memo.clubId],
+                          clubIsCustom: _clubIsCustom[memo.clubId] ?? false,
                           mediaItems: _buildMediaItems(memo.id),
                           distance: memo.distance != null ? '${memo.distance}yd' : null,
                           shotShape: memo.shotShape,
@@ -453,6 +497,8 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
                       openBuilder: (context, _) => MemoExpandedCard(
                         memo: memo,
                         clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                        clubCategory: _clubCategories[memo.clubId],
+                        clubIsCustom: _clubIsCustom[memo.clubId] ?? false,
                       ),
                     ),
                   )),
