@@ -52,7 +52,7 @@ class _MetaChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: AppTypography.jpSMedium.copyWith(color: const Color(0xFF2F5269)),
+        style: AppTypography.jpSMedium.copyWith(color: AppColors.textPrimary),
       ),
     );
   }

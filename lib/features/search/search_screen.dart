@@ -1,6 +1,7 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
@@ -146,7 +147,7 @@ class _SearchScreenState extends State<SearchScreen> {
         selected: _selectedDate,
         onSelect: (value) {
           setState(() => _selectedDate = value);
-          Navigator.pop(context);
+          Navigator.of(context, rootNavigator: true).pop();
         },
       ),
       showButtons: false,
@@ -201,6 +202,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       enableDrag: true,
       backgroundColor: Colors.white,
@@ -277,7 +279,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
+                    onTap: () => context.go('/home'),
                     child: Text(
                       'キャンセル',
                       style: AppTypography.jpMMedium.copyWith(color: AppColors.textMedium),
@@ -398,9 +400,9 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isActive = isSelected;
-    final bgColor = isActive ? AppColors.accent : const Color(0x8CFFFFFF);
-    final textColor = isActive ? Colors.white : const Color(0xFF6B7280);
-    final borderColor = isActive ? AppColors.accent : const Color(0xCCFFFFFF);
+    final bgColor = isActive ? const Color(0xFFC8DDEB) : Colors.white;
+    final textColor = isActive ? AppColors.textPrimary : const Color(0xFF6B7280);
+    final borderColor = isActive ? Colors.transparent : AppColors.borderHigh;
 
     final showCheck = isToggle && isSelected;
     final hasTrailingIcon = showCheck || showArrow;
@@ -411,39 +413,35 @@ class _FilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 32,
-        padding: EdgeInsets.fromLTRB(16, 4, hasTrailingIcon ? 10 : 16, 4),
+        padding: EdgeInsets.fromLTRB(12, 6, hasTrailingIcon ? 8 : 12, 6),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: borderColor),
-          boxShadow: isActive
-              ? const [BoxShadow(color: Color(0x403D6B8A), blurRadius: 12, offset: Offset(0, 4))]
-              : null,
+          borderRadius: BorderRadius.circular(12),
+          border: isActive ? null : Border.all(color: borderColor),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
               displayLabel,
-              style: AppTypography.jpSMedium.copyWith(color: textColor),
+              style: AppTypography.jpSMedium.copyWith(
+                color: textColor,
+                height: 1,
+              ),
             ),
             if (showCheck) ...[
               const SizedBox(width: 4),
               SvgPicture.asset(
                 'assets/icons/filter_check.svg',
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
+                colorFilter: ColorFilter.mode(textColor, BlendMode.srcIn),
               ),
             ],
             if (showArrow) ...[
-              const SizedBox(width: 4),
-              SvgPicture.asset(
-                'assets/icons/filter_arrow_down.svg',
-                width: 21,
-                height: 21,
-                colorFilter: ColorFilter.mode(textColor, BlendMode.srcIn),
-              ),
+              const SizedBox(width: 2),
+              Icon(Icons.keyboard_arrow_down, size: 18, color: textColor),
             ],
           ],
         ),
@@ -901,70 +899,58 @@ class _DistanceFilterContentState extends State<_DistanceFilterContent> {
             children: [
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: AppColors.background,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFF2F3F5)),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _minCtrl,
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.right,
-                          style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text('yd', style: AppTypography.enMMedium.copyWith(color: AppColors.textPlaceholder)),
-                    ],
+                  child: TextField(
+                    controller: _minCtrl,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.right,
+                    style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      isDense: true,
+                      hintText: '',
+                    ),
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
+              Text('yd', style: AppTypography.enMMedium.copyWith(color: AppColors.textPlaceholder)),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 12),
                 child: Text('〜', style: TextStyle(fontSize: 16, color: AppColors.textMedium)),
               ),
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: AppColors.background,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFF2F3F5)),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _maxCtrl,
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.right,
-                          style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text('yd', style: AppTypography.enMMedium.copyWith(color: AppColors.textPlaceholder)),
-                    ],
+                  child: TextField(
+                    controller: _maxCtrl,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.right,
+                    style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      isDense: true,
+                      hintText: '',
+                    ),
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
+              Text('yd', style: AppTypography.enMMedium.copyWith(color: AppColors.textPlaceholder)),
             ],
           ),
         ),
@@ -1003,13 +989,12 @@ class _ConditionFilterContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final entries = AppConstants.conditionLabels.entries.toList();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 48),
+      child: Row(
         children: [
           for (int i = 0; i < entries.length; i++) ...[
-            _buildChip(context, entries[i]),
-            if (i < entries.length - 1) const SizedBox(height: 8),
+            Expanded(child: _buildChip(context, entries[i])),
+            if (i < entries.length - 1) const SizedBox(width: 8),
           ],
         ],
       ),
@@ -1027,37 +1012,19 @@ class _ConditionFilterContent extends StatelessWidget {
         Navigator.pop(context);
       },
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFD0D7DE),
-          ),
+          color: isSelected ? const Color(0xFFC8DDEB) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: isSelected ? null : Border.all(color: AppColors.borderHigh),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (iconPath != null) ...[
-              SvgPicture.asset(
-                iconPath,
-                width: 20,
-                height: 20,
-                colorFilter: isSelected
-                    ? null
-                    : const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-              ),
-              const SizedBox(width: 8),
-            ],
-            Text(
-              e.value,
-              style: TextStyle(
-                fontSize: 14,
-                color: isSelected ? Colors.white : AppColors.textPrimary,
-              ),
+        child: Center(
+          child: Text(
+            e.value,
+            style: AppTypography.jpSMedium.copyWith(
+              color: isSelected ? AppColors.textPrimary : const Color(0xFF6B7280),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -1102,37 +1069,20 @@ class _ShotShapeFilterContentState extends State<_ShotShapeFilterContent> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFD0D7DE),
-          ),
+          color: isSelected ? const Color(0xFFC8DDEB) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: isSelected ? null : Border.all(color: AppColors.borderHigh),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              'assets/icons/${e.key}.svg',
-              width: 20,
-              height: 20,
-              colorFilter: ColorFilter.mode(
-                isSelected ? Colors.white : AppColors.textSecondary,
-                BlendMode.srcIn,
-              ),
+        child: Center(
+          child: Text(
+            e.value,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.jpSMedium.copyWith(
+              color: isSelected ? AppColors.textPrimary : const Color(0xFF6B7280),
             ),
-            const SizedBox(height: 4),
-            Text(
-              e.value,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 14,
-                color: isSelected ? Colors.white : AppColors.textPrimary,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

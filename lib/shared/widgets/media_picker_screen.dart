@@ -191,7 +191,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
               child: Text(
                 '完了($totalSelected)',
                 style: AppTypography.jpMMedium.copyWith(
-                  color: AppColors.accent,
+                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -293,9 +293,9 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
                                 height: 24,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: isSelected ? AppColors.accent : Colors.transparent,
+                                  color: isSelected ? AppColors.primary : Colors.transparent,
                                   border: Border.all(
-                                    color: isSelected ? AppColors.accent : Colors.white,
+                                    color: isSelected ? AppColors.primary : Colors.white,
                                     width: 1.5,
                                   ),
                                 ),
@@ -379,15 +379,15 @@ class _ImagePreviewPage extends StatelessWidget {
                       ? () => Navigator.of(context).pop(!isSelected)
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isSelected ? Colors.white : AppColors.accent,
-                    foregroundColor: isSelected ? AppColors.accent : Colors.white,
+                    backgroundColor: isSelected ? Colors.white : AppColors.primary,
+                    foregroundColor: isSelected ? AppColors.primary : Colors.white,
                     disabledBackgroundColor: Colors.white24,
                     disabledForegroundColor: Colors.white54,
                     minimumSize: const Size(double.infinity, 52),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(26),
                       side: isSelected
-                          ? const BorderSide(color: AppColors.accent)
+                          ? const BorderSide(color: AppColors.primary)
                           : BorderSide.none,
                     ),
                     elevation: 0,
@@ -509,14 +509,14 @@ class _VideoPreviewPageState extends State<_VideoPreviewPage> {
                       Navigator.of(context).pop(!widget.isSelected),
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        widget.isSelected ? Colors.white : AppColors.accent,
+                        widget.isSelected ? Colors.white : AppColors.primary,
                     foregroundColor:
-                        widget.isSelected ? AppColors.accent : Colors.white,
+                        widget.isSelected ? AppColors.primary : Colors.white,
                     minimumSize: const Size(double.infinity, 52),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(26),
                       side: widget.isSelected
-                          ? const BorderSide(color: AppColors.accent)
+                          ? const BorderSide(color: AppColors.primary)
                           : BorderSide.none,
                     ),
                     elevation: 0,

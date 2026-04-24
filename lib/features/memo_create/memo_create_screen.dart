@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -187,7 +188,7 @@ class _ClubSelectPageState extends State<_ClubSelectPage> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
-                                  color: AppColors.accent,
+                                  color: AppColors.primary,
                                 ),
                               ),
                             ),
@@ -253,6 +254,8 @@ class _MemoInputPage extends StatefulWidget {
 }
 
 class _MemoInputPageState extends State<_MemoInputPage> {
+  late int _clubId;
+  late String _clubName;
   DateTime _selectedDate = DateTime.now();
   final _bodyController = TextEditingController();
   final _distanceController = TextEditingController();
@@ -277,8 +280,37 @@ class _MemoInputPageState extends State<_MemoInputPage> {
   @override
   void initState() {
     super.initState();
+    _clubId = widget.clubId;
+    _clubName = widget.clubName;
     _bodyController.addListener(() => setState(() {}));
     _distanceController.addListener(() => setState(() {}));
+  }
+
+  void _showClubSelect() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (sheetContext) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollController) => _ClubSelectSheet(
+          scrollController: scrollController,
+          onClubSelected: (id, name) {
+            Navigator.pop(sheetContext);
+            if (mounted) setState(() { _clubId = id; _clubName = name; });
+          },
+          onOpenSettings: () {
+            Navigator.pop(sheetContext);
+            Future.microtask(() { if (mounted) context.push('/settings'); });
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -313,7 +345,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
             Align(
               alignment: Alignment.centerRight,
               child: CupertinoButton(
-                child: const Text('完了', style: TextStyle(color: AppColors.accent)),
+                child: const Text('完了', style: TextStyle(color: AppColors.primary)),
                 onPressed: () => Navigator.pop(modalContext),
               ),
             ),
@@ -477,7 +509,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
 
       // メモ保存
       final memo = PracticeMemo(
-        clubId: widget.clubId,
+        clubId: _clubId,
         practicedAt: _selectedDate,
         body: _bodyController.text.trimRight().isEmpty ? null : _bodyController.text.trimRight(),
         condition: _condition,
@@ -562,11 +594,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
   @override
   Widget build(BuildContext context) {
     final collapsedChips = <Widget>[
-      if (!_openSections.contains('distance'))
-        _CollapsedChip(label: '飛距離', onTap: () {
-          setState(() => _openSections.add('distance'));
-          Future.microtask(() => _distanceFocusNode.requestFocus());
-        }),
       if (!_openSections.contains('shotShape'))
         _CollapsedChip(label: '球筋', onTap: () => setState(() => _openSections.add('shotShape'))),
       if (!_openSections.contains('condition'))
@@ -580,26 +607,21 @@ class _MemoInputPageState extends State<_MemoInputPage> {
       appBar: AppBar(
         backgroundColor: AppColors.backgroundExLow,
         elevation: 0,
-        toolbarHeight: 56 + 8,
+        toolbarHeight: 56,
         automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: SvgPicture.asset(
-            'assets/icons/chevron_left.svg',
-            width: 24,
-            height: 24,
-            colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-          ),
+          icon: SvgPicture.asset('assets/icons/close.svg', width: 30, height: 30),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16, top: 8, bottom: 6),
+            padding: const EdgeInsets.only(right: 16),
             child: AppPrimaryButton(
               label: '保存',
               onPressed: _saveMemo,
               isLoading: _isSaving,
               icon: const Icon(Icons.check_rounded, size: 18, color: Colors.white),
-              color: AppColors.accent,
+              color: AppColors.primary,
               borderRadius: 24,
               fullWidth: false,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -643,9 +665,66 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                           ),
                           const SizedBox(height: 16),
                           // クラブ名
-                          Text(
-                            widget.clubName,
-                            style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
+                          GestureDetector(
+                            onTap: _showClubSelect,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _clubName,
+                                  style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
+                                ),
+                                const SizedBox(width: 6),
+                                SvgPicture.asset('assets/icons/edit_pen.svg', width: 20, height: 20),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // 飛距離（固定表示）
+                          Row(
+                            children: [
+                              Text(
+                                '飛距離',
+                                style: AppTypography.jpHeader4.copyWith(
+                                  color: AppColors.textMedium,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const Spacer(),
+                              Container(
+                                width: 100,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.background,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: TextField(
+                                  controller: _distanceController,
+                                  focusNode: _distanceFocusNode,
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.right,
+                                  style: AppTypography.enHeader4.copyWith(
+                                    color: AppColors.textPrimary,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    contentPadding: EdgeInsets.zero,
+                                    isDense: true,
+                                    hintText: '',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'yd',
+                                style: AppTypography.enMMedium.copyWith(
+                                  color: AppColors.textPlaceholder,
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 8),
                         ],
@@ -668,8 +747,8 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                       ),
                     ),
                     _buildCreateMediaGrid(),
-                    if (_openSections.contains('distance'))
-                      _buildDistanceCard(),
+                    if (_openSections.contains('shotShape') || _openSections.contains('condition') || _openSections.contains('wind'))
+                      const SizedBox(height: 16),
                     if (_openSections.contains('shotShape'))
                       _buildSectionCard(
                         label: '球筋',
@@ -732,7 +811,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: AppColors.background,
+                                color: AppColors.backgroundMiddle,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Center(
@@ -867,13 +946,6 @@ class _MemoInputPageState extends State<_MemoInputPage> {
     );
   }
 
-  Widget _buildDistanceCard() {
-    return AppDistanceInput(
-      controller: _distanceController,
-      focusNode: _distanceFocusNode,
-      onClose: () => setState(() => _openSections.remove('distance')),
-    );
-  }
 }
 
 // ──────────────────────────────────────────────────────
@@ -892,52 +964,24 @@ class _ChipSelector extends StatelessWidget {
     this.useGridLayout = false,
   });
 
-  Widget _buildChip(({String value, String label, String? svgPath, String? svgPathFilled}) opt, {bool compact = false}) {
+  Widget _buildChip(({String value, String label, String? svgPath, String? svgPathFilled}) opt) {
     final isSelected = selected == opt.value;
-    final iconPath = isSelected && opt.svgPathFilled != null ? opt.svgPathFilled! : opt.svgPath;
     return GestureDetector(
       onTap: () => onSelected(isSelected ? null : opt.value),
       child: Container(
-        padding: compact
-            ? const EdgeInsets.fromLTRB(4, 8, 4, 8)
-            : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.accent : const Color(0x8CFFFFFF),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? AppColors.accent : const Color(0xCCFFFFFF),
-          ),
-          boxShadow: isSelected
-              ? const [BoxShadow(color: Color(0x403D6B8A), blurRadius: 12, offset: Offset(0, 4))]
-              : null,
+          color: isSelected ? const Color(0xFFC8DDEB) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: isSelected ? null : Border.all(color: AppColors.borderHigh),
+          boxShadow: null,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (iconPath != null) ...[
-              SvgPicture.asset(
-                iconPath,
-                width: 20,
-                height: 20,
-                colorFilter: (isSelected && opt.svgPathFilled != null)
-                    ? null
-                    : ColorFilter.mode(
-                        isSelected ? Colors.white : const Color(0xFF6B7280),
-                        BlendMode.srcIn,
-                      ),
-              ),
-              const SizedBox(height: 4),
-            ],
-            Text(
-              opt.label,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 14,
-                color: isSelected ? Colors.white : const Color(0xFF6B7280),
-              ),
-            ),
-          ],
+        child: Text(
+          opt.label,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.jpSMedium.copyWith(
+            color: isSelected ? AppColors.textPrimary : const Color(0xFF6B7280),
+          ),
         ),
       ),
     );
@@ -947,38 +991,13 @@ class _ChipSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     if (useGridLayout && options.length == 5) {
       // 3＋2のグリッドレイアウト（球筋用）
-      return Column(
-        children: [
-          Row(
-            children: [
-              Expanded(child: _buildChip(options[0], compact: true)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildChip(options[1], compact: true)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildChip(options[2], compact: true)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(child: _buildChip(options[3], compact: true)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildChip(options[4], compact: true)),
-            ],
-          ),
-        ],
-      );
     }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        children: [
-          for (int i = 0; i < options.length; i++) ...[
-            Expanded(child: _buildChip(options[i])),
-            if (i < options.length - 1) const SizedBox(width: 8),
-          ],
-        ],
-      ),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final opt in options) _buildChip(opt),
+      ],
     );
   }
 }
@@ -997,12 +1016,11 @@ class _CollapsedChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 36,
         margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.only(left: 4, right: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: AppColors.backgroundMiddle,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFFE1E1E5)),
         ),
         child: Row(
@@ -1081,6 +1099,144 @@ class _MediaThumbnail extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────
+// クラブ選択シート
+// ──────────────────────────────────────────────────────
+class _ClubSelectSheet extends StatefulWidget {
+  final void Function(int clubId, String clubName) onClubSelected;
+  final VoidCallback? onOpenSettings;
+  final ScrollController? scrollController;
+
+  const _ClubSelectSheet({
+    required this.onClubSelected,
+    this.onOpenSettings,
+    this.scrollController,
+  });
+
+  @override
+  State<_ClubSelectSheet> createState() => _ClubSelectSheetState();
+}
+
+class _ClubSelectSheetState extends State<_ClubSelectSheet> {
+  final _clubRepo = ClubRepository();
+  List<Map<String, dynamic>> _clubGroups = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClubs();
+  }
+
+  Future<void> _loadClubs() async {
+    final clubs = await _clubRepo.getActiveOnClubs();
+    final grouped = <String, List<Club>>{};
+    for (final club in clubs) {
+      grouped.putIfAbsent(club.category, () => []).add(club);
+    }
+    setState(() {
+      _clubGroups = grouped.entries
+          .map((e) => {'category': e.key, 'clubs': e.value})
+          .toList();
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: SafeArea(
+        child: _isLoading
+            ? const SizedBox(
+                height: 200,
+                child: Center(child: CircularProgressIndicator()),
+              )
+            : ListView.builder(
+                controller: widget.scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _clubGroups.length + 2,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return Column(
+                      children: [
+                        const SheetDragHandle(),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                          child: SizedBox(
+                            height: 44,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Text(
+                                  'クラブを選択',
+                                  textAlign: TextAlign.center,
+                                  style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
+                                ),
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: GestureDetector(
+                                    onTap: () => Navigator.pop(context),
+                                    child: const Icon(Icons.close, color: AppColors.textPrimary),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  if (index == _clubGroups.length + 1) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 28),
+                      child: GestureDetector(
+                        onTap: widget.onOpenSettings,
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('クラブの設定を開く', style: TextStyle(fontSize: 14, color: Colors.blue)),
+                            SizedBox(width: 4),
+                            Icon(Icons.arrow_outward, size: 14, color: Colors.blue),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  final group = _clubGroups[index - 1];
+                  final clubs = group['clubs'] as List<Club>;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(top: index == 1 ? 0 : 16),
+                        child: SizedBox(
+                          height: 48,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              group['category'] as String,
+                              style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
+                            ),
+                          ),
+                        ),
+                      ),
+                      ...List.generate(clubs.length, (i) => AppListTile(
+                        title: clubs[i].name,
+                        onTap: () => widget.onClubSelected(clubs[i].id!, clubs[i].name),
+                      )),
+                    ],
+                  );
+                },
+              ),
+      ),
     );
   }
 }

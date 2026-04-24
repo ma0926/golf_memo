@@ -104,7 +104,6 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
       _existingMedia = media;
       _docsPath = docsDir.path;
       // 既に値が入っているセクションは最初から展開
-      if (memo.distance != null) _openSections.add('distance');
       if (memo.shotShape != null) _openSections.add('shotShape');
       if (memo.condition != null) _openSections.add('condition');
       if (memo.wind != null) _openSections.add('wind');
@@ -154,7 +153,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: CupertinoButton(
-                child: const Text('完了', style: TextStyle(color: AppColors.accent)),
+                child: const Text('完了', style: TextStyle(color: AppColors.primary)),
                 onPressed: () => Navigator.pop(modalContext),
               ),
             ),
@@ -479,11 +478,6 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
 
     // 未選択セクションのチップ（画面最下部に固定）
     final collapsedChips = <Widget>[
-      if (!_openSections.contains('distance'))
-        _CollapsedChip(label: '飛距離', onTap: () {
-          setState(() => _openSections.add('distance'));
-          Future.microtask(() => _distanceFocusNode.requestFocus());
-        }),
       if (!_openSections.contains('shotShape'))
         _CollapsedChip(label: '球筋', onTap: () => setState(() => _openSections.add('shotShape'))),
       if (!_openSections.contains('condition'))
@@ -511,7 +505,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
               onPressed: _saveChanges,
               isLoading: _isSaving,
               icon: const Icon(Icons.check_rounded, size: 18, color: Colors.white),
-              color: AppColors.accent,
+              color: AppColors.primary,
               borderRadius: 24,
               fullWidth: false,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -577,6 +571,52 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    // 飛距離（固定表示）
+                    Row(
+                      children: [
+                        Text(
+                          '飛距離',
+                          style: AppTypography.jpHeader4.copyWith(
+                            color: AppColors.textMedium,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          width: 100,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: TextField(
+                            controller: _distanceController,
+                            focusNode: _distanceFocusNode,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.right,
+                            style: AppTypography.enHeader4.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
+                              hintText: '',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'yd',
+                          style: AppTypography.enMMedium.copyWith(
+                            color: AppColors.textPlaceholder,
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 8),
                         ],
                       ),
@@ -599,10 +639,8 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildEditMediaGrid(),
-                    if (_openSections.contains('distance') || _openSections.contains('shotShape') || _openSections.contains('condition') || _openSections.contains('wind'))
+                    if (_openSections.contains('shotShape') || _openSections.contains('condition') || _openSections.contains('wind'))
                       const SizedBox(height: 16),
-                    if (_openSections.contains('distance'))
-                      _buildDistanceCard(),
                     if (_openSections.contains('shotShape'))
                       _buildSectionCard(
                         label: '球筋',
@@ -850,12 +888,11 @@ class _CollapsedChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 36,
         margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.only(left: 4, right: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: AppColors.backgroundMiddle,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFFE1E1E5)),
         ),
         child: Row(
@@ -1040,46 +1077,19 @@ class _ChipSelector extends StatelessWidget {
     return GestureDetector(
       onTap: () => onSelected(isSelected ? null : opt.value),
       child: Container(
-        padding: compact
-            ? const EdgeInsets.fromLTRB(4, 8, 4, 8)
-            : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.accent : const Color(0x8CFFFFFF),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? AppColors.accent : const Color(0xCCFFFFFF),
-          ),
-          boxShadow: isSelected
-              ? const [BoxShadow(color: Color(0x403D6B8A), blurRadius: 12, offset: Offset(0, 4))]
-              : null,
+          color: isSelected ? const Color(0xFFC8DDEB) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: isSelected ? null : Border.all(color: AppColors.borderHigh),
+          boxShadow: null,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (iconPath != null) ...[
-              SvgPicture.asset(
-                iconPath,
-                width: 20,
-                height: 20,
-                colorFilter: (isSelected && opt.svgPathFilled != null)
-                    ? null
-                    : ColorFilter.mode(
-                        isSelected ? Colors.white : const Color(0xFF6B7280),
-                        BlendMode.srcIn,
-                      ),
-              ),
-              const SizedBox(height: 4),
-            ],
-            Text(
-              opt.label,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.jpMMedium.copyWith(
-                fontSize: 14,
-                color: isSelected ? Colors.white : const Color(0xFF6B7280),
-              ),
-            ),
-          ],
+        child: Text(
+          opt.label,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.jpSMedium.copyWith(
+            color: isSelected ? AppColors.textPrimary : const Color(0xFF6B7280),
+          ),
         ),
       ),
     );
@@ -1089,39 +1099,13 @@ class _ChipSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     if (useGridLayout && options.length == 5) {
       // 3＋2のグリッドレイアウト（球筋用）
-      return Column(
-        children: [
-          Row(
-            children: [
-              Expanded(child: _buildChip(options[0], compact: true)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildChip(options[1], compact: true)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildChip(options[2], compact: true)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(child: _buildChip(options[3], compact: true)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildChip(options[4], compact: true)),
-            ],
-          ),
-        ],
-      );
     }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        children: [
-          for (int i = 0; i < options.length; i++) ...[
-            Expanded(child: _buildChip(options[i])),
-            if (i < options.length - 1) const SizedBox(width: 8),
-          ],
-        ],
-      ),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final opt in options) _buildChip(opt),
+      ],
     );
   }
 }

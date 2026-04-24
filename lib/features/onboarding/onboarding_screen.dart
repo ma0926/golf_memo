@@ -127,11 +127,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.add, size: 15, color: AppColors.accent),
+                          const Icon(Icons.add, size: 15, color: AppColors.primary),
                           const SizedBox(width: 4),
                           Text(
                             'カスタムクラブを追加',
-                            style: AppTypography.jpSRegular.copyWith(color: AppColors.accent),
+                            style: AppTypography.jpSRegular.copyWith(color: AppColors.primary),
                           ),
                         ],
                       ),

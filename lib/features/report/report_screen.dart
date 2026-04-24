@@ -244,12 +244,8 @@ class _ReportScreenState extends State<ReportScreen>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.accent,
-                  border: Border.all(color: AppColors.accent),
-                  borderRadius: BorderRadius.circular(999),
-                  boxShadow: const [
-                    BoxShadow(color: Color(0x403D6B8A), blurRadius: 12, offset: Offset(0, 4)),
-                  ],
+                  color: const Color(0xFFC8DDEB),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -257,14 +253,14 @@ class _ReportScreenState extends State<ReportScreen>
                     Text(
                       _selectedClub?.name ?? '—',
                       style: AppTypography.jpSMedium.copyWith(
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(width: 4),
                     const Icon(
                       Icons.keyboard_arrow_down,
                       size: 16,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),

@@ -43,8 +43,8 @@ class AppConstants {
 
   // 球筋の表示ラベル
   static const Map<String, String> shotShapeLabels = {
-    'draw':     'ドロー',
     'straight': 'ストレート',
+    'draw':     'ドロー',
     'fade':     'フェード',
     'hook':     'フック',
     'slice':    'スライス',

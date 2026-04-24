@@ -257,20 +257,15 @@ class _MetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.background, // #F0F2F5
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFF2F3F5)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: AppTypography.jpSMedium.copyWith(
-              color: const Color(0xFF2F5269),
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: AppTypography.jpSMedium.copyWith(
+          color: AppColors.textPrimary,
+        ),
       ),
     );
   }
