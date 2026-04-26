@@ -400,9 +400,9 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isActive = isSelected;
-    final bgColor = isActive ? const Color(0xFFC8DDEB) : Colors.white;
-    final textColor = isActive ? AppColors.textPrimary : const Color(0xFF6B7280);
-    final borderColor = isActive ? Colors.transparent : AppColors.borderHigh;
+    final bgColor = isActive ? AppColors.primary : Colors.white;
+    final textColor = isActive ? Colors.white : AppColors.textSecondary;
+    final borderColor = AppColors.borderHigh;
 
     final showCheck = isToggle && isSelected;
     final hasTrailingIcon = showCheck || showArrow;
@@ -417,7 +417,7 @@ class _FilterChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(12),
-          border: isActive ? null : Border.all(color: borderColor),
+          border: Border.all(color: borderColor),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -638,7 +638,7 @@ class _SearchResultsListState extends State<_SearchResultsList> {
     if (memoDay == today) return '今日';
     const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
     final w = weekdays[dt.weekday - 1];
-    return '${dt.year}年${dt.month}月${dt.day}日 ${w}曜日';
+    return '${dt.month}月${dt.day}日 ${w}曜日';
   }
 
   @override
@@ -1014,15 +1014,15 @@ class _ConditionFilterContent extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFC8DDEB) : Colors.white,
+          color: isSelected ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: isSelected ? null : Border.all(color: AppColors.borderHigh),
+          border: Border.all(color: AppColors.borderHigh),
         ),
         child: Center(
           child: Text(
             e.value,
             style: AppTypography.jpSMedium.copyWith(
-              color: isSelected ? AppColors.textPrimary : const Color(0xFF6B7280),
+              color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
           ),
         ),
@@ -1071,16 +1071,16 @@ class _ShotShapeFilterContentState extends State<_ShotShapeFilterContent> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFC8DDEB) : Colors.white,
+          color: isSelected ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: isSelected ? null : Border.all(color: AppColors.borderHigh),
+          border: Border.all(color: AppColors.borderHigh),
         ),
         child: Center(
           child: Text(
             e.value,
             overflow: TextOverflow.ellipsis,
             style: AppTypography.jpSMedium.copyWith(
-              color: isSelected ? AppColors.textPrimary : const Color(0xFF6B7280),
+              color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
           ),
         ),

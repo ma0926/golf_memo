@@ -34,9 +34,8 @@ class _DetailMetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.backgroundMiddle,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF2F3F5)),
       ),
       child: Text(
         label,
@@ -200,7 +199,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
     if (diff <= 6) return '$diff日前';
     const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
     final w = weekdays[dt.weekday - 1];
-    return '${dt.month}/${dt.day}（$w）';
+    return '${dt.month}月${dt.day}日 ${w}曜日';
   }
 
   @override
@@ -323,8 +322,8 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
               if (memo.shotShape != null || memo.condition != null || memo.wind != null) ...[
                 const SizedBox(height: 16),
                 Wrap(
-                  spacing: 2,
-                  runSpacing: 2,
+                  spacing: 4,
+                  runSpacing: 4,
                   children: [
                     if (memo.shotShape != null)
                       _DetailMetaChip(

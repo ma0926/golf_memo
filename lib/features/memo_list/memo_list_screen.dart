@@ -307,7 +307,7 @@ class _DateHeader extends StatelessWidget {
 
     const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
     final weekday = weekdays[date.weekday - 1];
-    return '${date.month}/${date.day}（$weekday）';
+    return '${date.month}月${date.day}日 ${weekday}曜日';
   }
 
   @override

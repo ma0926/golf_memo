@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -244,23 +243,29 @@ class _ReportScreenState extends State<ReportScreen>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFC8DDEB),
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.borderHigh),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      _selectedClub?.name ?? '—',
-                      style: AppTypography.jpSMedium.copyWith(
-                        color: AppColors.textPrimary,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 100),
+                      child: Text(
+                        _selectedClub?.name ?? '—',
+                        style: AppTypography.jpSMedium.copyWith(
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                     const SizedBox(width: 4),
                     const Icon(
                       Icons.keyboard_arrow_down,
                       size: 16,
-                      color: AppColors.textPrimary,
+                      color: Colors.white,
                     ),
                   ],
                 ),
@@ -451,7 +456,7 @@ class _ChartDetailSection extends StatelessWidget {
   String _formatDate(DateTime dt) {
     const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
     final w = weekdays[dt.weekday - 1];
-    return '${dt.year}年${dt.month}月${dt.day}日 ${w}曜日';
+    return '${dt.month}月${dt.day}日 ${w}曜日';
   }
 
   @override
@@ -523,97 +528,45 @@ class _ReportMetaRow extends StatelessWidget {
 
   const _ReportMetaRow({this.shotShape, this.condition, this.wind});
 
-  IconData _conditionIcon(String cond) {
-    switch (cond) {
-      case 'good': return Icons.sentiment_satisfied_alt;
-      case 'bad':  return Icons.sentiment_dissatisfied;
-      default:     return Icons.sentiment_neutral;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 8,
+      spacing: 4,
       runSpacing: 4,
-      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         if (shotShape != null)
-          Row(mainAxisSize: MainAxisSize.min, children: [
-            SvgPicture.asset(
-              'assets/icons/$shotShape.svg',
-              width: 16,
-              height: 16,
-              colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
-            ),
-            const SizedBox(width: 3),
-            Text(
-              AppConstants.shotShapeLabels[shotShape] ?? shotShape!,
-              style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
-            ),
-          ]),
+          _MetaChip(label: AppConstants.shotShapeLabels[shotShape] ?? shotShape!),
         if (condition != null)
-          Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(_conditionIcon(condition!), size: 16, color: AppColors.textMedium),
-            const SizedBox(width: 3),
-            Text(
-              AppConstants.conditionLabels[condition] ?? condition!,
-              style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
-            ),
-          ]),
+          _MetaChip(label: AppConstants.conditionLabels[condition] ?? condition!),
         if (wind != null)
-          Row(mainAxisSize: MainAxisSize.min, children: [
-            SvgPicture.asset(
-              AppConstants.windIcons[wind] ?? 'assets/icons/wind_yes.svg',
-              width: 16,
-              height: 16,
-              colorFilter: const ColorFilter.mode(AppColors.textMedium, BlendMode.srcIn),
-            ),
-            const SizedBox(width: 3),
-            Text(
-              AppConstants.windLabels[wind] ?? wind!,
-              style: AppTypography.jpSRegular.copyWith(color: AppColors.textMedium),
-            ),
-          ]),
+          _MetaChip(label: '風${AppConstants.windLabels[wind] ?? wind!}'),
       ],
+    );
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  final String label;
+  const _MetaChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundMiddle,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.jpSMedium.copyWith(color: AppColors.textPrimary),
+      ),
     );
   }
 }
 
 Widget _emptyTitle(double value, TitleMeta meta) => const SizedBox.shrink();
 
-// ── アクティブドット（グロー付き）────────────────────
-class _GlowDotPainter extends FlDotPainter {
-  const _GlowDotPainter();
-
-  @override
-  void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas) {
-    // 外側グロー: 12px, rgba(139, 168, 255, 0.60)
-    canvas.drawCircle(
-      offsetInCanvas,
-      12,
-      Paint()..color = const Color(0x998BA8FF),
-    );
-    // 内側ドット: accent, radius 6
-    canvas.drawCircle(
-      offsetInCanvas,
-      6,
-      Paint()..color = AppColors.accent,
-    );
-  }
-
-  @override
-  Size getSize(FlSpot spot) => const Size(24, 24);
-
-  @override
-  Color get mainColor => AppColors.accent;
-
-  @override
-  FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) => b;
-
-  @override
-  List<Object?> get props => [];
-}
 
 // ── 飛距離折れ線グラフ ────────────────────────────────
 class _DistanceChart extends StatelessWidget {
@@ -701,7 +654,12 @@ class _DistanceChart extends StatelessWidget {
               show: true,
               getDotPainter: (spot, percent, barData, index) {
                 if (index == selectedIndex) {
-                  return const _GlowDotPainter();
+                  return FlDotCirclePainter(
+                    radius: 6,
+                    color: AppColors.primary,
+                    strokeWidth: 2,
+                    strokeColor: Colors.white,
+                  );
                 }
                 return FlDotCirclePainter(
                   radius: 3,

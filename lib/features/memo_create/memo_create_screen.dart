@@ -331,7 +331,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
     if (diff <= 6) return '$diff日前';
     const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
     final w = weekdays[_selectedDate.weekday - 1];
-    return '${_selectedDate.month}/${_selectedDate.day}（$w）';
+    return '${_selectedDate.month}月${_selectedDate.day}日 ${w}曜日';
   }
 
   void _showDatePicker() {
@@ -971,16 +971,16 @@ class _ChipSelector extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFC8DDEB) : Colors.white,
+          color: isSelected ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: isSelected ? null : Border.all(color: AppColors.borderHigh),
+          border: Border.all(color: AppColors.borderHigh),
           boxShadow: null,
         ),
         child: Text(
           opt.label,
           overflow: TextOverflow.ellipsis,
           style: AppTypography.jpSMedium.copyWith(
-            color: isSelected ? AppColors.textPrimary : const Color(0xFF6B7280),
+            color: isSelected ? Colors.white : const Color(0xFF6B7280),
           ),
         ),
       ),
