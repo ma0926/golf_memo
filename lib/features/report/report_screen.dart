@@ -16,6 +16,8 @@ import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../app.dart' show memoCreatedNotifier;
 import '../../shared/widgets/app_list_tile.dart';
+import '../../shared/widgets/app_section_title.dart';
+import '../../shared/widgets/memo_card.dart' show ClubBadge;
 import '../../shared/widgets/app_tab_bar.dart';
 import '../../shared/widgets/sheet_drag_handle.dart';
 
@@ -778,7 +780,7 @@ class _ClubSelectSheet extends StatelessWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: SafeArea(
@@ -808,41 +810,45 @@ class _ClubSelectSheet extends StatelessWidget {
             Expanded(
               child: ListView(
                 controller: scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 children: [
                   for (final entry in grouped.entries) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: SizedBox(
-                        height: 48,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            entry.key,
-                            style: AppTypography.jpHeader4.copyWith(
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                    AppSectionTitle(title: entry.key),
                     ...entry.value.map((club) {
-                          final hasData = availableClubIds.contains(club.id);
-                          return AppListTile(
-                            title: club.name,
-                            titleColor: hasData
-                                ? AppColors.textPrimary
-                                : AppColors.textPlaceholder,
-                            trailing: club.id == selectedClubId
-                                ? const Icon(Icons.check, color: AppColors.primary)
-                                : null,
-                            onTap: hasData
-                                ? () => Navigator.pop(context, club)
-                                : null,
-                          );
-                        }),
+                      final parenIdx = club.name.indexOf('（');
+                      final hasSubtitle = parenIdx != -1;
+                      final mainName = hasSubtitle ? club.name.substring(0, parenIdx) : club.name;
+                      final subName = hasSubtitle ? club.name.substring(parenIdx) : '';
+                      final hasData = availableClubIds.contains(club.id);
+                      final textColor = hasData ? AppColors.textPrimary : AppColors.textPlaceholder;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: ListTile(
+                          minTileHeight: 56,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                          leading: ClubBadge(name: club.name, category: club.category, isCustom: club.isCustom),
+                          title: hasSubtitle
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: textColor)),
+                                    Text(subName, style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary)),
+                                  ],
+                                )
+                              : Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: textColor)),
+                          trailing: club.id == selectedClubId
+                              ? const Icon(Icons.check, color: AppColors.primary)
+                              : null,
+                          onTap: hasData ? () => Navigator.pop(context, club) : null,
+                        ),
+                      );
+                    }),
                   ],
-                  const SizedBox(height: 16),
                 ],
               ),
             ),

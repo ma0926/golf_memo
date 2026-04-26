@@ -21,6 +21,8 @@ import '../../shared/widgets/media_picker_screen.dart';
 import '../../shared/widgets/app_buttons.dart';
 import '../../shared/widgets/app_distance_input.dart';
 import '../../shared/widgets/app_list_tile.dart';
+import '../../shared/widgets/app_section_title.dart';
+import '../../shared/widgets/memo_card.dart' show ClubBadge;
 import '../../shared/widgets/sheet_drag_handle.dart';
 
 // ──────────────────────────────────────────────────────
@@ -1215,23 +1217,36 @@ class _ClubSelectSheetState extends State<_ClubSelectSheet> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: EdgeInsets.only(top: index == 1 ? 0 : 16),
-                        child: SizedBox(
-                          height: 48,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              group['category'] as String,
-                              style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
-                            ),
+                      AppSectionTitle(title: group['category'] as String),
+                      ...clubs.map((club) {
+                        final parenIdx = club.name.indexOf('（');
+                        final hasSubtitle = parenIdx != -1;
+                        final mainName = hasSubtitle ? club.name.substring(0, parenIdx) : club.name;
+                        final subName = hasSubtitle ? club.name.substring(parenIdx) : '';
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        ),
-                      ),
-                      ...List.generate(clubs.length, (i) => AppListTile(
-                        title: clubs[i].name,
-                        onTap: () => widget.onClubSelected(clubs[i].id!, clubs[i].name),
-                      )),
+                          child: ListTile(
+                            minTileHeight: 56,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                            leading: ClubBadge(name: club.name, category: club.category, isCustom: club.isCustom),
+                            title: hasSubtitle
+                                ? Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: AppColors.textPrimary)),
+                                      Text(subName, style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary)),
+                                    ],
+                                  )
+                                : Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: AppColors.textPrimary)),
+                            onTap: () => widget.onClubSelected(club.id!, club.name),
+                          ),
+                        );
+                      }),
                     ],
                   );
                 },

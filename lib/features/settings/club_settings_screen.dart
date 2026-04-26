@@ -7,6 +7,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_typography.dart';
 import '../../shared/widgets/app_list_tile.dart';
 import '../../shared/widgets/app_section_title.dart';
+import '../../shared/widgets/memo_card.dart' show ClubBadge;
 import '../../data/models/club.dart';
 import '../../data/repositories/club_repository.dart';
 
@@ -69,7 +70,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -77,9 +78,9 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
     final grouped = _groupedClubs;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: IconButton(
@@ -160,7 +161,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               height: 32,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : Colors.white,
+                color: isSelected ? AppColors.primary : AppColors.background,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
                   color: isSelected ? AppColors.primary : AppColors.divider,
@@ -170,7 +171,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               child: Text(
                 tab,
                 style: AppTypography.jpSMedium.copyWith(
-                  color: isSelected ? Colors.white : AppColors.textMedium,
+                  color: isSelected ? AppColors.background : AppColors.textMedium,
                 ),
               ),
             ),
@@ -186,10 +187,31 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppSectionTitle(title: category),
-        Column(
-          children: clubs.map((club) {
-            return AppListTile(
-              title: club.name,
+        ...clubs.map((club) {
+          final parenIdx = club.name.indexOf('（');
+          final hasSubtitle = parenIdx != -1;
+          final mainName = hasSubtitle ? club.name.substring(0, parenIdx) : club.name;
+          final subName = hasSubtitle ? club.name.substring(parenIdx) : '';
+          return Container(
+            margin: const EdgeInsets.only(bottom: 2),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ListTile(
+              minTileHeight: 56,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              leading: ClubBadge(name: club.name, category: club.category, isCustom: club.isCustom),
+              title: hasSubtitle
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: AppColors.textPrimary)),
+                        Text(subName, style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary)),
+                      ],
+                    )
+                  : Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: AppColors.textPrimary)),
               trailing: Transform.scale(
                 scale: 0.8,
                 child: CupertinoSwitch(
@@ -204,9 +226,9 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                       _load();
                     }
                   : null,
-            );
-          }).toList(),
-        ),
+            ),
+          );
+        }),
       ],
     );
   }

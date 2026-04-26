@@ -11,7 +11,7 @@ class AppSectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 0, 0),
       child: SizedBox(
         height: 48,
         child: Align(

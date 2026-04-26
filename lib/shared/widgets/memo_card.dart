@@ -212,7 +212,7 @@ class ClubBadge extends StatelessWidget {
         _shortName,
         style: const TextStyle(
           fontFamily: 'SF Compact',
-          fontSize: 16,
+          fontSize: 14,
           fontWeight: FontWeight.w800, // 790 → w800 が最近似
           color: AppColors.textMedium,
           height: 1.5,

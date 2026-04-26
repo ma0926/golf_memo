@@ -10,6 +10,7 @@ class AppListTile extends StatelessWidget {
   final Widget? trailing;
   final VoidCallback? onTap;
   final Color? titleColor;
+  final EdgeInsetsGeometry contentPadding;
 
   const AppListTile({
     super.key,
@@ -18,13 +19,14 @@ class AppListTile extends StatelessWidget {
     this.trailing,
     this.onTap,
     this.titleColor,
+    this.contentPadding = EdgeInsets.zero,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       minTileHeight: 48,
-      contentPadding: EdgeInsets.zero,
+      contentPadding: contentPadding,
       leading: leading,
       title: Text(
         title,

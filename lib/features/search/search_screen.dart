@@ -15,7 +15,8 @@ import '../../data/repositories/media_repository.dart';
 import '../../data/repositories/practice_memo_repository.dart';
 import '../../shared/widgets/app_buttons.dart';
 import '../../shared/widgets/app_list_tile.dart';
-import '../../shared/widgets/memo_card.dart';
+import '../../shared/widgets/app_section_title.dart';
+import '../../shared/widgets/memo_card.dart' show MemoCard, MemoMediaItem, ClubBadge;
 import '../memo_list/memo_expanded_card.dart';
 import '../../shared/widgets/sheet_drag_handle.dart';
 
@@ -107,7 +108,7 @@ class _SearchScreenState extends State<SearchScreen> {
         expand: false,
         builder: (context, scrollController) => Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
+            color: AppColors.background,
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
           child: Column(
@@ -205,7 +206,7 @@ class _SearchScreenState extends State<SearchScreen> {
       useRootNavigator: true,
       isScrollControlled: true,
       enableDrag: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -771,32 +772,42 @@ class _ClubFilterContentState extends State<_ClubFilterContent> {
     }
 
     return ListView.builder(
-        controller: widget.scrollController,
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        itemCount: _clubGroups.length,
-        itemBuilder: (context, groupIndex) {
-          final group = _clubGroups[groupIndex];
-          final clubs = group['clubs'] as List<Club>;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(top: groupIndex == 0 ? 0 : 16),
-                child: SizedBox(
-                  height: 48,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      group['category'] as String,
-                      style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
-                    ),
-                  ),
+      controller: widget.scrollController,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      itemCount: _clubGroups.length,
+      itemBuilder: (context, groupIndex) {
+        final group = _clubGroups[groupIndex];
+        final clubs = group['clubs'] as List<Club>;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppSectionTitle(title: group['category'] as String),
+            ...clubs.map((club) {
+              final parenIdx = club.name.indexOf('（');
+              final hasSubtitle = parenIdx != -1;
+              final mainName = hasSubtitle ? club.name.substring(0, parenIdx) : club.name;
+              final subName = hasSubtitle ? club.name.substring(parenIdx) : '';
+              final isSelected = widget.selectedId == club.id;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              ),
-              ...clubs.map((club) {
-                final isSelected = widget.selectedId == club.id;
-                return AppListTile(
-                  title: club.name,
+                child: ListTile(
+                  minTileHeight: 56,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  leading: ClubBadge(name: club.name, category: club.category, isCustom: club.isCustom),
+                  title: hasSubtitle
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: AppColors.textPrimary)),
+                            Text(subName, style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary)),
+                          ],
+                        )
+                      : Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: AppColors.textPrimary)),
                   trailing: isSelected
                       ? const Icon(Icons.check, color: AppColors.primary)
                       : null,
@@ -808,11 +819,12 @@ class _ClubFilterContentState extends State<_ClubFilterContent> {
                     }
                     Navigator.pop(context);
                   },
-                );
-              }),
-            ],
-          );
-        },
+                ),
+              );
+            }),
+          ],
+        );
+      },
     );
   }
 }
