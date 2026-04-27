@@ -207,23 +207,36 @@ class _ClubSelectPageState extends State<_ClubSelectPage> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: EdgeInsets.only(top: index == 0 ? 0 : 16),
-                        child: SizedBox(
-                          height: 48,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              group['category'] as String,
-                              style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
-                            ),
+                      AppSectionTitle(title: group['category'] as String),
+                      ...clubs.map((club) {
+                        final parenIdx = club.name.indexOf('（');
+                        final hasSubtitle = parenIdx != -1;
+                        final mainName = hasSubtitle ? club.name.substring(0, parenIdx) : club.name;
+                        final subName = hasSubtitle ? club.name.substring(parenIdx) : '';
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        ),
-                      ),
-                      ...List.generate(clubs.length, (i) => AppListTile(
-                        title: clubs[i].name,
-                        onTap: () => widget.onClubSelected(clubs[i].id!, clubs[i].name),
-                      )),
+                          child: ListTile(
+                            minTileHeight: 56,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                            leading: ClubBadge(name: club.name, category: club.category, isCustom: club.isCustom),
+                            title: hasSubtitle
+                                ? Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: AppColors.textPrimary)),
+                                      Text(subName, style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary)),
+                                    ],
+                                  )
+                                : Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: AppColors.textPrimary)),
+                            onTap: () => widget.onClubSelected(club.id!, club.name),
+                          ),
+                        );
+                      }),
                     ],
                   );
                 },
@@ -983,6 +996,7 @@ class _ChipSelector extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: AppTypography.jpSMedium.copyWith(
             color: isSelected ? Colors.white : const Color(0xFF6B7280),
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
           ),
         ),
       ),

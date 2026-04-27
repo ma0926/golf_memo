@@ -35,16 +35,7 @@ class MemoListScreen extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: AppColors.background,
           elevation: 0,
-          titleSpacing: 16,
-          title: Text(
-            'My GOLF',
-            style: GoogleFonts.inter(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF23264E),
-              height: 1.0,
-            ),
-          ),
+          toolbarHeight: 0,
           bottom: const TabBar(
             labelColor: AppColors.textPrimary,
             unselectedLabelColor: AppColors.textSecondary,

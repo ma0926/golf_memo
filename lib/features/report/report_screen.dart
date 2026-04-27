@@ -228,63 +228,73 @@ class _ReportScreenState extends State<ReportScreen>
       padding: const EdgeInsets.fromLTRB(16, 36, 16, 100),
       children: [
         // セクション1: クラブ別平均飛距離テーブル
-        _SectionTitle(title: 'クラブ別平均飛距離'),
-        const SizedBox(height: 12),
         _ClubDistanceTable(
           clubs: _clubs,
           avgDistances: _clubAvgDistances,
         ),
-        const SizedBox(height: 32),
-        // セクション2: 飛距離の推移
-        Row(
-          children: [
-            _SectionTitle(title: '飛距離の推移'),
-            const Spacer(),
-            GestureDetector(
-              onTap: _showClubSheet,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.borderHigh),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 100),
-                      child: Text(
-                        _selectedClub?.name ?? '—',
-                        style: AppTypography.jpSMedium.copyWith(
-                          color: Colors.white,
+        const SizedBox(height: 16),
+        // セクション2タイトル
+        Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: SizedBox(
+          height: 54,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                '飛距離の推移',
+                style: AppTypography.jpHeader3.copyWith(color: AppColors.textMedium),
+              ),
+              GestureDetector(
+                onTap: _showClubSheet,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.borderHigh),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 100),
+                        child: Text(
+                          _selectedClub?.name ?? '—',
+                          style: AppTypography.jpSMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      const Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.white),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
+          ),
         ),
-        const SizedBox(height: 12),
         // グラフカード
         _DistanceChartCard(
-          selectedClub: _selectedClub,
           chartData: _chartData,
           selectedIdx: _selectedIdx,
-          docsPath: _docsPath,
           onTapped: (i) => setState(() => _selectedIdx = i),
-          onDetailTap: (id) => context.push('/memo/$id'),
         ),
+        // 選択時のメモ概要カード
+        if (_selectedIdx != null && _chartData.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          _MemoSummaryCard(
+            dayData: _chartData[_selectedIdx!],
+            selectedClub: _selectedClub,
+            onDetailTap: (id) => context.push('/memo/$id'),
+          ),
+        ],
       ],
     );
   }
@@ -337,62 +347,76 @@ class _ClubDistanceTable extends StatelessWidget {
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: rows.asMap().entries.map((entry) {
-          final i = entry.key;
-          final club = entry.value;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'クラブ別平均飛距離',
+                style: AppTypography.jpHeader3.copyWith(color: AppColors.textMedium),
+              ),
+            ],
+          ),
+        ),
+        ...rows.map((club) {
           final avg = avgDistances[club.id]!;
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    club.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.enMMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+          final parenIdx = club.name.indexOf('（');
+          final hasSubtitle = parenIdx != -1;
+          final mainName = hasSubtitle ? club.name.substring(0, parenIdx) : club.name;
+          final subName = hasSubtitle ? club.name.substring(parenIdx) : '';
+          return Container(
+            margin: const EdgeInsets.only(bottom: 2),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  ClubBadge(name: club.name, category: club.category, isCustom: club.isCustom),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: hasSubtitle
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: AppColors.textPrimary)),
+                              Text(subName, style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary)),
+                            ],
+                          )
+                        : Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: AppColors.textPrimary)),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${avg.round()}yd',
-                  style: AppTypography.enMMedium.copyWith(
-                    color: AppColors.textPrimary,
+                  const SizedBox(width: 8),
+                  Text(
+                    '${avg.round()}yd',
+                    style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
-        }).toList(),
-      ),
+        }),
+      ],
     );
   }
 }
 
 // ── グラフカード（タイトル＋チャート＋詳細） ──────────
 class _DistanceChartCard extends StatelessWidget {
-  final Club? selectedClub;
   final List<_DayData> chartData;
   final int? selectedIdx;
-  final String docsPath;
   final ValueChanged<int> onTapped;
-  final ValueChanged<int> onDetailTap;
 
   const _DistanceChartCard({
-    required this.selectedClub,
     required this.chartData,
     required this.selectedIdx,
-    required this.docsPath,
     required this.onTapped,
-    required this.onDetailTap,
   });
 
   @override
@@ -403,12 +427,8 @@ class _DistanceChartCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // グラフ
-          if (chartData.isNotEmpty)
-            SizedBox(
+      child: chartData.isNotEmpty
+          ? SizedBox(
               height: 192,
               child: _DistanceChart(
                 data: chartData,
@@ -416,28 +436,89 @@ class _DistanceChartCard extends StatelessWidget {
                 onTapped: onTapped,
               ),
             )
-          else
-            SizedBox(
+          : const SizedBox(
               height: 120,
-              child: Center(
-                child: Text(
-                  'データがありません',
-                  style: AppTypography.jpSRegular.copyWith(
-                    color: AppColors.textSecondary,
+              child: Center(child: Text('データがありません')),
+            ),
+    );
+  }
+}
+
+// ── メモ概要カード ────────────────────────────────────
+class _MemoSummaryCard extends StatelessWidget {
+  final _DayData dayData;
+  final Club? selectedClub;
+  final ValueChanged<int> onDetailTap;
+
+  const _MemoSummaryCard({
+    required this.dayData,
+    required this.selectedClub,
+    required this.onDetailTap,
+  });
+
+  String _formatDate(DateTime dt) {
+    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+    final w = weekdays[dt.weekday - 1];
+    return '${dt.year}年${dt.month}月${dt.day}日 ${w}曜日';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final memo = dayData.memos.first;
+    final hasMeta = memo.shotShape != null || memo.condition != null || memo.wind != null;
+
+    return GestureDetector(
+      onTap: memo.id != null ? () => onDetailTap(memo.id!) : null,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ClubBadge(
+                  name: selectedClub?.name ?? '',
+                  category: selectedClub?.category,
+                  isCustom: selectedClub?.isCustom ?? false,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _formatDate(dayData.date),
+                        style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
+                      ),
+                      Text(
+                        selectedClub?.name ?? '',
+                        style: AppTypography.jpSMedium.copyWith(color: AppColors.textPrimary),
+                      ),
+                    ],
                   ),
                 ),
+                Text(
+                  '${dayData.avgDistance.round()}yd',
+                  style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary),
+                ),
+              ],
+            ),
+            if (hasMeta) ...[
+              const SizedBox(height: 8),
+              _ReportMetaRow(
+                shotShape: memo.shotShape,
+                condition: memo.condition,
+                wind: memo.wind,
               ),
-            ),
-          // 詳細セクション
-          if (selectedIdx != null && chartData.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            _ChartDetailSection(
-              dayData: chartData[selectedIdx!],
-              docsPath: docsPath,
-              onDetailTap: onDetailTap,
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

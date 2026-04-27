@@ -18,7 +18,7 @@ class AppSectionTitle extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Text(
             title,
-            style: AppTypography.jpHeader4.copyWith(color: AppColors.textPrimary),
+            style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium),
           ),
         ),
       ),

@@ -428,6 +428,7 @@ class _FilterChip extends StatelessWidget {
               displayLabel,
               style: AppTypography.jpSMedium.copyWith(
                 color: textColor,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                 height: 1,
               ),
             ),

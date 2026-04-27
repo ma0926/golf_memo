@@ -1089,6 +1089,7 @@ class _ChipSelector extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: AppTypography.jpSMedium.copyWith(
             color: isSelected ? Colors.white : const Color(0xFF6B7280),
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
           ),
         ),
       ),
