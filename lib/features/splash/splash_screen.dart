@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_colors.dart';
 
@@ -61,21 +63,19 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(
-                'assets/images/logo.png',
+              SvgPicture.asset(
+                'assets/images/logo.svg',
                 width: 88,
-                height: 98,
+                height: 88,
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'My GOLF',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Georgia',
+                style: GoogleFonts.inter(
                   fontSize: 32,
-                  fontStyle: FontStyle.italic,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF23264E),
+                  color: const Color(0xFF23264E),
                 ),
               ),
             ],

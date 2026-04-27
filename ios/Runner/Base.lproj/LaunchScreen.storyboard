@@ -19,7 +19,7 @@
                             <imageView opaque="NO" contentMode="scaleAspectFit" image="LaunchImage" translatesAutoresizingMaskIntoConstraints="NO" id="YRO-k0-Ey4">
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="My GOLF" textAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="lbl-mg-001">
-                                <fontDescription key="fontDescription" name="Georgia-BoldItalic" family="Georgia" pointSize="32"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="32"/>
                                 <color key="textColor" red="0.137" green="0.149" blue="0.306" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             </label>
                         </subviews>
@@ -28,7 +28,7 @@
                             <!-- imageView: 88x98、画面中央より少し上 -->
                             <constraint firstItem="YRO-k0-Ey4" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="img-cx"/>
                             <constraint firstItem="YRO-k0-Ey4" firstAttribute="width" constant="88" id="img-w"/>
-                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="height" constant="98" id="img-h"/>
+                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="height" constant="88" id="img-h"/>
                             <!-- label: imageView の8pt下、画面中央X -->
                             <constraint firstItem="lbl-mg-001" firstAttribute="top" secondItem="YRO-k0-Ey4" secondAttribute="bottom" constant="8" id="lbl-top"/>
                             <constraint firstItem="lbl-mg-001" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="lbl-cx"/>

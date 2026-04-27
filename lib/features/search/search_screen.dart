@@ -851,12 +851,27 @@ class _DateFilterContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: _options.map((opt) {
           final isSelected = selected == opt.value;
-          return AppListTile(
-            title: opt.label,
-            trailing: isSelected
-                ? const Icon(Icons.check, color: AppColors.primary)
-                : null,
-            onTap: () => onSelect(opt.value),
+          return Container(
+            margin: const EdgeInsets.only(bottom: 2),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ListTile(
+              minTileHeight: 56,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              title: Text(
+                opt.label,
+                style: AppTypography.jpMRegular.copyWith(
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              trailing: isSelected
+                  ? const Icon(Icons.check, color: AppColors.primary)
+                  : null,
+              onTap: () => onSelect(opt.value),
+            ),
           );
         }).toList(),
       ),
@@ -913,7 +928,7 @@ class _DistanceFilterContentState extends State<_DistanceFilterContent> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
@@ -942,7 +957,7 @@ class _DistanceFilterContentState extends State<_DistanceFilterContent> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
@@ -1001,43 +1016,37 @@ class _ConditionFilterContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final entries = AppConstants.conditionLabels.entries.toList();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 48),
-      child: Row(
-        children: [
-          for (int i = 0; i < entries.length; i++) ...[
-            Expanded(child: _buildChip(context, entries[i])),
-            if (i < entries.length - 1) const SizedBox(width: 8),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChip(BuildContext context, MapEntry<String, String> e) {
-    final isSelected = selected == e.key;
-    final iconPath = isSelected
-        ? AppConstants.conditionIconsFilled[e.key]
-        : AppConstants.conditionIcons[e.key];
-    return GestureDetector(
-      onTap: () {
-        onApply(isSelected ? null : e.key);
-        Navigator.pop(context);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderHigh),
-        ),
-        child: Center(
-          child: Text(
-            e.value,
-            style: AppTypography.jpSMedium.copyWith(
-              color: isSelected ? Colors.white : AppColors.textSecondary,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: entries.map((e) {
+          final isSelected = selected == e.key;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 2),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
             ),
-          ),
-        ),
+            child: ListTile(
+              minTileHeight: 56,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              title: Text(
+                e.value,
+                style: AppTypography.jpMRegular.copyWith(
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              trailing: isSelected
+                  ? const Icon(Icons.check, color: AppColors.primary)
+                  : null,
+              onTap: () {
+                onApply(isSelected ? null : e.key);
+                Navigator.pop(context);
+              },
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -1068,38 +1077,6 @@ class _ShotShapeFilterContentState extends State<_ShotShapeFilterContent> {
     _temp = Set.from(widget.selected);
   }
 
-  Widget _buildChip(MapEntry<String, String> e) {
-    final isSelected = _temp.contains(e.key);
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          if (isSelected) {
-            _temp.remove(e.key);
-          } else {
-            _temp.add(e.key);
-          }
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderHigh),
-        ),
-        child: Center(
-          child: Text(
-            e.value,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.jpSMedium.copyWith(
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final entries = AppConstants.shotShapeLabels.entries.toList();
@@ -1110,25 +1087,39 @@ class _ShotShapeFilterContentState extends State<_ShotShapeFilterContent> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Expanded(child: _buildChip(entries[0])),
-                  const SizedBox(width: 8),
-                  Expanded(child: _buildChip(entries[1])),
-                  const SizedBox(width: 8),
-                  Expanded(child: _buildChip(entries[2])),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(child: _buildChip(entries[3])),
-                  const SizedBox(width: 8),
-                  Expanded(child: _buildChip(entries[4])),
-                ],
-              ),
-            ],
+            children: entries.map((e) {
+              final isSelected = _temp.contains(e.key);
+              return Container(
+                margin: const EdgeInsets.only(bottom: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: ListTile(
+                  minTileHeight: 56,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  title: Text(
+                    e.value,
+                    style: AppTypography.jpMRegular.copyWith(
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? const Icon(Icons.check, color: AppColors.primary)
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      if (isSelected) {
+                        _temp.remove(e.key);
+                      } else {
+                        _temp.add(e.key);
+                      }
+                    });
+                  },
+                ),
+              );
+            }).toList(),
           ),
         ),
         _SheetButtons(

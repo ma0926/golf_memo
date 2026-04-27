@@ -1,5 +1,6 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
@@ -35,14 +36,12 @@ class MemoListScreen extends StatelessWidget {
           backgroundColor: AppColors.background,
           elevation: 0,
           titleSpacing: 16,
-          title: const Text(
+          title: Text(
             'My GOLF',
-            style: TextStyle(
-              fontFamily: 'Georgia',
+            style: GoogleFonts.inter(
               fontSize: 24,
-              fontStyle: FontStyle.italic,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF23264E),
+              color: const Color(0xFF23264E),
               height: 1.0,
             ),
           ),

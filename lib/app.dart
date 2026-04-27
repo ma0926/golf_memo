@@ -43,10 +43,10 @@ GoRouter _buildRouter(String initialLocation) => GoRouter(
           GoRoute(path: '/home', builder: (_, __) => const MemoListScreen()),
         ]),
         StatefulShellBranch(routes: [
-          GoRoute(path: '/report', builder: (_, __) => const ReportScreen()),
+          GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
         ]),
         StatefulShellBranch(routes: [
-          GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
+          GoRoute(path: '/report', builder: (_, __) => const ReportScreen()),
         ]),
         StatefulShellBranch(routes: [
           GoRoute(
@@ -195,6 +195,7 @@ class _ScaffoldWithNav extends StatelessWidget {
                   'assets/icons/add_2.svg',
                   width: 24,
                   height: 24,
+                  colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                 ),
               ),
             )
@@ -238,8 +239,8 @@ class _ScaffoldWithNav extends StatelessWidget {
                       behavior: HitTestBehavior.opaque,
                       onTap: () => navigationShell.goBranch(1),
                       child: _NavItem(
-                        icon: 'assets/icons/show_chart.svg',
-                        label: 'レポート',
+                        icon: 'assets/icons/Icon Button-1.svg',
+                        label: '検索',
                         selected: navigationShell.currentIndex == 1,
                       ),
                     ),
@@ -249,8 +250,8 @@ class _ScaffoldWithNav extends StatelessWidget {
                       behavior: HitTestBehavior.opaque,
                       onTap: () => navigationShell.goBranch(2),
                       child: _NavItem(
-                        icon: 'assets/icons/Icon Button-1.svg',
-                        label: '検索',
+                        icon: 'assets/icons/show_chart.svg',
+                        label: 'レポート',
                         selected: navigationShell.currentIndex == 2,
                       ),
                     ),
