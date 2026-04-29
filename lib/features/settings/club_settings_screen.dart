@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_typography.dart';
-import '../../shared/widgets/app_list_tile.dart';
 import '../../shared/widgets/app_section_title.dart';
 import '../../shared/widgets/memo_card.dart' show ClubBadge;
 import '../../data/models/club.dart';
@@ -82,6 +81,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
+        toolbarHeight: 48,
         automaticallyImplyLeading: false,
         leading: IconButton(
           onPressed: () => context.pop(),
@@ -110,7 +110,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
           // クラブリスト
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
               children: [
                 ...grouped.entries.map((e) => _buildCategoryGroup(e.key, e.value)),
                 // カスタムクラブ追加ボタン
@@ -119,19 +119,34 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                     await context.push('/settings/clubs/new');
                     _load();
                   },
-                  child: SizedBox(
-                    height: 56,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.add, size: 16, color: Color(0xFF0051FF)),
-                        const SizedBox(width: 4),
-                        Text(
-                          'カスタムクラブを追加',
-                          style: AppTypography.jpMMedium.copyWith(
-                            color: const Color(0xFF0051FF),
-                          ),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 4,
+                          offset: const Offset(0, 4),
                         ),
                       ],
+                    ),
+                    child: SizedBox(
+                      height: 56,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add, size: 16, color: AppColors.accent),
+                          const SizedBox(width: 4),
+                          Text(
+                            'カスタムクラブを追加',
+                            style: AppTypography.jpMMedium.copyWith(
+                              color: AppColors.accent,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -151,7 +166,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         itemCount: _tabs.length,
-        separatorBuilder: (_, i) => const SizedBox(width: 8),
+        separatorBuilder: (_, i) => const SizedBox(width: 4),
         itemBuilder: (context, index) {
           final tab = _tabs[index];
           final isSelected = _selectedTab == tab;
@@ -161,8 +176,8 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               height: 32,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.background,
-                borderRadius: BorderRadius.circular(999),
+                color: isSelected ? AppColors.primary : Colors.white,
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected ? AppColors.primary : AppColors.divider,
                 ),
@@ -197,6 +212,13 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 4,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: ListTile(
               minTileHeight: 56,
@@ -217,7 +239,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                 child: CupertinoSwitch(
                   value: club.isActive,
                   onChanged: (v) => _toggleClub(club, v),
-                  activeTrackColor: Colors.green,
+                  activeTrackColor: AppColors.primary,
                 ),
               ),
               onTap: club.isCustom

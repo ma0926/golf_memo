@@ -8,6 +8,8 @@ import '../../core/constants/app_constants.dart';
 import '../../data/models/club.dart';
 import '../../data/repositories/club_repository.dart';
 import '../../shared/widgets/app_buttons.dart';
+import '../../shared/widgets/app_section_title.dart';
+import '../../shared/widgets/memo_card.dart' show ClubBadge;
 import '../settings/custom_club_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -25,8 +27,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _isLoading = true;
 
   static const _tabs = ['すべて', ...AppConstants.clubCategories];
-
-  // 「次へ」ボタンの色（Figmaのダークネイビー）
   static const _buttonColor = Color(0xFF2B3562);
 
   @override
@@ -84,66 +84,111 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // タイトル
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
-              child: Text(
-                '記録するクラブを\n選択してください',
-                textAlign: TextAlign.center,
-                style: AppTypography.jpMMedium.copyWith(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.textPrimary, height: 1.5),
+        child: CustomScrollView(
+          slivers: [
+            // ヘッダー
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
+                child: Column(
+                  children: [
+                    Image.asset(
+                      'assets/images/club_setting.png',
+                      width: 80,
+                      height: 80,
+                    ),
+                    const SizedBox(height: 32),
+                    Text(
+                      '練習で使用するクラブを\n教えてください。',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.jpHeader2.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'クラブごとにコツや飛距離を残せるので、\n気づきを逃さずストックできます。',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.jpMRegular.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '設定はいつでも変えられます。',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.jpMRegular.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             // カテゴリタブ
-            _buildTabRow(),
+            SliverToBoxAdapter(child: _buildTabRow()),
             // クラブリスト
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
                   ...grouped.entries.map((e) => _buildCategoryGroup(e.key, e.value)),
-                  // カスタムクラブ追加リンク
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: GestureDetector(
-                      onTap: () async {
-                        await showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          constraints: BoxConstraints(
-                            maxHeight: MediaQuery.of(context).size.height * 0.92,
+                  GestureDetector(
+                    onTap: () async {
+                      await showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.of(context).size.height * 0.92,
+                        ),
+                        builder: (_) => ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                          child: CustomClubScreen(
+                            initialCategory: _selectedTab == 'すべて' ? null : _selectedTab,
                           ),
-                          builder: (_) => ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                            child: CustomClubScreen(
-                              initialCategory: _selectedTab == 'すべて' ? null : _selectedTab,
-                            ),
-                          ),
-                        );
-                        _load();
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.add, size: 15, color: AppColors.primary),
-                          const SizedBox(width: 4),
-                          Text(
-                            'カスタムクラブを追加',
-                            style: AppTypography.jpSRegular.copyWith(color: AppColors.primary),
+                        ),
+                      );
+                      _load();
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 4,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
+                      child: SizedBox(
+                        height: 56,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add, size: 16, color: AppColors.accent),
+                            const SizedBox(width: 4),
+                            Text(
+                              'カスタムクラブを追加',
+                              style: AppTypography.jpMMedium.copyWith(
+                                color: AppColors.accent,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ],
+                  const SizedBox(height: 16),
+                ]),
               ),
             ),
           ],
         ),
       ),
-      // 次へボタン（画面下部に固定）
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -166,27 +211,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         itemCount: _tabs.length,
-        separatorBuilder: (_, i) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => const SizedBox(width: 4),
         itemBuilder: (context, index) {
           final tab = _tabs[index];
           final isSelected = _selectedTab == tab;
           return GestureDetector(
             onTap: () => setState(() => _selectedTab = tab),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+              height: 32,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.textPrimary : Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                color: isSelected ? AppColors.primary : Colors.white,
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isSelected ? AppColors.textPrimary : AppColors.divider,
+                  color: isSelected ? AppColors.primary : AppColors.divider,
                 ),
               ),
+              alignment: Alignment.center,
               child: Text(
                 tab,
-                style: AppTypography.jpSRegular.copyWith(
-                  fontSize: 13,
+                style: AppTypography.jpSMedium.copyWith(
+                  color: isSelected ? AppColors.background : AppColors.textMedium,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
                 ),
               ),
             ),
@@ -200,41 +246,50 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 16, bottom: 6, left: 4),
-          child: Text(
-            category,
-            style: AppTypography.jpSRegular.copyWith(fontSize: 13, color: AppColors.textSecondary),
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            children: List.generate(clubs.length, (i) {
-              final club = clubs[i];
-              return Column(
-                children: [
-                  ListTile(
-                    title: Text(
-                      club.name,
-                      style: AppTypography.jpMRegular.copyWith(fontSize: 15, color: AppColors.textPrimary),
-                    ),
-                    trailing: CupertinoSwitch(
-                      value: club.isActive,
-                      onChanged: (v) => _toggleClub(club, v),
-                      activeTrackColor: Colors.green,
-                    ),
-                  ),
-                  if (i < clubs.length - 1)
-                    const Divider(height: 0.5, indent: 16, color: AppColors.divider),
-                ],
-              );
-            }),
-          ),
-        ),
+        AppSectionTitle(title: category),
+        ...clubs.map((club) {
+          final parenIdx = club.name.indexOf('（');
+          final hasSubtitle = parenIdx != -1;
+          final mainName = hasSubtitle ? club.name.substring(0, parenIdx) : club.name;
+          final subName = hasSubtitle ? club.name.substring(parenIdx) : '';
+          return Container(
+            margin: const EdgeInsets.only(bottom: 2),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 4,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ListTile(
+              minTileHeight: 56,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              leading: ClubBadge(name: club.name, category: club.category, isCustom: club.isCustom),
+              title: hasSubtitle
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: AppColors.textPrimary)),
+                        Text(subName, style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary)),
+                      ],
+                    )
+                  : Text(mainName, style: AppTypography.jpMRegular.copyWith(fontSize: 16, color: AppColors.textPrimary)),
+              trailing: Transform.scale(
+                scale: 0.8,
+                child: CupertinoSwitch(
+                  value: club.isActive,
+                  onChanged: (v) => _toggleClub(club, v),
+                  activeTrackColor: AppColors.primary,
+                ),
+              ),
+            ),
+          );
+        }),
       ],
     );
   }

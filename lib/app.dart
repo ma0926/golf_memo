@@ -1,4 +1,3 @@
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -184,6 +183,7 @@ class _ScaffoldWithNav extends StatelessWidget {
                       ),
                     ),
                   );
+                  debugPrint('MemoCreate result: $result');
                   if (result == true) {
                     memoCreatedNotifier.value++;
                   }
@@ -191,12 +191,7 @@ class _ScaffoldWithNav extends StatelessWidget {
                 backgroundColor: AppColors.primary,
                 shape: const CircleBorder(),
                 elevation: 3,
-                child: SvgPicture.asset(
-                  'assets/icons/add_2.svg',
-                  width: 24,
-                  height: 24,
-                  colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                ),
+                child: const Icon(Icons.add, color: Colors.white, size: 28),
               ),
             )
           : null,
@@ -251,7 +246,7 @@ class _ScaffoldWithNav extends StatelessWidget {
                       onTap: () => navigationShell.goBranch(2),
                       child: _NavItem(
                         icon: 'assets/icons/show_chart.svg',
-                        label: 'レポート',
+                        label: 'サマリー',
                         selected: navigationShell.currentIndex == 2,
                       ),
                     ),

@@ -19,7 +19,6 @@ void main() async {
     return false;
   };
 
-  // ネイティブ起動画面が表示されている間にルート判定
   final prefs = await SharedPreferences.getInstance();
   final completed = prefs.getBool('onboarding_completed') ?? false;
   final initialRoute = completed ? '/home' : '/onboarding';
