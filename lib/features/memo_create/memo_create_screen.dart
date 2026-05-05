@@ -719,7 +719,7 @@ class _MemoInputPageState extends State<_MemoInputPage> {
                                   focusNode: _distanceFocusNode,
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.right,
-                                  style: AppTypography.enHeader4.copyWith(
+                                  style: AppTypography.enMMedium.copyWith(
                                     color: AppColors.textPrimary,
                                   ),
                                   decoration: const InputDecoration(
@@ -1009,8 +1009,8 @@ class _ChipSelector extends StatelessWidget {
       // 3＋2のグリッドレイアウト（球筋用）
     }
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: 4,
+      runSpacing: 4,
       children: [
         for (final opt in options) _buildChip(opt),
       ],
@@ -1032,7 +1032,7 @@ class _CollapsedChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(right: 8),
+        margin: const EdgeInsets.only(right: 4),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: AppColors.backgroundMiddle,

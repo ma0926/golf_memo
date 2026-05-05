@@ -9,7 +9,7 @@ class AppColors {
   // Figma: Primary/Middle
   static const Color primaryMiddle   = Color(0xFF4B5E96);
   // Figma: Accent
-  static const Color accent          = Color(0xFF3D6B8A);
+  static const Color accent          = Color(0xFF415196);
   // Figma: Colors/Red（Destructive）
   static const Color destructive     = Color(0xFFFF3B30);
 

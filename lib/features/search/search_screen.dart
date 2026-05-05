@@ -233,11 +233,11 @@ class _SearchScreenState extends State<SearchScreen> {
                 children: [
                   Expanded(
                     child: Container(
-                      height: 48,
+                      height: 40,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: const Color(0xFFF2F3F5)),
                       ),
                       child: Row(
@@ -303,7 +303,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     showArrow: false,
                     onTap: () => setState(() => _isFavorite = !_isFavorite),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   _FilterChip(
                     label: '添付ファイル',
                     isSelected: _hasAttachment,
@@ -311,7 +311,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     showArrow: false,
                     onTap: () => setState(() => _hasAttachment = !_hasAttachment),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   _FilterChip(
                     label: 'クラブ',
                     isSelected: _selectedClubId != null,
@@ -319,7 +319,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     selectedLabel: _selectedClubName,
                     onTap: _openClubSheet,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   _FilterChip(
                     label: '日付',
                     isSelected: _selectedDate != null,
@@ -327,7 +327,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     selectedLabel: _dateLabel,
                     onTap: _openDateSheet,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   _FilterChip(
                     label: '飛距離',
                     isSelected: _distanceMin != null || _distanceMax != null,
@@ -335,7 +335,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     selectedLabel: _distanceLabel,
                     onTap: _openDistanceSheet,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   _FilterChip(
                     label: '球筋',
                     isSelected: _selectedShotShapes.isNotEmpty,
@@ -343,7 +343,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     selectedLabel: _shotShapeLabel,
                     onTap: _openShotShapeSheet,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   _FilterChip(
                     label: '調子',
                     isSelected: _selectedCondition != null,
@@ -672,14 +672,9 @@ class _SearchResultsListState extends State<_SearchResultsList> {
             borderRadius: BorderRadius.all(Radius.circular(24)),
             boxShadow: [
               BoxShadow(
-                color: Color(0x0D000000), // rgba(0,0,0,0.05)
-                blurRadius: 20,
-                offset: Offset(0, 0),
-              ),
-              BoxShadow(
-                color: Color(0x0A007BFF), // rgba(0,123,255,0.04)
-                blurRadius: 40,
-                offset: Offset(0, 8),
+                color: Color(0x0D000000),
+                blurRadius: 4,
+                offset: Offset(0, 4),
               ),
             ],
           ),
@@ -936,7 +931,7 @@ class _DistanceFilterContentState extends State<_DistanceFilterContent> {
                     controller: _minCtrl,
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.right,
-                    style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary),
+                    style: AppTypography.enMMedium.copyWith(color: AppColors.textPrimary),
                     decoration: const InputDecoration(
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
@@ -965,7 +960,7 @@ class _DistanceFilterContentState extends State<_DistanceFilterContent> {
                     controller: _maxCtrl,
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.right,
-                    style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary),
+                    style: AppTypography.enMMedium.copyWith(color: AppColors.textPrimary),
                     decoration: const InputDecoration(
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,

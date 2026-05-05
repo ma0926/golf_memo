@@ -86,7 +86,7 @@ class MemoCard extends StatelessWidget {
                               distance != null
                                   ? distance!.replaceAll('yd', '')
                                   : '--',
-                              style: AppTypography.enHeader4.copyWith(
+                              style: AppTypography.enMMedium.copyWith(
                                 color: distance != null
                                     ? AppColors.textPrimary
                                     : AppColors.textSecondary,
@@ -95,7 +95,7 @@ class MemoCard extends StatelessWidget {
                             const SizedBox(width: 2),
                             Text(
                               'yd',
-                              style: AppTypography.enHeader4.copyWith(
+                              style: AppTypography.enMMedium.copyWith(
                                 color: distance != null
                                     ? AppColors.textPrimary
                                     : AppColors.textSecondary,
@@ -168,6 +168,7 @@ class ClubBadge extends StatelessWidget {
       return name.runes.take(2).map(String.fromCharCode).join();
     }
     if (name == 'ドライバー') return '1W';
+    if (name == 'パター') return 'PT';
     final match = RegExp(r'(\d+)番').firstMatch(name);
     final num = match?.group(1) ?? '';
     switch (category) {
@@ -183,6 +184,8 @@ class ClubBadge extends StatelessWidget {
         if (name.contains('サンド')) return 'SW';
         if (name.contains('ロブ')) return 'LW';
         return 'W';
+      case 'パター':
+        return 'PT';
       default:
         return name.runes.take(2).map(String.fromCharCode).join();
     }
@@ -211,7 +214,7 @@ class ClubBadge extends StatelessWidget {
       child: Text(
         _shortName,
         style: const TextStyle(
-          fontFamily: 'SF Compact',
+          fontFamily: 'Futura',
           fontSize: 14,
           fontWeight: FontWeight.w800, // 790 → w800 が最近似
           color: AppColors.textMedium,

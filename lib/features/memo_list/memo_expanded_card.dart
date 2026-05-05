@@ -313,7 +313,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
                         children: [
                           Text(
                             memo.distance != null ? '${memo.distance}' : '--',
-                            style: AppTypography.enHeader4.copyWith(
+                            style: AppTypography.enMMedium.copyWith(
                               color: memo.distance != null
                                   ? AppColors.textPrimary
                                   : AppColors.textSecondary,
@@ -322,7 +322,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
                           const SizedBox(width: 2),
                           Text(
                             'yd',
-                            style: AppTypography.enHeader4.copyWith(
+                            style: AppTypography.enMMedium.copyWith(
                               color: memo.distance != null
                                   ? AppColors.textPrimary
                                   : AppColors.textSecondary,

@@ -228,9 +228,10 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
               children: [
                 // クラブ名入力
                 Container(
+                  height: 40,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.divider),
                   ),
                   child: TextField(
@@ -241,9 +242,10 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
                       hintText: 'クラブ名を入力',
                       hintStyle: TextStyle(color: AppColors.textSecondary),
                       border: InputBorder.none,
+                      isDense: true,
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 14,
+                        vertical: 11,
                       ),
                     ),
                     style: const TextStyle(
@@ -267,13 +269,11 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
                 GestureDetector(
                   onTap: _showCategoryPicker,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [

@@ -85,12 +85,13 @@ class AppTypography {
     height: 1.5,
   );
 
-  // ── EN: SF Pro（iOSシステムフォント、fontFamily省略でSF Pro自動適用）────
+  // ── EN: Futura ────────────────────────────────────────────────────────
 
   /// Header1: 24px / W7 / 行間120%
   static const TextStyle enHeader1 = TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.w700,
+    fontFamily: 'Futura',
     height: 1.2,
   );
 
@@ -98,6 +99,7 @@ class AppTypography {
   static const TextStyle enHeader2 = TextStyle(
     fontSize: 20,
     fontWeight: FontWeight.w700,
+    fontFamily: 'Futura',
     height: 1.2,
   );
 
@@ -105,6 +107,7 @@ class AppTypography {
   static const TextStyle enHeader3 = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w700,
+    fontFamily: 'Futura',
     height: 1.2,
   );
 
@@ -112,6 +115,7 @@ class AppTypography {
   static const TextStyle enHeader4 = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w600,
+    fontFamily: 'Futura',
     height: 1.2,
   );
 
@@ -119,6 +123,7 @@ class AppTypography {
   static const TextStyle enMMedium = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w500,
+    fontFamily: 'Futura',
     fontStyle: FontStyle.normal,
     height: 1.5,
   );
@@ -127,6 +132,7 @@ class AppTypography {
   static const TextStyle enMRegular = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w400,
+    fontFamily: 'Futura',
     height: 1.5,
   );
 
@@ -134,6 +140,7 @@ class AppTypography {
   static const TextStyle enSMedium100 = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
+    fontFamily: 'Futura',
     height: 1.0,
   );
 }

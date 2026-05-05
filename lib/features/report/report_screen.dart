@@ -181,30 +181,32 @@ class _ReportScreenState extends State<ReportScreen>
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
+        toolbarHeight: 48,
         scrolledUnderElevation: 0,
-        centerTitle: false,
-        titleSpacing: 16,
+        centerTitle: true,
         title: Text(
-          'レポート',
-          style: AppTypography.jpHeader1.copyWith(color: AppColors.textPrimary),
+          'Summary',
+          style: AppTypography.enHeader1.copyWith(color: AppColors.textPrimary),
         ),
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
+          tabAlignment: TabAlignment.center,
           labelColor: AppColors.textPrimary,
           unselectedLabelColor: AppColors.textSecondary,
           indicator: const UnderlineTabIndicator(
-            borderSide: BorderSide(color: AppColors.textPrimary, width: 2.0),
+            borderSide: BorderSide(color: AppColors.primary, width: 2.0),
             borderRadius: BorderRadius.zero,
-            insets: EdgeInsets.symmetric(horizontal: 16),
+            insets: EdgeInsets.zero,
           ),
           indicatorSize: TabBarIndicatorSize.tab,
-          dividerColor: AppColors.primaryMiddle,
-          dividerHeight: 0.3,
+          dividerColor: Colors.transparent,
+          labelPadding: EdgeInsets.zero,
           labelStyle: AppTypography.jpHeader4,
           unselectedLabelStyle: AppTypography.jpHeader4,
           tabs: const [
-            Tab(text: '30日', height: 38),
-            Tab(text: '60日', height: 38),
+            SizedBox(width: 80, height: 38, child: Center(child: Text('30日'))),
+            SizedBox(width: 80, height: 38, child: Center(child: Text('60日'))),
           ],
         ),
       ),
@@ -244,7 +246,7 @@ class _ReportScreenState extends State<ReportScreen>
             children: [
               Text(
                 '飛距離の推移',
-                style: AppTypography.jpHeader3.copyWith(color: AppColors.textMedium),
+                style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium),
               ),
               GestureDetector(
                 onTap: _showClubSheet,
@@ -309,7 +311,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: AppTypography.jpHeader3.copyWith(color: AppColors.textMedium),
+      style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium),
     );
   }
 }
@@ -357,7 +359,7 @@ class _ClubDistanceTable extends StatelessWidget {
             children: [
               Text(
                 'クラブ別平均飛距離',
-                style: AppTypography.jpHeader3.copyWith(color: AppColors.textMedium),
+                style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium),
               ),
             ],
           ),
@@ -395,7 +397,7 @@ class _ClubDistanceTable extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     '${avg.round()}yd',
-                    style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary),
+                    style: AppTypography.enMMedium.copyWith(color: AppColors.textPrimary),
                   ),
                 ],
               ),
@@ -505,7 +507,7 @@ class _MemoSummaryCard extends StatelessWidget {
                 ),
                 Text(
                   '${dayData.avgDistance.round()}yd',
-                  style: AppTypography.enHeader4.copyWith(color: AppColors.textPrimary),
+                  style: AppTypography.enMMedium.copyWith(color: AppColors.textPrimary),
                 ),
               ],
             ),

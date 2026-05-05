@@ -20,7 +20,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -35,6 +35,9 @@ class DatabaseHelper {
     if (oldVersion < 2) {
       await _migrateV1ToV2(db);
     }
+    if (oldVersion < 3) {
+      await _migrateV2ToV3(db);
+    }
   }
 
   Future<void> _createTables(Database db) async {
@@ -47,6 +50,7 @@ class DatabaseHelper {
         sort_order  INTEGER NOT NULL,
         is_active   INTEGER NOT NULL DEFAULT 1,
         is_custom   INTEGER NOT NULL DEFAULT 0,
+        master_id   TEXT,
         created_at  TEXT    NOT NULL,
         deleted_at  TEXT
       )
@@ -84,7 +88,6 @@ class DatabaseHelper {
   }
 
   // v1 → v2 マイグレーション
-  // 既存クラブの名前・並び順・ON/OFFを更新し、不足クラブを追加する
   Future<void> _migrateV1ToV2(Database db) async {
     final now = DateTime.now().toIso8601String();
 
@@ -130,7 +133,6 @@ class DatabaseHelper {
     ];
 
     for (final club in newClubs) {
-      // 同名クラブが既に存在しなければ追加
       final existing = await db.query(
         'clubs',
         where: 'name = ? AND is_custom = 0',
@@ -146,41 +148,85 @@ class DatabaseHelper {
     }
   }
 
+  // v2 → v3 マイグレーション
+  // master_id カラムを追加し、全デフォルトクラブに固定IDをセットする
+  Future<void> _migrateV2ToV3(Database db) async {
+    // カラム追加
+    await db.execute('ALTER TABLE clubs ADD COLUMN master_id TEXT');
+
+    // デフォルトクラブに master_id をセット
+    // [name, master_id]
+    final masterIds = [
+      ['ドライバー',                    'driver'],
+      ['3番ウッド',                     'wood_3'],
+      ['5番ウッド',                     'wood_5'],
+      ['7番ウッド',                     'wood_7'],
+      ['9番ウッド',                     'wood_9'],
+      ['11番ウッド',                    'wood_11'],
+      ['2番ユーティリティ',             'ut_2'],
+      ['3番ユーティリティ',             'ut_3'],
+      ['4番ユーティリティ',             'ut_4'],
+      ['5番ユーティリティ',             'ut_5'],
+      ['6番ユーティリティ',             'ut_6'],
+      ['1番アイアン',                   'iron_1'],
+      ['2番アイアン',                   'iron_2'],
+      ['3番アイアン',                   'iron_3'],
+      ['4番アイアン',                   'iron_4'],
+      ['5番アイアン',                   'iron_5'],
+      ['6番アイアン',                   'iron_6'],
+      ['7番アイアン',                   'iron_7'],
+      ['8番アイアン',                   'iron_8'],
+      ['9番アイアン',                   'iron_9'],
+      ['ピッチングウェッジ（44〜47°）', 'wedge_pw'],
+      ['アプローチウェッジ（48〜53°）', 'wedge_aw'],
+      ['サンドウェッジ（54〜58°）',     'wedge_sw'],
+      ['ロブウェッジ（58〜64°）',       'wedge_lw'],
+      ['パター',                        'putter'],
+    ];
+
+    for (final entry in masterIds) {
+      await db.execute(
+        'UPDATE clubs SET master_id = ? WHERE name = ? AND is_custom = 0',
+        [entry[1], entry[0]],
+      );
+    }
+  }
+
   // 新規インストール時のデフォルトクラブ一覧（完全版）
   Future<void> _insertDefaultClubs(Database db) async {
     final now = DateTime.now().toIso8601String();
 
     final defaultClubs = [
       // ウッド
-      {'name': 'ドライバー',                    'category': 'ウッド',         'sort_order': 1,  'is_active': 1},
-      {'name': '3番ウッド',                     'category': 'ウッド',         'sort_order': 2,  'is_active': 1},
-      {'name': '5番ウッド',                     'category': 'ウッド',         'sort_order': 3,  'is_active': 1},
-      {'name': '7番ウッド',                     'category': 'ウッド',         'sort_order': 4,  'is_active': 0},
-      {'name': '9番ウッド',                     'category': 'ウッド',         'sort_order': 5,  'is_active': 0},
-      {'name': '11番ウッド',                    'category': 'ウッド',         'sort_order': 6,  'is_active': 0},
+      {'name': 'ドライバー',                    'category': 'ウッド',         'sort_order': 1,  'is_active': 1, 'master_id': 'driver'},
+      {'name': '3番ウッド',                     'category': 'ウッド',         'sort_order': 2,  'is_active': 1, 'master_id': 'wood_3'},
+      {'name': '5番ウッド',                     'category': 'ウッド',         'sort_order': 3,  'is_active': 1, 'master_id': 'wood_5'},
+      {'name': '7番ウッド',                     'category': 'ウッド',         'sort_order': 4,  'is_active': 0, 'master_id': 'wood_7'},
+      {'name': '9番ウッド',                     'category': 'ウッド',         'sort_order': 5,  'is_active': 0, 'master_id': 'wood_9'},
+      {'name': '11番ウッド',                    'category': 'ウッド',         'sort_order': 6,  'is_active': 0, 'master_id': 'wood_11'},
       // ユーティリティ
-      {'name': '2番ユーティリティ',             'category': 'ユーティリティ', 'sort_order': 7,  'is_active': 0},
-      {'name': '3番ユーティリティ',             'category': 'ユーティリティ', 'sort_order': 8,  'is_active': 1},
-      {'name': '4番ユーティリティ',             'category': 'ユーティリティ', 'sort_order': 9,  'is_active': 1},
-      {'name': '5番ユーティリティ',             'category': 'ユーティリティ', 'sort_order': 10, 'is_active': 1},
-      {'name': '6番ユーティリティ',             'category': 'ユーティリティ', 'sort_order': 11, 'is_active': 1},
+      {'name': '2番ユーティリティ',             'category': 'ユーティリティ', 'sort_order': 7,  'is_active': 0, 'master_id': 'ut_2'},
+      {'name': '3番ユーティリティ',             'category': 'ユーティリティ', 'sort_order': 8,  'is_active': 1, 'master_id': 'ut_3'},
+      {'name': '4番ユーティリティ',             'category': 'ユーティリティ', 'sort_order': 9,  'is_active': 1, 'master_id': 'ut_4'},
+      {'name': '5番ユーティリティ',             'category': 'ユーティリティ', 'sort_order': 10, 'is_active': 1, 'master_id': 'ut_5'},
+      {'name': '6番ユーティリティ',             'category': 'ユーティリティ', 'sort_order': 11, 'is_active': 1, 'master_id': 'ut_6'},
       // アイアン
-      {'name': '1番アイアン',                   'category': 'アイアン',       'sort_order': 12, 'is_active': 0},
-      {'name': '2番アイアン',                   'category': 'アイアン',       'sort_order': 13, 'is_active': 0},
-      {'name': '3番アイアン',                   'category': 'アイアン',       'sort_order': 14, 'is_active': 0},
-      {'name': '4番アイアン',                   'category': 'アイアン',       'sort_order': 15, 'is_active': 0},
-      {'name': '5番アイアン',                   'category': 'アイアン',       'sort_order': 16, 'is_active': 0},
-      {'name': '6番アイアン',                   'category': 'アイアン',       'sort_order': 17, 'is_active': 1},
-      {'name': '7番アイアン',                   'category': 'アイアン',       'sort_order': 18, 'is_active': 1},
-      {'name': '8番アイアン',                   'category': 'アイアン',       'sort_order': 19, 'is_active': 1},
-      {'name': '9番アイアン',                   'category': 'アイアン',       'sort_order': 20, 'is_active': 1},
+      {'name': '1番アイアン',                   'category': 'アイアン',       'sort_order': 12, 'is_active': 0, 'master_id': 'iron_1'},
+      {'name': '2番アイアン',                   'category': 'アイアン',       'sort_order': 13, 'is_active': 0, 'master_id': 'iron_2'},
+      {'name': '3番アイアン',                   'category': 'アイアン',       'sort_order': 14, 'is_active': 0, 'master_id': 'iron_3'},
+      {'name': '4番アイアン',                   'category': 'アイアン',       'sort_order': 15, 'is_active': 0, 'master_id': 'iron_4'},
+      {'name': '5番アイアン',                   'category': 'アイアン',       'sort_order': 16, 'is_active': 0, 'master_id': 'iron_5'},
+      {'name': '6番アイアン',                   'category': 'アイアン',       'sort_order': 17, 'is_active': 1, 'master_id': 'iron_6'},
+      {'name': '7番アイアン',                   'category': 'アイアン',       'sort_order': 18, 'is_active': 1, 'master_id': 'iron_7'},
+      {'name': '8番アイアン',                   'category': 'アイアン',       'sort_order': 19, 'is_active': 1, 'master_id': 'iron_8'},
+      {'name': '9番アイアン',                   'category': 'アイアン',       'sort_order': 20, 'is_active': 1, 'master_id': 'iron_9'},
       // ウェッジ
-      {'name': 'ピッチングウェッジ（44〜47°）', 'category': 'ウェッジ',       'sort_order': 21, 'is_active': 1},
-      {'name': 'アプローチウェッジ（48〜53°）', 'category': 'ウェッジ',       'sort_order': 22, 'is_active': 1},
-      {'name': 'サンドウェッジ（54〜58°）',     'category': 'ウェッジ',       'sort_order': 23, 'is_active': 0},
-      {'name': 'ロブウェッジ（58〜64°）',       'category': 'ウェッジ',       'sort_order': 24, 'is_active': 0},
+      {'name': 'ピッチングウェッジ（44〜47°）', 'category': 'ウェッジ',       'sort_order': 21, 'is_active': 1, 'master_id': 'wedge_pw'},
+      {'name': 'アプローチウェッジ（48〜53°）', 'category': 'ウェッジ',       'sort_order': 22, 'is_active': 1, 'master_id': 'wedge_aw'},
+      {'name': 'サンドウェッジ（54〜58°）',     'category': 'ウェッジ',       'sort_order': 23, 'is_active': 0, 'master_id': 'wedge_sw'},
+      {'name': 'ロブウェッジ（58〜64°）',       'category': 'ウェッジ',       'sort_order': 24, 'is_active': 0, 'master_id': 'wedge_lw'},
       // その他
-      {'name': 'パター',                        'category': 'その他',         'sort_order': 25, 'is_active': 0},
+      {'name': 'パター',                        'category': 'その他',         'sort_order': 25, 'is_active': 0, 'master_id': 'putter'},
     ];
 
     for (final club in defaultClubs) {

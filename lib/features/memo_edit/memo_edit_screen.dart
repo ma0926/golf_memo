@@ -595,7 +595,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                             focusNode: _distanceFocusNode,
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.right,
-                            style: AppTypography.enHeader4.copyWith(
+                            style: AppTypography.enMMedium.copyWith(
                               color: AppColors.textPrimary,
                             ),
                             decoration: const InputDecoration(

@@ -218,6 +218,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
+          toolbarHeight: 48,
           automaticallyImplyLeading: false,
           leading: IconButton(
             icon: SvgPicture.asset('assets/icons/close.svg', width: 30, height: 30),
@@ -280,7 +281,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
                         children: [
                           Text(
                             memo.distance != null ? '${memo.distance}' : '--',
-                            style: AppTypography.enHeader4.copyWith(
+                            style: AppTypography.enMMedium.copyWith(
                               color: memo.distance != null
                                   ? AppColors.textPrimary
                                   : AppColors.textSecondary,
@@ -289,7 +290,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
                           const SizedBox(width: 2),
                           Text(
                             'yd',
-                            style: AppTypography.enHeader4.copyWith(
+                            style: AppTypography.enMMedium.copyWith(
                               color: memo.distance != null
                                   ? AppColors.textPrimary
                                   : AppColors.textSecondary,

@@ -13,6 +13,7 @@ class TermsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
+        toolbarHeight: 48,
         automaticallyImplyLeading: false,
         leading: IconButton(
           onPressed: () => context.pop(),

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_colors.dart';
@@ -92,10 +93,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
                 child: Column(
                   children: [
-                    Image.asset(
-                      'assets/images/club_setting.png',
-                      width: 80,
-                      height: 80,
+                    SvgPicture.asset(
+                      'assets/images/club_setting.svg',
+                      width: 120,
+                      height: 117,
                     ),
                     const SizedBox(height: 32),
                     Text(
@@ -107,7 +108,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'クラブごとにコツや飛距離を残せるので、\n気づきを逃さずストックできます。',
+                      'クラブごとにコツや飛距離を記録できます。',
                       textAlign: TextAlign.center,
                       style: AppTypography.jpMRegular.copyWith(
                         color: AppColors.textPrimary,

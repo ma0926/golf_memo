@@ -35,23 +35,33 @@ class MemoListScreen extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: AppColors.background,
           elevation: 0,
-          toolbarHeight: 0,
-          bottom: const TabBar(
+          toolbarHeight: 48,
+          titleSpacing: 16,
+          title: Text(
+            'My GOLF',
+            style: AppTypography.enHeader1.copyWith(
+              color: const Color(0xFF23264E),
+              wordSpacing: 6,
+            ),
+          ),
+          bottom: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.center,
             labelColor: AppColors.textPrimary,
             unselectedLabelColor: AppColors.textSecondary,
-            indicator: UnderlineTabIndicator(
-              borderSide: BorderSide(color: AppColors.textPrimary, width: 2.0),
+            indicator: const UnderlineTabIndicator(
+              borderSide: BorderSide(color: AppColors.primary, width: 2.0),
               borderRadius: BorderRadius.zero,
-              insets: EdgeInsets.symmetric(horizontal: 16),
+              insets: EdgeInsets.zero,
             ),
             indicatorSize: TabBarIndicatorSize.tab,
-            dividerColor: AppColors.primaryMiddle,
-            dividerHeight: 0.3,
+            dividerColor: Colors.transparent,
+            labelPadding: EdgeInsets.zero,
             labelStyle: AppTypography.jpHeader4,
             unselectedLabelStyle: AppTypography.jpHeader4,
-            tabs: [
-              Tab(text: 'すべて', height: 38),
-              Tab(text: 'お気に入り', height: 38),
+            tabs: const [
+              SizedBox(width: 120, height: 38, child: Center(child: Text('すべて'))),
+              SizedBox(width: 120, height: 38, child: Center(child: Text('お気に入り'))),
             ],
           ),
         ),
@@ -104,6 +114,17 @@ class _AllMemosTabState extends State<_AllMemosTab> {
   bool _isLoading = true;
   int? _hiddenMemoId;
 
+  late final Future<String> _docsDirFuture = _initDocsPath();
+
+  Future<String> _initDocsPath() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      return dir.path;
+    } catch (_) {
+      return '';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -118,32 +139,37 @@ class _AllMemosTabState extends State<_AllMemosTab> {
   }
 
   Future<void> _load() async {
-    final memos = await _memoRepo.getAllMemos();
-    final clubs = await _clubRepo.getActiveClubs();
+    try {
+      final memos = await _memoRepo.getAllMemos();
+      final clubs = await _clubRepo.getActiveClubs();
 
-    final mediaResults = await Future.wait(
-      memos.map((m) => m.id != null
-          ? _mediaRepo.getMediaByMemoId(m.id!)
-          : Future.value(<Media>[])),
-    );
+      final mediaResults = await Future.wait(
+        memos.map((m) => m.id != null
+            ? _mediaRepo.getMediaByMemoId(m.id!)
+            : Future.value(<Media>[])),
+      );
 
-    final docsDir = await getApplicationDocumentsDirectory();
-    final memoMediaMap = <int, List<Media>>{};
-    for (var i = 0; i < memos.length; i++) {
-      if (memos[i].id != null) memoMediaMap[memos[i].id!] = mediaResults[i];
+      final docsPath = await _docsDirFuture;
+      final memoMediaMap = <int, List<Media>>{};
+      for (var i = 0; i < memos.length; i++) {
+        if (memos[i].id != null) memoMediaMap[memos[i].id!] = mediaResults[i];
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _memos = memos;
+        _clubNames = {for (final c in clubs) c.id!: c.name};
+        _clubCategories = {for (final c in clubs) c.id!: c.category};
+        _clubIsCustom = {for (final c in clubs) c.id!: c.isCustom};
+        _memoMediaList = memoMediaMap;
+        _docsPath = docsPath;
+        _isLoading = false;
+        _hiddenMemoId = null;
+      });
+    } catch (e, st) {
+      debugPrint('_AllMemosTab _load error: $e\n$st');
+      if (mounted) setState(() => _isLoading = false);
     }
-
-    if (!mounted) return;
-    setState(() {
-      _memos = memos;
-      _clubNames = {for (final c in clubs) c.id!: c.name};
-      _clubCategories = {for (final c in clubs) c.id!: c.category};
-      _clubIsCustom = {for (final c in clubs) c.id!: c.isCustom};
-      _memoMediaList = memoMediaMap;
-      _docsPath = docsDir.path;
-      _isLoading = false;
-      _hiddenMemoId = null;
-    });
   }
 
   List<MemoMediaItem> _buildMediaItems(int? memoId) {
@@ -216,14 +242,9 @@ class _AllMemosTabState extends State<_AllMemosTab> {
                       borderRadius: BorderRadius.all(Radius.circular(24)),
                       boxShadow: [
                         BoxShadow(
-                          color: Color(0x0D000000), // rgba(0,0,0,0.05)
-                          blurRadius: 20,
-                          offset: Offset(0, 0),
-                        ),
-                        BoxShadow(
-                          color: Color(0x0A007BFF), // rgba(0,123,255,0.04)
-                          blurRadius: 40,
-                          offset: Offset(0, 8),
+                          color: Color(0x0D000000),
+                          blurRadius: 4,
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),
@@ -334,6 +355,17 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
   String _docsPath = '';
   bool _isLoading = true;
 
+  late final Future<String> _docsDirFuture = _initDocsPath();
+
+  Future<String> _initDocsPath() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      return dir.path;
+    } catch (_) {
+      return '';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -341,32 +373,37 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
   }
 
   Future<void> _load() async {
-    final memos = await _memoRepo.getFavoriteMemos();
-    final clubs = await _clubRepo.getActiveClubs();
+    try {
+      final memos = await _memoRepo.getFavoriteMemos();
+      final clubs = await _clubRepo.getActiveClubs();
 
-    final mediaResults = await Future.wait(
-      memos.map((m) => m.id != null
-          ? _mediaRepo.getMediaByMemoId(m.id!)
-          : Future.value(<Media>[])),
-    );
+      final mediaResults = await Future.wait(
+        memos.map((m) => m.id != null
+            ? _mediaRepo.getMediaByMemoId(m.id!)
+            : Future.value(<Media>[])),
+      );
 
-    final docsDir = await getApplicationDocumentsDirectory();
-    final memoMediaMap = <int, List<Media>>{};
-    for (var i = 0; i < memos.length; i++) {
-      if (memos[i].id != null) memoMediaMap[memos[i].id!] = mediaResults[i];
+      final docsPath = await _docsDirFuture;
+      final memoMediaMap = <int, List<Media>>{};
+      for (var i = 0; i < memos.length; i++) {
+        if (memos[i].id != null) memoMediaMap[memos[i].id!] = mediaResults[i];
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _memos = memos;
+        _clubNames = {for (final c in clubs) c.id!: c.name};
+        _clubCategories = {for (final c in clubs) c.id!: c.category};
+        _clubIsCustom = {for (final c in clubs) c.id!: c.isCustom};
+        _memoMediaList = memoMediaMap;
+        _docsPath = docsPath;
+        _isLoading = false;
+        _hiddenMemoId = null;
+      });
+    } catch (e, st) {
+      debugPrint('_FavoriteMemosTab _load error: $e\n$st');
+      if (mounted) setState(() => _isLoading = false);
     }
-
-    if (!mounted) return;
-    setState(() {
-      _memos = memos;
-      _clubNames = {for (final c in clubs) c.id!: c.name};
-      _clubCategories = {for (final c in clubs) c.id!: c.category};
-      _clubIsCustom = {for (final c in clubs) c.id!: c.isCustom};
-      _memoMediaList = memoMediaMap;
-      _docsPath = docsDir.path;
-      _isLoading = false;
-      _hiddenMemoId = null;
-    });
   }
 
   List<MemoMediaItem> _buildMediaItems(int? memoId) {
@@ -438,14 +475,9 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
                       borderRadius: BorderRadius.all(Radius.circular(24)),
                       boxShadow: [
                         BoxShadow(
-                          color: Color(0x0D000000), // rgba(0,0,0,0.05)
-                          blurRadius: 20,
-                          offset: Offset(0, 0),
-                        ),
-                        BoxShadow(
-                          color: Color(0x0A007BFF), // rgba(0,123,255,0.04)
-                          blurRadius: 40,
-                          offset: Offset(0, 8),
+                          color: Color(0x0D000000),
+                          blurRadius: 4,
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),

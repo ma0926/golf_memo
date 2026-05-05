@@ -5,6 +5,7 @@ class Club {
   final int sortOrder;
   final bool isActive;
   final bool isCustom;
+  final String? masterId; // デフォルトクラブのみ設定。ユーザー間で同一クラブを識別するための固定ID
   final DateTime createdAt;
   final DateTime? deletedAt; // カスタムクラブの削除用（ソフトデリート）
 
@@ -15,6 +16,7 @@ class Club {
     required this.sortOrder,
     this.isActive = true,
     this.isCustom = false,
+    this.masterId,
     required this.createdAt,
     this.deletedAt,
   });
@@ -28,6 +30,7 @@ class Club {
       sortOrder: map['sort_order'] as int,
       isActive: (map['is_active'] as int) == 1,
       isCustom: (map['is_custom'] as int) == 1,
+      masterId: map['master_id'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
       deletedAt: map['deleted_at'] != null
           ? DateTime.parse(map['deleted_at'] as String)
@@ -44,6 +47,7 @@ class Club {
       'sort_order': sortOrder,
       'is_active': isActive ? 1 : 0,
       'is_custom': isCustom ? 1 : 0,
+      'master_id': masterId,
       'created_at': createdAt.toIso8601String(),
       'deleted_at': deletedAt?.toIso8601String(),
     };
@@ -56,6 +60,7 @@ class Club {
     int? sortOrder,
     bool? isActive,
     bool? isCustom,
+    String? masterId,
     DateTime? createdAt,
     DateTime? deletedAt,
   }) {
@@ -66,6 +71,7 @@ class Club {
       sortOrder: sortOrder ?? this.sortOrder,
       isActive: isActive ?? this.isActive,
       isCustom: isCustom ?? this.isCustom,
+      masterId: masterId ?? this.masterId,
       createdAt: createdAt ?? this.createdAt,
       deletedAt: deletedAt ?? this.deletedAt,
     );
