@@ -225,7 +225,6 @@ class _SearchScreenState extends State<SearchScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const SheetDragHandle(),
             // 検索バー
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -276,14 +275,6 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                         ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => context.go('/home'),
-                    child: Text(
-                      'キャンセル',
-                      style: AppTypography.jpMMedium.copyWith(color: AppColors.textMedium),
                     ),
                   ),
                 ],
@@ -650,10 +641,10 @@ class _SearchResultsListState extends State<_SearchResultsList> {
     }
 
     if (_results.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           '記録が見つかりませんでした',
-          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+          style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
         ),
       );
     }

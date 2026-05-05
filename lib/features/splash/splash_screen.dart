@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigate() async {
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
     final prefs = await SharedPreferences.getInstance();
     final completed = prefs.getBool('onboarding_completed') ?? false;
@@ -36,12 +36,12 @@ class _SplashScreenState extends State<SplashScreen> {
           Center(
             child: SvgPicture.asset(
               'assets/images/logo.svg',
-              width: 88,
+              width: 120,
               height: 88,
             ),
           ),
           const Positioned(
-            bottom: 48,
+            bottom: 80,
             left: 0,
             right: 0,
             child: Text(
@@ -53,6 +53,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 fontWeight: FontWeight.w700,
                 color: AppColors.primary,
                 decoration: TextDecoration.none,
+                letterSpacing: -2,
               ),
             ),
           ),

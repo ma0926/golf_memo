@@ -5,7 +5,6 @@
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12089"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
         <scene sceneID="EHf-IW-A2E">
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
@@ -16,10 +15,7 @@
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <!-- ロゴ: 画面中央 -->
-                            <imageView opaque="NO" contentMode="scaleAspectFit" image="LaunchImage" translatesAutoresizingMaskIntoConstraints="NO" id="YRO-k0-Ey4">
-                            </imageView>
-                            <!-- テキスト: 画面下部 -->
+                            <imageView opaque="NO" contentMode="scaleAspectFit" image="LaunchImage" translatesAutoresizingMaskIntoConstraints="NO" id="YRO-k0-Ey4"/>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="My GOLF" textAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="lbl-mg-001">
                                 <fontDescription key="fontDescription" name="Futura-Bold" family="Futura" pointSize="32"/>
                                 <color key="textColor" red="0.137" green="0.149" blue="0.306" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -27,12 +23,10 @@
                         </subviews>
                         <color key="backgroundColor" red="0.902" green="0.918" blue="0.933" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <!-- imageView: 88x88、画面中央 -->
                             <constraint firstItem="YRO-k0-Ey4" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="img-cx"/>
                             <constraint firstItem="YRO-k0-Ey4" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="img-cy"/>
-                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="width" constant="88" id="img-w"/>
+                            <constraint firstItem="YRO-k0-Ey4" firstAttribute="width" constant="120" id="img-w"/>
                             <constraint firstItem="YRO-k0-Ey4" firstAttribute="height" constant="88" id="img-h"/>
-                            <!-- label: 画面下部 (superviewの底辺から80pt) -->
                             <constraint firstItem="lbl-mg-001" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="lbl-cx"/>
                             <constraint firstItem="Ze5-6b-2t3" firstAttribute="bottom" secondItem="lbl-mg-001" secondAttribute="bottom" constant="80" id="lbl-bottom"/>
                         </constraints>
@@ -44,6 +38,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="LaunchImage" width="88" height="88"/>
+        <image name="LaunchImage" width="120" height="88"/>
     </resources>
 </document>

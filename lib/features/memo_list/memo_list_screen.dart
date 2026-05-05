@@ -41,7 +41,7 @@ class MemoListScreen extends StatelessWidget {
             'My GOLF',
             style: AppTypography.enHeader1.copyWith(
               color: const Color(0xFF23264E),
-              wordSpacing: 6,
+              wordSpacing: -2,
             ),
           ),
           bottom: TabBar(
@@ -215,10 +215,22 @@ class _AllMemosTabState extends State<_AllMemosTab> {
     }
     if (_memos.isEmpty) {
       return Center(
-        child: Text(
-          'まだ記録がありません\n＋ボタンから追加しましょう',
-          textAlign: TextAlign.center,
-          style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary, height: 1.8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('assets/images/empty_memo.png', width: 52, height: 98.842),
+            const SizedBox(height: 24),
+            Text(
+              'まだ記録がありません。',
+              textAlign: TextAlign.center,
+              style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
+            ),
+            Text(
+              '＋ボタンから追加しましょう！',
+              textAlign: TextAlign.center,
+              style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
+            ),
+          ],
         ),
       );
     }
@@ -451,7 +463,7 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
       return Center(
         child: Text(
           'お気に入りはまだありません',
-          style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
+          style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
         ),
       );
     }

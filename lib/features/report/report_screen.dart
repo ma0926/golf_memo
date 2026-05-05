@@ -343,7 +343,7 @@ class _ClubDistanceTable extends StatelessWidget {
         child: Center(
           child: Text(
             'データがありません',
-            style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
           ),
         ),
       );
@@ -438,9 +438,9 @@ class _DistanceChartCard extends StatelessWidget {
                 onTapped: onTapped,
               ),
             )
-          : const SizedBox(
+          : SizedBox(
               height: 120,
-              child: Center(child: Text('データがありません')),
+              child: Center(child: Text('データがありません', style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder))),
             ),
     );
   }
