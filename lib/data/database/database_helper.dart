@@ -8,6 +8,20 @@ class DatabaseHelper {
 
   DatabaseHelper._();
 
+  // ── テスト用ヘルパー ──────────────────────────────────
+  /// テスト前にシングルトン状態をリセットする
+  static void resetForTest() {
+    _database = null;
+    _initFuture = null;
+  }
+
+  /// テスト用のDBインスタンスを直接注入する
+  static void injectDatabaseForTest(Database db) {
+    _database = db;
+    _initFuture = Future.value(db);
+  }
+  // ─────────────────────────────────────────────────────
+
   Future<Database> get database {
     // 同時に複数の呼び出しが来ても _initDatabase() は1回しか実行しない
     _initFuture ??= _initDatabase();

@@ -1,0 +1,131 @@
+{
+  "@@locale": "en",
+
+  "tabAll": "All",
+  "tabFavorites": "Favorites",
+  "actionSave": "Save",
+  "actionEdit": "Edit",
+  "actionDelete": "Delete",
+  "actionCancel": "Cancel",
+  "actionDone": "Done",
+  "actionApply": "Apply",
+  "actionClear": "Clear",
+  "actionOk": "OK",
+  "actionNext": "Next",
+  "confirmDeleteTitle": "Delete this record?",
+  "confirmDeleteDescription": "This action cannot be undone.",
+  "errorSaveFailed": "Failed to save",
+  "errorRetryHint": "Please try again.",
+  "dateToday": "Today",
+  "dateYesterday": "Yesterday",
+  "dateDaysAgo": "{count} days ago",
+  "@dateDaysAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "weekdayMon": "Mon",
+  "weekdayTue": "Tue",
+  "weekdayWed": "Wed",
+  "weekdayThu": "Thu",
+  "weekdayFri": "Fri",
+  "weekdaySat": "Sat",
+  "weekdaySun": "Sun",
+  "dateFull": "{weekday}, {month}/{day}",
+  "@dateFull": {
+    "placeholders": {
+      "month": { "type": "int" },
+      "day": { "type": "int" },
+      "weekday": { "type": "String" }
+    }
+  },
+  "dateFullWithYear": "{weekday}, {month}/{day}/{year}",
+  "@dateFullWithYear": {
+    "placeholders": {
+      "year": { "type": "int" },
+      "month": { "type": "int" },
+      "day": { "type": "int" },
+      "weekday": { "type": "String" }
+    }
+  },
+
+  "emptyNoRecords": "No records yet.",
+  "emptyAddHint": "Tap + to add your first record!",
+  "emptyNoFavorites": "No favorites yet",
+  "unknownClub": "Unknown club",
+
+  "labelClubSelect": "Select Club",
+  "labelDistance": "Distance",
+  "sectionShotShape": "Shot Shape",
+  "sectionCondition": "Condition",
+  "sectionWind": "Wind",
+  "placeholderBody": "Notes & observations",
+  "mediaLibrary": "Choose from Library",
+  "mediaCamera": "Take Photo",
+  "mediaLimitHint": "Up to 1 video and 3 photos.",
+  "actionOpenClubSettings": "Open Club Settings",
+
+  "placeholderSearch": "Search",
+  "filterClub": "Club",
+  "filterDate": "Date",
+  "filterDistance": "Distance",
+  "filterCondition": "Condition",
+  "filterShotShape": "Shot Shape",
+  "filterFavorite": "Favorites",
+  "filterAttachment": "Has Attachment",
+  "dateRange1m": "Last month",
+  "dateRange6m": "Last 6 months",
+  "dateRange1y": "Last year",
+  "filterNone": "Any",
+  "emptySearch": "No records found",
+
+  "tab30Days": "30 Days",
+  "tab60Days": "60 Days",
+  "sectionAvgDistance": "Average Distance by Club",
+  "sectionDistanceTrend": "Distance Trend",
+  "emptyNoData": "No data available",
+  "emptyClubOff": "Enable clubs in Settings",
+
+  "onboardingTitle": "Select your clubs.",
+  "onboardingSubtitle1": "Track tips and distances for each club.",
+  "onboardingSubtitle2": "You can change this anytime in Settings.",
+  "actionAddCustom": "Add Custom Club",
+
+  "navHome": "Home",
+  "navSearch": "Search",
+  "navSummary": "Summary",
+  "navSettings": "Settings",
+
+  "titleSettings": "Settings",
+  "settingsClubs": "Clubs",
+  "settingsAbout": "About",
+  "settingsContact": "Contact Us",
+  "settingsTerms": "Terms & Licenses",
+  "titleClubSettings": "Clubs",
+  "titleCustomClub": "Custom Club",
+  "labelClubCategory": "Category",
+  "placeholderClubName": "Club name",
+  "placeholderCategory": "Select category",
+  "actionDeleteClub": "Delete this club",
+  "confirmDeleteCustomClub": "This custom club will be deleted.",
+  "titleTerms": "Terms & Licenses",
+  "sectionTermsOfUse": "Terms of Use",
+  "sectionPrivacy": "Privacy Policy",
+  "sectionLicense": "Licenses",
+  "placeholderPreparing": "Coming soon.",
+
+  "tabLibrary": "Library",
+  "actionDoneCount": "Done ({count})",
+  "@actionDoneCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "emptyMedia": "No photos or videos",
+  "titleImagePreview": "Image Preview",
+  "titleVideoPreview": "Video Preview",
+  "actionSelectImage": "Select this image",
+  "actionSelectVideo": "Select this video",
+  "actionDeselect": "Deselect",
+  "errorMaxImages": "Maximum photos selected"
+}

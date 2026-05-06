@@ -22,6 +22,7 @@ import '../../shared/widgets/app_buttons.dart';
 import '../../shared/widgets/app_distance_input.dart';
 import '../../shared/widgets/app_list_tile.dart';
 import '../../shared/widgets/sheet_drag_handle.dart';
+import 'package:golf_memo/l10n/app_localizations.dart';
 
 class MemoEditScreen extends StatefulWidget {
   final int memoId;
@@ -94,7 +95,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
     setState(() {
       _memo = memo;
       _clubId = memo.clubId;
-      _clubName = club?.name ?? '不明なクラブ';
+      _clubName = club?.name ?? '';
       _selectedDate = memo.practicedAt;
       _bodyController.text = (memo.body ?? '').trimRight();
       _distanceController.text = memo.distance?.toString() ?? '';
@@ -129,17 +130,18 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  String get _formattedDate {
+  String _formattedDate(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final target = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
     final diff = today.difference(target).inDays;
-    if (diff == 0) return '今日';
-    if (diff == 1) return '昨日';
-    if (diff <= 6) return '$diff日前';
-    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+    if (diff == 0) return l10n.dateToday;
+    if (diff == 1) return l10n.dateYesterday;
+    if (diff <= 6) return l10n.dateDaysAgo(diff);
+    final weekdays = [l10n.weekdayMon, l10n.weekdayTue, l10n.weekdayWed, l10n.weekdayThu, l10n.weekdayFri, l10n.weekdaySat, l10n.weekdaySun];
     final w = weekdays[_selectedDate.weekday - 1];
-    return '${_selectedDate.month}月${_selectedDate.day}日 ${w}曜日';
+    return l10n.dateFull(_selectedDate.month, _selectedDate.day, w);
   }
 
   void _showDatePicker() {
@@ -153,8 +155,8 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: CupertinoButton(
-                child: const Text('完了', style: TextStyle(color: AppColors.primary)),
                 onPressed: () => Navigator.pop(modalContext),
+                child: Text(AppLocalizations.of(context)!.actionDone, style: const TextStyle(color: AppColors.primary)),
               ),
             ),
             Expanded(
@@ -241,7 +243,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                 colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
               ),
               title: Text(
-                'ライブラリから選ぶ',
+                AppLocalizations.of(ctx)!.mediaLibrary,
                 style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
               ),
               onTap: () {
@@ -258,7 +260,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                 colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
               ),
               title: Text(
-                '写真を撮る',
+                AppLocalizations.of(ctx)!.mediaCamera,
                 style: AppTypography.jpMRegular.copyWith(color: AppColors.textPrimary),
               ),
               onTap: () {
@@ -272,7 +274,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Text(
-                  '※動画は1枚、画像は3枚まで追加できます。',
+                  AppLocalizations.of(ctx)!.mediaLimitHint,
                   style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
                 ),
               ),
@@ -443,15 +445,16 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
     } catch (e) {
       setState(() => _isSaving = false);
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         showCupertinoDialog(
           context: context,
           builder: (ctx) => CupertinoAlertDialog(
-            title: const Text('保存に失敗しました'),
-            content: const Text('もう一度お試しください。'),
+            title: Text(l10n.errorSaveFailed),
+            content: Text(l10n.errorRetryHint),
             actions: [
               CupertinoDialogAction(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK'),
+                child: Text(l10n.actionOk),
               ),
             ],
           ),
@@ -476,14 +479,15 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
     final activeExistingVideo =
         _existingMedia.where((m) => m.isVideo && !_removedMediaIds.contains(m.id)).firstOrNull;
 
+    final l10n = AppLocalizations.of(context)!;
     // 未選択セクションのチップ（画面最下部に固定）
     final collapsedChips = <Widget>[
       if (!_openSections.contains('shotShape'))
-        _CollapsedChip(label: '球筋', onTap: () => setState(() => _openSections.add('shotShape'))),
+        _CollapsedChip(label: l10n.sectionShotShape, onTap: () => setState(() => _openSections.add('shotShape'))),
       if (!_openSections.contains('condition'))
-        _CollapsedChip(label: '調子', onTap: () => setState(() => _openSections.add('condition'))),
+        _CollapsedChip(label: l10n.sectionCondition, onTap: () => setState(() => _openSections.add('condition'))),
       if (!_openSections.contains('wind'))
-        _CollapsedChip(label: '風', onTap: () => setState(() => _openSections.add('wind'))),
+        _CollapsedChip(label: l10n.sectionWind, onTap: () => setState(() => _openSections.add('wind'))),
     ];
 
     return Scaffold(
@@ -501,7 +505,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 16, top: 0, bottom: 0),
             child: AppPrimaryButton(
-              label: '保存',
+              label: l10n.actionSave,
               onPressed: _saveChanges,
               isLoading: _isSaving,
               icon: const Icon(Icons.check_rounded, size: 18, color: Colors.white),
@@ -539,7 +543,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              _formattedDate,
+                              _formattedDate(context),
                               style: AppTypography.jpSMedium.copyWith(color: AppColors.textSecondary),
                             ),
                             const SizedBox(width: 6),
@@ -576,7 +580,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                     Row(
                       children: [
                         Text(
-                          '飛距離',
+                          AppLocalizations.of(context)!.labelDistance,
                           style: AppTypography.jpHeader4.copyWith(
                             color: AppColors.textMedium,
                             fontSize: 14,
@@ -628,7 +632,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                         maxLines: null,
                         textAlignVertical: TextAlignVertical.top,
                         decoration: InputDecoration(
-                          hintText: '練習内容・気づき',
+                          hintText: l10n.placeholderBody,
                           hintStyle: AppTypography.jpMRegular.copyWith(color: AppColors.textPlaceholder, letterSpacing: 0, wordSpacing: 0),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.zero,
@@ -643,7 +647,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                       const SizedBox(height: 16),
                     if (_openSections.contains('shotShape'))
                       _buildSectionCard(
-                        label: '球筋',
+                        label: l10n.sectionShotShape,
                         sectionKey: 'shotShape',
                         child: _ChipSelector(
                           options: AppConstants.shotShapeLabels.entries
@@ -656,7 +660,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                       ),
                     if (_openSections.contains('condition'))
                       _buildSectionCard(
-                        label: '調子',
+                        label: l10n.sectionCondition,
                         sectionKey: 'condition',
                         child: _ChipSelector(
                           options: AppConstants.conditionLabels.entries
@@ -668,7 +672,7 @@ class _MemoEditScreenState extends State<MemoEditScreen> {
                       ),
                     if (_openSections.contains('wind'))
                       _buildSectionCard(
-                        label: '風',
+                        label: l10n.sectionWind,
                         sectionKey: 'wind',
                         child: _ChipSelector(
                           options: AppConstants.windLabels.entries
@@ -982,7 +986,7 @@ class _ClubSelectSheetState extends State<_ClubSelectSheet> {
                               alignment: Alignment.center,
                               children: [
                                 Text(
-                                  'クラブを選択',
+                                  AppLocalizations.of(context)!.labelClubSelect,
                                   textAlign: TextAlign.center,
                                   style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
                                 ),
@@ -1007,15 +1011,15 @@ class _ClubSelectSheetState extends State<_ClubSelectSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 28),
                       child: GestureDetector(
                         onTap: widget.onOpenSettings,
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'クラブの設定を開く',
-                              style: TextStyle(fontSize: 14, color: Colors.blue),
+                              AppLocalizations.of(context)!.actionOpenClubSettings,
+                              style: const TextStyle(fontSize: 14, color: Colors.blue),
                             ),
-                            SizedBox(width: 4),
-                            Icon(Icons.arrow_outward, size: 14, color: Colors.blue),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.arrow_outward, size: 14, color: Colors.blue),
                           ],
                         ),
                       ),

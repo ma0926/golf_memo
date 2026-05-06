@@ -19,6 +19,7 @@ import '../../shared/widgets/app_section_title.dart';
 import '../../shared/widgets/memo_card.dart' show MemoCard, MemoMediaItem, ClubBadge;
 import '../memo_list/memo_expanded_card.dart';
 import '../../shared/widgets/sheet_drag_handle.dart';
+import 'package:golf_memo/l10n/app_localizations.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -45,11 +46,11 @@ class _SearchScreenState extends State<SearchScreen> {
   bool get _hasResults => _searchController.text.isNotEmpty || _hasAnyFilter;
 
   // 記録日チップのラベル
-  String? get _dateLabel {
+  String? _dateLabel(AppLocalizations l10n) {
     switch (_selectedDate) {
-      case 'month1': return '1ヶ月以前';
-      case 'month6': return '6ヶ月以前';
-      case 'year1':  return '1年以前';
+      case 'month1': return l10n.dateRange1m;
+      case 'month6': return l10n.dateRange6m;
+      case 'year1':  return l10n.dateRange1y;
       default:       return null;
     }
   }
@@ -115,7 +116,7 @@ class _SearchScreenState extends State<SearchScreen> {
             children: [
               const SheetDragHandle(),
               Text(
-                'クラブ',
+                AppLocalizations.of(context)!.filterClub,
                 textAlign: TextAlign.center,
                 style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
               ),
@@ -142,8 +143,9 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _openDateSheet() {
+    final l10n = AppLocalizations.of(context)!;
     _showFilterSheet(
-      title: '日付',
+      title: l10n.filterDate,
       child: _DateFilterContent(
         selected: _selectedDate,
         onSelect: (value) {
@@ -156,8 +158,9 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _openDistanceSheet() {
+    final l10n = AppLocalizations.of(context)!;
     _showFilterSheet(
-      title: '飛距離',
+      title: l10n.filterDistance,
       child: _DistanceFilterContent(
         min: _distanceMin,
         max: _distanceMax,
@@ -174,8 +177,9 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _openConditionSheet() {
+    final l10n = AppLocalizations.of(context)!;
     _showFilterSheet(
-      title: '調子',
+      title: l10n.filterCondition,
       child: _ConditionFilterContent(
         selected: _selectedCondition,
         onApply: (value) => setState(() => _selectedCondition = value),
@@ -185,8 +189,9 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _openShotShapeSheet() {
+    final l10n = AppLocalizations.of(context)!;
     _showFilterSheet(
-      title: '球筋',
+      title: l10n.filterShotShape,
       showButtons: false,
       child: _ShotShapeFilterContent(
         selected: _selectedShotShapes,
@@ -220,14 +225,26 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        toolbarHeight: 48,
+        centerTitle: true,
+        title: Text(
+          l10n.navSearch,
+          style: AppTypography.jpHeader2.copyWith(color: AppColors.textPrimary),
+        ),
+      ),
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             // 検索バー
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               child: Row(
                 children: [
                   Expanded(
@@ -248,7 +265,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               controller: _searchController,
                               focusNode: _searchFocusNode,
                               decoration: InputDecoration(
-                                hintText: 'キーワード検索',
+                                hintText: l10n.placeholderSearch,
                                 hintStyle: AppTypography.jpMRegular.copyWith(
                                   color: AppColors.textSecondary,
                                 ),
@@ -288,7 +305,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   _FilterChip(
-                    label: 'お気に入り',
+                    label: l10n.tabFavorites,
                     isSelected: _isFavorite,
                     isToggle: true,
                     showArrow: false,
@@ -296,7 +313,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 4),
                   _FilterChip(
-                    label: '添付ファイル',
+                    label: l10n.filterAttachment,
                     isSelected: _hasAttachment,
                     isToggle: true,
                     showArrow: false,
@@ -304,7 +321,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 4),
                   _FilterChip(
-                    label: 'クラブ',
+                    label: l10n.filterClub,
                     isSelected: _selectedClubId != null,
                     showArrow: true,
                     selectedLabel: _selectedClubName,
@@ -312,15 +329,15 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 4),
                   _FilterChip(
-                    label: '日付',
+                    label: l10n.filterDate,
                     isSelected: _selectedDate != null,
                     showArrow: true,
-                    selectedLabel: _dateLabel,
+                    selectedLabel: _dateLabel(l10n),
                     onTap: _openDateSheet,
                   ),
                   const SizedBox(width: 4),
                   _FilterChip(
-                    label: '飛距離',
+                    label: l10n.filterDistance,
                     isSelected: _distanceMin != null || _distanceMax != null,
                     showArrow: true,
                     selectedLabel: _distanceLabel,
@@ -328,7 +345,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 4),
                   _FilterChip(
-                    label: '球筋',
+                    label: l10n.filterShotShape,
                     isSelected: _selectedShotShapes.isNotEmpty,
                     showArrow: true,
                     selectedLabel: _shotShapeLabel,
@@ -336,7 +353,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 4),
                   _FilterChip(
-                    label: '調子',
+                    label: l10n.filterCondition,
                     isSelected: _selectedCondition != null,
                     showArrow: true,
                     selectedLabel: _selectedCondition != null
@@ -624,14 +641,15 @@ class _SearchResultsListState extends State<_SearchResultsList> {
     }).toList();
   }
 
-  String _formatDate(DateTime dt) {
+  String _formatDate(DateTime dt, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final memoDay = DateTime(dt.year, dt.month, dt.day);
-    if (memoDay == today) return '今日';
-    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+    if (memoDay == today) return l10n.dateToday;
+    final weekdays = [l10n.weekdayMon, l10n.weekdayTue, l10n.weekdayWed, l10n.weekdayThu, l10n.weekdayFri, l10n.weekdaySat, l10n.weekdaySun];
     final w = weekdays[dt.weekday - 1];
-    return '${dt.month}月${dt.day}日 ${w}曜日';
+    return l10n.dateFull(dt.month, dt.day, w);
   }
 
   @override
@@ -643,7 +661,7 @@ class _SearchResultsListState extends State<_SearchResultsList> {
     if (_results.isEmpty) {
       return Center(
         child: Text(
-          '記録が見つかりませんでした',
+          AppLocalizations.of(context)!.emptySearch,
           style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
         ),
       );
@@ -654,7 +672,7 @@ class _SearchResultsListState extends State<_SearchResultsList> {
       itemCount: _results.length,
       itemBuilder: (context, index) {
         final memo = _results[index];
-        final clubName = _clubNames[memo.clubId] ?? '不明なクラブ';
+        final clubName = _clubNames[memo.clubId] ?? AppLocalizations.of(context)!.unknownClub;
         final mediaItems = _buildMediaItems(memo.id);
 
         return Container(
@@ -690,7 +708,7 @@ class _SearchResultsListState extends State<_SearchResultsList> {
               condition: memo.condition,
               wind: memo.wind,
               bodyText: memo.body,
-              date: _formatDate(memo.practicedAt),
+              date: _formatDate(memo.practicedAt, context),
               onTap: openContainer,
               margin: EdgeInsets.zero,
             ),
@@ -823,20 +841,20 @@ class _DateFilterContent extends StatelessWidget {
 
   const _DateFilterContent({required this.selected, required this.onSelect});
 
-  static const _options = [
-    (value: null,      label: '指定なし'),
-    (value: 'month1',  label: '1ヶ月以上前'),
-    (value: 'month6',  label: '6ヶ月以上前'),
-    (value: 'year1',   label: '1年以上前'),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final options = [
+      (value: null as String?,      label: l10n.filterNone),
+      (value: 'month1' as String?,  label: l10n.dateRange1m),
+      (value: 'month6' as String?,  label: l10n.dateRange6m),
+      (value: 'year1' as String?,   label: l10n.dateRange1y),
+    ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: _options.map((opt) {
+        children: options.map((opt) {
           final isSelected = selected == opt.value;
           return Container(
             margin: const EdgeInsets.only(bottom: 2),

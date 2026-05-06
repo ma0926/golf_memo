@@ -15,6 +15,7 @@ import 'memo_expanded_card.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../core/utils/media_path_helper.dart';
 import '../../app.dart' show isDetailOpen, memoCreatedNotifier;
+import 'package:golf_memo/l10n/app_localizations.dart';
 
 // 日付ごとのグループ
 class _DateGroup {
@@ -59,9 +60,9 @@ class MemoListScreen extends StatelessWidget {
             labelPadding: EdgeInsets.zero,
             labelStyle: AppTypography.jpHeader4,
             unselectedLabelStyle: AppTypography.jpHeader4,
-            tabs: const [
-              SizedBox(width: 120, height: 38, child: Center(child: Text('すべて'))),
-              SizedBox(width: 120, height: 38, child: Center(child: Text('お気に入り'))),
+            tabs: [
+              SizedBox(width: 120, height: 38, child: Center(child: Text(AppLocalizations.of(context)!.tabAll))),
+              SizedBox(width: 120, height: 38, child: Center(child: Text(AppLocalizations.of(context)!.tabFavorites))),
             ],
           ),
         ),
@@ -221,12 +222,12 @@ class _AllMemosTabState extends State<_AllMemosTab> {
             Image.asset('assets/images/empty_memo.png', width: 52, height: 98.842),
             const SizedBox(height: 24),
             Text(
-              'まだ記録がありません。',
+              AppLocalizations.of(context)!.emptyNoRecords,
               textAlign: TextAlign.center,
               style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
             ),
             Text(
-              '＋ボタンから追加しましょう！',
+              AppLocalizations.of(context)!.emptyAddHint,
               textAlign: TextAlign.center,
               style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
             ),
@@ -278,7 +279,7 @@ class _AllMemosTabState extends State<_AllMemosTab> {
                         opacity: _hiddenMemoId == memo.id ? 0.0 : 1.0,
                         duration: const Duration(milliseconds: 160),
                         child: MemoCard(
-                          clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                          clubName: _clubNames[memo.clubId] ?? AppLocalizations.of(context)!.unknownClub,
                           clubCategory: _clubCategories[memo.clubId],
                           clubIsCustom: _clubIsCustom[memo.clubId] ?? false,
                           mediaItems: _buildMediaItems(memo.id),
@@ -297,7 +298,7 @@ class _AllMemosTabState extends State<_AllMemosTab> {
                       ),
                       openBuilder: (context, _) => MemoExpandedCard(
                         memo: memo,
-                        clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                        clubName: _clubNames[memo.clubId] ?? AppLocalizations.of(context)!.unknownClub,
                         clubCategory: _clubCategories[memo.clubId],
                         clubIsCustom: _clubIsCustom[memo.clubId] ?? false,
                       ),
@@ -318,19 +319,20 @@ class _DateHeader extends StatelessWidget {
 
   const _DateHeader({required this.date});
 
-  String _label() {
+  String _label(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final target = DateTime(date.year, date.month, date.day);
     final diff = today.difference(target).inDays;
 
-    if (diff == 0) return '今日';
-    if (diff == 1) return '昨日';
-    if (diff <= 6) return '$diff日前';
+    if (diff == 0) return l10n.dateToday;
+    if (diff == 1) return l10n.dateYesterday;
+    if (diff <= 6) return l10n.dateDaysAgo(diff);
 
-    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+    final weekdays = [l10n.weekdayMon, l10n.weekdayTue, l10n.weekdayWed, l10n.weekdayThu, l10n.weekdayFri, l10n.weekdaySat, l10n.weekdaySun];
     final weekday = weekdays[date.weekday - 1];
-    return '${date.month}月${date.day}日 ${weekday}曜日';
+    return l10n.dateFull(date.month, date.day, weekday);
   }
 
   @override
@@ -338,7 +340,7 @@ class _DateHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(32, 12, 24, 8),
       child: Text(
-        _label(),
+        _label(context),
         style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium),
       ),
     );
@@ -462,7 +464,7 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
     if (_memos.isEmpty) {
       return Center(
         child: Text(
-          'お気に入りはまだありません',
+          AppLocalizations.of(context)!.emptyNoFavorites,
           style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
         ),
       );
@@ -511,7 +513,7 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
                         opacity: _hiddenMemoId == memo.id ? 0.0 : 1.0,
                         duration: const Duration(milliseconds: 160),
                         child: MemoCard(
-                          clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                          clubName: _clubNames[memo.clubId] ?? AppLocalizations.of(context)!.unknownClub,
                           clubCategory: _clubCategories[memo.clubId],
                           clubIsCustom: _clubIsCustom[memo.clubId] ?? false,
                           mediaItems: _buildMediaItems(memo.id),
@@ -530,7 +532,7 @@ class _FavoriteMemosTabState extends State<_FavoriteMemosTab> {
                       ),
                       openBuilder: (context, _) => MemoExpandedCard(
                         memo: memo,
-                        clubName: _clubNames[memo.clubId] ?? '不明なクラブ',
+                        clubName: _clubNames[memo.clubId] ?? AppLocalizations.of(context)!.unknownClub,
                         clubCategory: _clubCategories[memo.clubId],
                         clubIsCustom: _clubIsCustom[memo.clubId] ?? false,
                       ),

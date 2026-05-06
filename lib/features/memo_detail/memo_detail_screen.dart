@@ -15,6 +15,7 @@ import '../../shared/widgets/media_grid.dart';
 import '../../shared/widgets/memo_card.dart' show ClubBadge;
 import '../../shared/widgets/sheet_drag_handle.dart';
 import '../memo_edit/memo_edit_screen.dart';
+import 'package:golf_memo/l10n/app_localizations.dart';
 
 class MemoDetailScreen extends StatefulWidget {
   final int memoId;
@@ -77,7 +78,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
 
     setState(() {
       _memo = memo;
-      _clubName = club?.name ?? '不明なクラブ';
+      _clubName = club?.name ?? '';
       _clubCategory = club?.category;
       _clubIsCustom = club?.isCustom ?? false;
       _mediaList = media;
@@ -111,7 +112,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
                 colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
               ),
               title: Text(
-                '編集',
+                AppLocalizations.of(ctx)!.actionEdit,
                 style: AppTypography.enMRegular.copyWith(color: AppColors.textPrimary),
               ),
               onTap: () async {
@@ -140,7 +141,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
                 colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
               ),
               title: Text(
-                '削除',
+                AppLocalizations.of(ctx)!.actionDelete,
                 style: AppTypography.enMRegular.copyWith(color: Colors.red),
               ),
               onTap: () {
@@ -157,25 +158,26 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
 
   // 削除確認
   void _showDeleteConfirm() {
+    final l10n = AppLocalizations.of(context)!;
     showCupertinoDialog(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('削除しますか？'),
-        content: const Text('この記録を削除すると元に戻せません。'),
+      builder: (ctx) => CupertinoAlertDialog(
+        title: Text(l10n.confirmDeleteTitle),
+        content: Text(l10n.confirmDeleteDescription),
         actions: [
           CupertinoDialogAction(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.actionCancel),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(ctx);
               await _mediaRepo.deleteMediaByMemoId(widget.memoId);
               await _memoRepo.deleteMemo(widget.memoId);
               if (mounted) context.go('/home');
             },
-            child: const Text('削除'),
+            child: Text(l10n.actionDelete),
           ),
         ],
       ),
@@ -189,17 +191,18 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
     await _memoRepo.toggleFavorite(widget.memoId, newValue);
   }
 
-  String _formattedDate(DateTime dt) {
+  String _formattedDate(DateTime dt, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final target = DateTime(dt.year, dt.month, dt.day);
     final diff = today.difference(target).inDays;
-    if (diff == 0) return '今日';
-    if (diff == 1) return '昨日';
-    if (diff <= 6) return '$diff日前';
-    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+    if (diff == 0) return l10n.dateToday;
+    if (diff == 1) return l10n.dateYesterday;
+    if (diff <= 6) return l10n.dateDaysAgo(diff);
+    final weekdays = [l10n.weekdayMon, l10n.weekdayTue, l10n.weekdayWed, l10n.weekdayThu, l10n.weekdayFri, l10n.weekdaySat, l10n.weekdaySun];
     final w = weekdays[dt.weekday - 1];
-    return '${dt.month}月${dt.day}日 ${w}曜日';
+    return l10n.dateFull(dt.month, dt.day, w);
   }
 
   @override
@@ -247,7 +250,7 @@ class _MemoDetailScreenState extends State<MemoDetailScreen> {
               // 日付
               Center(
                 child: Text(
-                  _formattedDate(memo.practicedAt),
+                  _formattedDate(memo.practicedAt, context),
                   style: AppTypography.jpSMedium.copyWith(color: AppColors.textSecondary),
                 ),
               ),

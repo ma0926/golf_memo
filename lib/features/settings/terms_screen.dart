@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
+import 'package:golf_memo/l10n/app_localizations.dart';
 
 class TermsScreen extends StatelessWidget {
   const TermsScreen({super.key});
@@ -24,9 +25,9 @@ class TermsScreen extends StatelessWidget {
             colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
           ),
         ),
-        title: const Text(
-          '規約・ライセンス',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)!.settingsTerms,
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
@@ -36,13 +37,13 @@ class TermsScreen extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
-        children: const [
-          _Section(title: '利用規約', body: ''),
-          SizedBox(height: 32),
-          _Section(title: 'プライバシーポリシー', body: ''),
-          SizedBox(height: 32),
+        children: [
+          _Section(title: AppLocalizations.of(context)!.sectionTermsOfUse, body: ''),
+          const SizedBox(height: 32),
+          _Section(title: AppLocalizations.of(context)!.sectionPrivacy, body: ''),
+          const SizedBox(height: 32),
           _Section(
-            title: 'ライセンス',
+            title: AppLocalizations.of(context)!.sectionLicense,
             body: 'このアプリは以下のオープンソースソフトウェアを使用しています。\n\n'
                 '• Flutter (BSD 3-Clause License)\n'
                 '• sqflite (MIT License)\n'
@@ -57,7 +58,7 @@ class TermsScreen extends StatelessWidget {
                 '• path (MIT License)\n'
                 '• cupertino_icons (MIT License)',
           ),
-          SizedBox(height: 40),
+          const SizedBox(height: 40),
         ],
       ),
     );
@@ -92,9 +93,9 @@ class _Section extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
           child: body.isEmpty
-              ? const Text(
-                  '準備中です。',
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ? Text(
+                  AppLocalizations.of(context)!.placeholderPreparing,
+                  style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                 )
               : Text(
                   body,

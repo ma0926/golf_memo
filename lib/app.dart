@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'core/constants/app_colors.dart';
 import 'core/theme/app_theme.dart';
+import 'l10n/app_localizations.dart';
 
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/memo_list/memo_list_screen.dart';
@@ -154,6 +155,7 @@ class _ScaffoldWithNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       extendBody: true,
       body: navigationShell,
@@ -224,7 +226,7 @@ class _ScaffoldWithNav extends StatelessWidget {
                       onTap: () => navigationShell.goBranch(0),
                       child: _NavItem(
                         icon: 'assets/icons/view_agenda.svg',
-                        label: 'ホーム',
+                        label: l10n.navHome,
                         selected: navigationShell.currentIndex == 0,
                       ),
                     ),
@@ -235,7 +237,7 @@ class _ScaffoldWithNav extends StatelessWidget {
                       onTap: () => navigationShell.goBranch(1),
                       child: _NavItem(
                         icon: 'assets/icons/Icon Button-1.svg',
-                        label: '検索',
+                        label: l10n.navSearch,
                         selected: navigationShell.currentIndex == 1,
                       ),
                     ),
@@ -246,7 +248,7 @@ class _ScaffoldWithNav extends StatelessWidget {
                       onTap: () => navigationShell.goBranch(2),
                       child: _NavItem(
                         icon: 'assets/icons/show_chart.svg',
-                        label: 'サマリー',
+                        label: l10n.navSummary,
                         selected: navigationShell.currentIndex == 2,
                       ),
                     ),
@@ -257,7 +259,7 @@ class _ScaffoldWithNav extends StatelessWidget {
                       onTap: () => navigationShell.goBranch(3),
                       child: _NavItem(
                         icon: 'assets/icons/Icon Button.svg',
-                        label: '設定',
+                        label: l10n.navSettings,
                         selected: navigationShell.currentIndex == 3,
                       ),
                     ),
@@ -344,14 +346,15 @@ class _AppState extends State<App> {
       title: 'PIN',
       theme: AppTheme.light,
       routerConfig: _router,
-      locale: const Locale('ja', 'JP'),
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('ja', 'JP'),
+        Locale('ja'),
+        Locale('en'),
       ],
     );
   }

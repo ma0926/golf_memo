@@ -8,6 +8,7 @@ import '../../data/models/club.dart';
 import '../../data/repositories/club_repository.dart';
 import '../../shared/widgets/app_list_tile.dart';
 import '../../shared/widgets/sheet_drag_handle.dart';
+import 'package:golf_memo/l10n/app_localizations.dart';
 
 class CustomClubScreen extends StatefulWidget {
   final int? clubId; // null = 新規, 非null = 既存クラブを編集
@@ -99,15 +100,16 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
   }
 
   void _showDeleteConfirm() {
+    final l10n = AppLocalizations.of(context)!;
     showCupertinoDialog(
       context: context,
       builder: (ctx) => CupertinoAlertDialog(
-        title: const Text('削除しますか？'),
-        content: const Text('このカスタムクラブを削除します。'),
+        title: Text(l10n.confirmDeleteTitle),
+        content: Text(l10n.confirmDeleteCustomClub),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('キャンセル'),
+            child: Text(l10n.actionCancel),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
@@ -116,7 +118,7 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
               await _clubRepo.deleteClub(widget.clubId!);
               if (mounted) context.pop();
             },
-            child: const Text('削除'),
+            child: Text(l10n.actionDelete),
           ),
         ],
       ),
@@ -139,7 +141,7 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: Text(
-                'クラブのカテゴリ',
+                AppLocalizations.of(ctx)!.labelClubCategory,
                 textAlign: TextAlign.center,
                 style: AppTypography.jpHeader3.copyWith(color: AppColors.textPrimary),
               ),
@@ -189,14 +191,14 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
         leading: TextButton(
           onPressed: () => Navigator.of(context).pop(),
           style: TextButton.styleFrom(padding: EdgeInsets.zero),
-          child: const Text(
-            'キャンセル',
-            style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+          child: Text(
+            AppLocalizations.of(context)!.actionCancel,
+            style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
           ),
         ),
-        title: const Text(
-          'カスタムクラブ',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)!.titleCustomClub,
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
@@ -209,7 +211,7 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Text(
-                '保存',
+                AppLocalizations.of(context)!.actionSave,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -238,9 +240,9 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
                     controller: _nameController,
                     autofocus: _isNew,
                     onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(
-                      hintText: 'クラブ名を入力',
-                      hintStyle: TextStyle(color: AppColors.textSecondary),
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.placeholderClubName,
+                      hintStyle: const TextStyle(color: AppColors.textSecondary),
                       border: InputBorder.none,
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(
@@ -256,11 +258,11 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
                 ),
                 const SizedBox(height: 24),
                 // カテゴリ選択
-                const Padding(
-                  padding: EdgeInsets.only(left: 4, bottom: 8),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 8),
                   child: Text(
-                    'クラブのカテゴリ',
-                    style: TextStyle(
+                    AppLocalizations.of(context)!.labelClubCategory,
+                    style: const TextStyle(
                       fontSize: 13,
                       color: AppColors.textSecondary,
                     ),
@@ -278,7 +280,7 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
                     child: Row(
                       children: [
                         Text(
-                          _selectedCategory ?? 'カテゴリ選択',
+                          _selectedCategory ?? AppLocalizations.of(context)!.placeholderCategory,
                           style: TextStyle(
                             fontSize: 15,
                             color: _selectedCategory != null
@@ -306,9 +308,9 @@ class _CustomClubScreenState extends State<CustomClubScreen> {
                 padding: const EdgeInsets.only(bottom: 16),
                 child: TextButton(
                   onPressed: _showDeleteConfirm,
-                  child: const Text(
-                    'このクラブを削除する',
-                    style: TextStyle(fontSize: 15, color: Colors.red),
+                  child: Text(
+                    AppLocalizations.of(context)!.actionDeleteClub,
+                    style: const TextStyle(fontSize: 15, color: Colors.red),
                   ),
                 ),
               ),

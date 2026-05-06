@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../shared/widgets/app_section_title.dart';
+import 'package:golf_memo/l10n/app_localizations.dart';
 
 
 class SettingsScreen extends StatelessWidget {
@@ -11,6 +12,7 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -19,7 +21,7 @@ class SettingsScreen extends StatelessWidget {
         toolbarHeight: 48,
         automaticallyImplyLeading: false,
         title: Text(
-          '設定',
+          l10n.titleSettings,
           style: AppTypography.jpHeader2.copyWith(color: AppColors.textPrimary),
         ),
         centerTitle: true,
@@ -28,18 +30,18 @@ class SettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
         children: [
           _SettingsRow(
-            label: '記録するクラブ',
+            label: l10n.settingsClubs,
             icon: 'assets/icons/settings_club.svg',
             onTap: () => context.push('/settings/clubs'),
           ),
-          const AppSectionTitle(title: 'このアプリについて'),
+          AppSectionTitle(title: l10n.settingsAbout),
           _SettingsRow(
-            label: 'お問い合わせ',
+            label: l10n.settingsContact,
             icon: 'assets/icons/settings_contact.svg',
             onTap: () {},
           ),
           _SettingsRow(
-            label: '規約・ライセンス',
+            label: l10n.settingsTerms,
             icon: 'assets/icons/settings_terms.svg',
             onTap: () => context.push('/settings/terms'),
           ),

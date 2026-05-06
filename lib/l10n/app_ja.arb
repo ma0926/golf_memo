@@ -1,0 +1,131 @@
+{
+  "@@locale": "ja",
+
+  "tabAll": "すべて",
+  "tabFavorites": "お気に入り",
+  "actionSave": "保存",
+  "actionEdit": "編集",
+  "actionDelete": "削除",
+  "actionCancel": "キャンセル",
+  "actionDone": "完了",
+  "actionApply": "適用",
+  "actionClear": "クリア",
+  "actionOk": "OK",
+  "actionNext": "次へ",
+  "confirmDeleteTitle": "削除しますか？",
+  "confirmDeleteDescription": "この記録を削除すると元に戻せません。",
+  "errorSaveFailed": "保存に失敗しました",
+  "errorRetryHint": "もう一度お試しください。",
+  "dateToday": "今日",
+  "dateYesterday": "昨日",
+  "dateDaysAgo": "{count}日前",
+  "@dateDaysAgo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "weekdayMon": "月",
+  "weekdayTue": "火",
+  "weekdayWed": "水",
+  "weekdayThu": "木",
+  "weekdayFri": "金",
+  "weekdaySat": "土",
+  "weekdaySun": "日",
+  "dateFull": "{month}月{day}日 {weekday}曜日",
+  "@dateFull": {
+    "placeholders": {
+      "month": { "type": "int" },
+      "day": { "type": "int" },
+      "weekday": { "type": "String" }
+    }
+  },
+  "dateFullWithYear": "{year}年{month}月{day}日 {weekday}曜日",
+  "@dateFullWithYear": {
+    "placeholders": {
+      "year": { "type": "int" },
+      "month": { "type": "int" },
+      "day": { "type": "int" },
+      "weekday": { "type": "String" }
+    }
+  },
+
+  "emptyNoRecords": "まだ記録がありません。",
+  "emptyAddHint": "＋ボタンから追加しましょう！",
+  "emptyNoFavorites": "お気に入りはまだありません",
+  "unknownClub": "不明なクラブ",
+
+  "labelClubSelect": "クラブを選択",
+  "labelDistance": "飛距離",
+  "sectionShotShape": "球筋",
+  "sectionCondition": "調子",
+  "sectionWind": "風",
+  "placeholderBody": "練習内容・気づき",
+  "mediaLibrary": "ライブラリから選ぶ",
+  "mediaCamera": "写真を撮る",
+  "mediaLimitHint": "※動画は1枚、画像は3枚まで追加できます。",
+  "actionOpenClubSettings": "クラブの設定を開く",
+
+  "placeholderSearch": "キーワード検索",
+  "filterClub": "クラブ",
+  "filterDate": "日付",
+  "filterDistance": "飛距離",
+  "filterCondition": "調子",
+  "filterShotShape": "球筋",
+  "filterFavorite": "お気に入り",
+  "filterAttachment": "添付ファイル",
+  "dateRange1m": "1ヶ月以前",
+  "dateRange6m": "6ヶ月以前",
+  "dateRange1y": "1年以前",
+  "filterNone": "指定なし",
+  "emptySearch": "記録が見つかりませんでした",
+
+  "tab30Days": "30日",
+  "tab60Days": "60日",
+  "sectionAvgDistance": "クラブ別平均飛距離",
+  "sectionDistanceTrend": "飛距離の推移",
+  "emptyNoData": "データがありません",
+  "emptyClubOff": "設定からクラブをONにしてください",
+
+  "onboardingTitle": "練習で使用するクラブを\n教えてください。",
+  "onboardingSubtitle1": "クラブごとにコツや飛距離を記録できます。",
+  "onboardingSubtitle2": "設定はいつでも変えられます。",
+  "actionAddCustom": "カスタムクラブを追加",
+
+  "navHome": "ホーム",
+  "navSearch": "検索",
+  "navSummary": "サマリー",
+  "navSettings": "設定",
+
+  "titleSettings": "設定",
+  "settingsClubs": "記録するクラブ",
+  "settingsAbout": "このアプリについて",
+  "settingsContact": "お問い合わせ",
+  "settingsTerms": "規約・ライセンス",
+  "titleClubSettings": "記録するクラブ",
+  "titleCustomClub": "カスタムクラブ",
+  "labelClubCategory": "クラブのカテゴリ",
+  "placeholderClubName": "クラブ名を入力",
+  "placeholderCategory": "カテゴリ選択",
+  "actionDeleteClub": "このクラブを削除する",
+  "confirmDeleteCustomClub": "このカスタムクラブを削除します。",
+  "titleTerms": "規約・ライセンス",
+  "sectionTermsOfUse": "利用規約",
+  "sectionPrivacy": "プライバシーポリシー",
+  "sectionLicense": "ライセンス",
+  "placeholderPreparing": "準備中です。",
+
+  "tabLibrary": "ライブラリ",
+  "actionDoneCount": "完了({count})",
+  "@actionDoneCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "emptyMedia": "写真・動画がありません",
+  "titleImagePreview": "画像プレビュー",
+  "titleVideoPreview": "動画プレビュー",
+  "actionSelectImage": "この画像を選択する",
+  "actionSelectVideo": "この動画を選択する",
+  "actionDeselect": "選択を解除する",
+  "errorMaxImages": "選択できる枚数の上限に達しました"
+}

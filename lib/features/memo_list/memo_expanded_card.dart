@@ -14,6 +14,7 @@ import '../../shared/widgets/media_grid.dart';
 import '../../shared/widgets/memo_card.dart' show ClubBadge;
 import '../../shared/widgets/sheet_drag_handle.dart';
 import '../memo_edit/memo_edit_screen.dart';
+import 'package:golf_memo/l10n/app_localizations.dart';
 
 /// カードを展開したときに表示するコンテンツ。
 /// MemoCard（閉じた状態）と同じ流れで OpenContainer の openBuilder に渡す。
@@ -96,9 +97,11 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
     if (memo == null || !mounted) return;
     final club = await _clubRepo.getClubById(memo.clubId);
     final media = await _mediaRepo.getMediaByMemoId(_memo.id!);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _memo = memo;
-      _clubName = club?.name ?? '不明なクラブ';
+      _clubName = club?.name ?? l10n.unknownClub;
       _clubCategory = club?.category;
       _clubIsCustom = club?.isCustom ?? false;
       _isFavorite = memo.isFavorite;
@@ -152,7 +155,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
                 colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
               ),
               title: Text(
-                '編集',
+                AppLocalizations.of(ctx)!.actionEdit,
                 style: AppTypography.enMRegular.copyWith(color: AppColors.textPrimary),
               ),
               onTap: () async {
@@ -183,7 +186,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
                 colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
               ),
               title: Text(
-                '削除',
+                AppLocalizations.of(ctx)!.actionDelete,
                 style: AppTypography.enMRegular.copyWith(color: Colors.red),
               ),
               onTap: () {
@@ -199,15 +202,16 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
   }
 
   void _showDeleteConfirm() {
+    final l10n = AppLocalizations.of(context)!;
     showCupertinoDialog(
       context: context,
       builder: (ctx) => CupertinoAlertDialog(
-        title: const Text('削除しますか？'),
-        content: const Text('この記録を削除すると元に戻せません。'),
+        title: Text(l10n.confirmDeleteTitle),
+        content: Text(l10n.confirmDeleteDescription),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('キャンセル'),
+            child: Text(l10n.actionCancel),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
@@ -220,24 +224,25 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
                 Navigator.of(context).pop();
               }
             },
-            child: const Text('削除'),
+            child: Text(l10n.actionDelete),
           ),
         ],
       ),
     );
   }
 
-  String _formattedDate(DateTime dt) {
+  String _formattedDate(DateTime dt, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final target = DateTime(dt.year, dt.month, dt.day);
     final diff = today.difference(target).inDays;
-    if (diff == 0) return '今日';
-    if (diff == 1) return '昨日';
-    if (diff <= 6) return '$diff日前';
-    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+    if (diff == 0) return l10n.dateToday;
+    if (diff == 1) return l10n.dateYesterday;
+    if (diff <= 6) return l10n.dateDaysAgo(diff);
+    final weekdays = [l10n.weekdayMon, l10n.weekdayTue, l10n.weekdayWed, l10n.weekdayThu, l10n.weekdayFri, l10n.weekdaySat, l10n.weekdaySun];
     final w = weekdays[dt.weekday - 1];
-    return '${dt.month}月${dt.day}日 ${w}曜日';
+    return l10n.dateFull(dt.month, dt.day, w);
   }
 
   @override
@@ -279,7 +284,7 @@ class _MemoExpandedCardState extends State<MemoExpandedCard>
             children: [
               Center(
                 child: Text(
-                  _formattedDate(memo.practicedAt),
+                  _formattedDate(memo.practicedAt, context),
                   style: AppTypography.jpSMedium.copyWith(color: AppColors.textSecondary),
                 ),
               ),

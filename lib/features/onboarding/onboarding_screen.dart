@@ -12,6 +12,7 @@ import '../../shared/widgets/app_buttons.dart';
 import '../../shared/widgets/app_section_title.dart';
 import '../../shared/widgets/memo_card.dart' show ClubBadge;
 import '../settings/custom_club_screen.dart';
+import 'package:golf_memo/l10n/app_localizations.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -24,10 +25,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _clubRepo = ClubRepository();
 
   List<Club> _clubs = [];
-  String _selectedTab = 'すべて';
+  static const _allTabKey = '__all__';
+  String _selectedTab = _allTabKey;
   bool _isLoading = true;
 
-  static const _tabs = ['すべて', ...AppConstants.clubCategories];
+  static const _tabKeys = [_allTabKey, ...AppConstants.clubCategories];
   static const _buttonColor = Color(0xFF2B3562);
 
   @override
@@ -55,7 +57,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Map<String, List<Club>> get _groupedClubs {
-    final categories = _selectedTab == 'すべて'
+    final categories = _selectedTab == _allTabKey
         ? AppConstants.clubCategories
         : [_selectedTab];
     return {
@@ -100,7 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const SizedBox(height: 32),
                     Text(
-                      '練習で使用するクラブを\n教えてください。',
+                      AppLocalizations.of(context)!.onboardingTitle,
                       textAlign: TextAlign.center,
                       style: AppTypography.jpHeader2.copyWith(
                         color: AppColors.primary,
@@ -108,7 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'クラブごとにコツや飛距離を記録できます。',
+                      AppLocalizations.of(context)!.onboardingSubtitle1,
                       textAlign: TextAlign.center,
                       style: AppTypography.jpMRegular.copyWith(
                         color: AppColors.textPrimary,
@@ -116,7 +118,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '設定はいつでも変えられます。',
+                      AppLocalizations.of(context)!.onboardingSubtitle2,
                       textAlign: TextAlign.center,
                       style: AppTypography.jpMRegular.copyWith(
                         color: AppColors.textPrimary,
@@ -146,7 +148,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         builder: (_) => ClipRRect(
                           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                           child: CustomClubScreen(
-                            initialCategory: _selectedTab == 'すべて' ? null : _selectedTab,
+                            initialCategory: _selectedTab == _allTabKey ? null : _selectedTab,
                           ),
                         ),
                       );
@@ -166,7 +168,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             Icon(Icons.add, size: 16, color: AppColors.accent),
                             const SizedBox(width: 4),
                             Text(
-                              'カスタムクラブを追加',
+                              AppLocalizations.of(context)!.actionAddCustom,
                               style: AppTypography.jpMMedium.copyWith(
                                 color: AppColors.accent,
                               ),
@@ -187,7 +189,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           child: AppPrimaryButton(
-            label: '次へ',
+            label: AppLocalizations.of(context)!.actionNext,
             onPressed: _onNext,
             color: _buttonColor,
             height: 52,
@@ -204,13 +206,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        itemCount: _tabs.length,
+        itemCount: _tabKeys.length,
         separatorBuilder: (_, __) => const SizedBox(width: 4),
         itemBuilder: (context, index) {
-          final tab = _tabs[index];
-          final isSelected = _selectedTab == tab;
+          final tabKey = _tabKeys[index];
+          final isSelected = _selectedTab == tabKey;
+          final tabLabel = tabKey == _allTabKey
+              ? AppLocalizations.of(context)!.tabAll
+              : tabKey;
           return GestureDetector(
-            onTap: () => setState(() => _selectedTab = tab),
+            onTap: () => setState(() => _selectedTab = tabKey),
             child: Container(
               height: 32,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -223,7 +228,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               alignment: Alignment.center,
               child: Text(
-                tab,
+                tabLabel,
                 style: AppTypography.jpSMedium.copyWith(
                   color: isSelected ? AppColors.background : AppColors.textMedium,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,

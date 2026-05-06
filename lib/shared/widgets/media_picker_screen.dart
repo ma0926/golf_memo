@@ -7,6 +7,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:video_player/video_player.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import 'package:golf_memo/l10n/app_localizations.dart';
 
 /// ライブラリから画像・動画を選択するカスタムピッカー。
 /// 動画はタップするとプレビュー画面で確認してから選択できる。
@@ -180,7 +181,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'ライブラリ',
+          AppLocalizations.of(context)!.tabLibrary,
           style: AppTypography.jpMMedium.copyWith(color: Colors.white),
         ),
         centerTitle: true,
@@ -189,7 +190,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
             TextButton(
               onPressed: _confirm,
               child: Text(
-                '完了($totalSelected)',
+                AppLocalizations.of(context)!.actionDoneCount(totalSelected),
                 style: AppTypography.jpMMedium.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -205,7 +206,7 @@ class _MediaPickerScreenState extends State<MediaPickerScreen> {
           : _assets.isEmpty
               ? Center(
                   child: Text(
-                    '写真・動画がありません',
+                    AppLocalizations.of(context)!.emptyMedia,
                     style: AppTypography.jpMRegular.copyWith(color: Colors.white54),
                   ),
                 )
@@ -355,7 +356,7 @@ class _ImagePreviewPage extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          '画像プレビュー',
+          AppLocalizations.of(context)!.titleImagePreview,
           style: AppTypography.jpMMedium.copyWith(color: Colors.white),
         ),
         centerTitle: true,
@@ -394,10 +395,10 @@ class _ImagePreviewPage extends StatelessWidget {
                   ),
                   child: Text(
                     isSelected
-                        ? '選択を解除する'
+                        ? AppLocalizations.of(context)!.actionDeselect
                         : canSelect
-                            ? 'この画像を選択する'
-                            : '選択できる枚数の上限に達しました',
+                            ? AppLocalizations.of(context)!.actionSelectImage
+                            : AppLocalizations.of(context)!.errorMaxImages,
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -461,7 +462,7 @@ class _VideoPreviewPageState extends State<_VideoPreviewPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          '動画プレビュー',
+          AppLocalizations.of(context)!.titleVideoPreview,
           style: AppTypography.jpMMedium.copyWith(color: Colors.white),
         ),
         centerTitle: true,
@@ -522,7 +523,9 @@ class _VideoPreviewPageState extends State<_VideoPreviewPage> {
                     elevation: 0,
                   ),
                   child: Text(
-                    widget.isSelected ? '選択を解除する' : 'この動画を選択する',
+                    widget.isSelected
+                        ? AppLocalizations.of(context)!.actionDeselect
+                        : AppLocalizations.of(context)!.actionSelectVideo,
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w600),
                   ),

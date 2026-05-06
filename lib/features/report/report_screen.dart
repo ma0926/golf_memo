@@ -20,6 +20,7 @@ import '../../shared/widgets/app_section_title.dart';
 import '../../shared/widgets/memo_card.dart' show ClubBadge;
 import '../../shared/widgets/app_tab_bar.dart';
 import '../../shared/widgets/sheet_drag_handle.dart';
+import 'package:golf_memo/l10n/app_localizations.dart';
 
 // ── 1日分のデータ ─────────────────────────────────────
 class _DayData {
@@ -176,6 +177,7 @@ class _ReportScreenState extends State<ReportScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -185,8 +187,8 @@ class _ReportScreenState extends State<ReportScreen>
         scrolledUnderElevation: 0,
         centerTitle: true,
         title: Text(
-          'Summary',
-          style: AppTypography.enHeader1.copyWith(color: AppColors.textPrimary),
+          l10n.navSummary,
+          style: AppTypography.jpHeader2.copyWith(color: AppColors.textPrimary),
         ),
         bottom: TabBar(
           controller: _tabController,
@@ -204,9 +206,9 @@ class _ReportScreenState extends State<ReportScreen>
           labelPadding: EdgeInsets.zero,
           labelStyle: AppTypography.jpHeader4,
           unselectedLabelStyle: AppTypography.jpHeader4,
-          tabs: const [
-            SizedBox(width: 80, height: 38, child: Center(child: Text('30日'))),
-            SizedBox(width: 80, height: 38, child: Center(child: Text('60日'))),
+          tabs: [
+            SizedBox(width: 80, height: 38, child: Center(child: Text(AppLocalizations.of(context)!.tab30Days))),
+            SizedBox(width: 80, height: 38, child: Center(child: Text(AppLocalizations.of(context)!.tab60Days))),
           ],
         ),
       ),
@@ -220,7 +222,7 @@ class _ReportScreenState extends State<ReportScreen>
     if (_clubs.isEmpty) {
       return Center(
         child: Text(
-          '設定からクラブをONにしてください',
+          AppLocalizations.of(context)!.emptyClubOff,
           style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
         ),
       );
@@ -245,7 +247,7 @@ class _ReportScreenState extends State<ReportScreen>
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                '飛距離の推移',
+                AppLocalizations.of(context)!.sectionDistanceTrend,
                 style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium),
               ),
               GestureDetector(
@@ -342,7 +344,7 @@ class _ClubDistanceTable extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            'データがありません',
+            AppLocalizations.of(context)!.emptyNoData,
             style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder),
           ),
         ),
@@ -358,7 +360,7 @@ class _ClubDistanceTable extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'クラブ別平均飛距離',
+                AppLocalizations.of(context)!.sectionAvgDistance,
                 style: AppTypography.jpHeader4.copyWith(color: AppColors.textMedium),
               ),
             ],
@@ -440,7 +442,7 @@ class _DistanceChartCard extends StatelessWidget {
             )
           : SizedBox(
               height: 120,
-              child: Center(child: Text('データがありません', style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder))),
+              child: Center(child: Text(AppLocalizations.of(context)!.emptyNoData, style: AppTypography.jpSRegular.copyWith(color: AppColors.textPlaceholder))),
             ),
     );
   }
@@ -458,10 +460,11 @@ class _MemoSummaryCard extends StatelessWidget {
     required this.onDetailTap,
   });
 
-  String _formatDate(DateTime dt) {
-    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+  String _formatDate(DateTime dt, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final weekdays = [l10n.weekdayMon, l10n.weekdayTue, l10n.weekdayWed, l10n.weekdayThu, l10n.weekdayFri, l10n.weekdaySat, l10n.weekdaySun];
     final w = weekdays[dt.weekday - 1];
-    return '${dt.year}年${dt.month}月${dt.day}日 ${w}曜日';
+    return l10n.dateFullWithYear(dt.year, dt.month, dt.day, w);
   }
 
   @override
@@ -495,7 +498,7 @@ class _MemoSummaryCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        _formatDate(dayData.date),
+                        _formatDate(dayData.date, context),
                         style: AppTypography.jpSRegular.copyWith(color: AppColors.textSecondary),
                       ),
                       Text(
@@ -538,10 +541,11 @@ class _ChartDetailSection extends StatelessWidget {
     required this.onDetailTap,
   });
 
-  String _formatDate(DateTime dt) {
-    const weekdays = ['月', '火', '水', '木', '金', '土', '日'];
+  String _formatDate(DateTime dt, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final weekdays = [l10n.weekdayMon, l10n.weekdayTue, l10n.weekdayWed, l10n.weekdayThu, l10n.weekdayFri, l10n.weekdaySat, l10n.weekdaySun];
     final w = weekdays[dt.weekday - 1];
-    return '${dt.month}月${dt.day}日 ${w}曜日';
+    return l10n.dateFull(dt.month, dt.day, w);
   }
 
   @override
@@ -553,7 +557,7 @@ class _ChartDetailSection extends StatelessWidget {
         Row(
           children: [
             Text(
-              _formatDate(dayData.date),
+              _formatDate(dayData.date, context),
               style: AppTypography.jpSRegular.copyWith(color: AppColors.textPrimary),
             ),
             const Spacer(),

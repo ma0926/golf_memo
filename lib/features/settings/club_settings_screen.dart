@@ -9,6 +9,7 @@ import '../../shared/widgets/app_section_title.dart';
 import '../../shared/widgets/memo_card.dart' show ClubBadge;
 import '../../data/models/club.dart';
 import '../../data/repositories/club_repository.dart';
+import 'package:golf_memo/l10n/app_localizations.dart';
 
 class ClubSettingsScreen extends StatefulWidget {
   const ClubSettingsScreen({super.key});
@@ -21,10 +22,11 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
   final _clubRepo = ClubRepository();
 
   List<Club> _clubs = [];
-  String _selectedTab = 'すべて';
+  static const _allTabKey = '__all__';
+  String _selectedTab = _allTabKey;
   bool _isLoading = true;
 
-  static const _tabs = ['すべて', ...AppConstants.clubCategories];
+  static const _tabKeys = [_allTabKey, ...AppConstants.clubCategories];
 
   @override
   void initState() {
@@ -55,7 +57,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
 
   // 選択中タブに応じてグループ化したクラブを返す
   Map<String, List<Club>> get _groupedClubs {
-    final categories = _selectedTab == 'すべて'
+    final categories = _selectedTab == _allTabKey
         ? AppConstants.clubCategories
         : [_selectedTab];
     return {
@@ -92,9 +94,9 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
             colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
           ),
         ),
-        title: const Text(
-          '記録するクラブ',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)!.titleClubSettings,
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
@@ -133,7 +135,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
                           Icon(Icons.add, size: 16, color: AppColors.accent),
                           const SizedBox(width: 4),
                           Text(
-                            'カスタムクラブを追加',
+                            AppLocalizations.of(context)!.actionAddCustom,
                             style: AppTypography.jpMMedium.copyWith(
                               color: AppColors.accent,
                             ),
@@ -158,13 +160,16 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        itemCount: _tabs.length,
+        itemCount: _tabKeys.length,
         separatorBuilder: (_, i) => const SizedBox(width: 4),
         itemBuilder: (context, index) {
-          final tab = _tabs[index];
-          final isSelected = _selectedTab == tab;
+          final tabKey = _tabKeys[index];
+          final isSelected = _selectedTab == tabKey;
+          final tabLabel = tabKey == _allTabKey
+              ? AppLocalizations.of(context)!.tabAll
+              : tabKey;
           return GestureDetector(
-            onTap: () => setState(() => _selectedTab = tab),
+            onTap: () => setState(() => _selectedTab = tabKey),
             child: Container(
               height: 32,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -177,7 +182,7 @@ class _ClubSettingsScreenState extends State<ClubSettingsScreen> {
               ),
               alignment: Alignment.center,
               child: Text(
-                tab,
+                tabLabel,
                 style: AppTypography.jpSMedium.copyWith(
                   color: isSelected ? AppColors.background : AppColors.textMedium,
                 ),
